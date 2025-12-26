@@ -56,7 +56,7 @@ BEGIN
     -- Bước 3: Kiểm tra xung đột với các vé ĐANG HOẠT ĐỘNG trong database
     IF EXISTS (
         SELECT 1
-        FROM VE_TAU v                               -- Vé cũ trong DB
+        FROM VE_TAU v                                   -- Vé cũ trong DB
         JOIN #VeMoi vm ON v.MaChuyenTau = vm.MaChuyenTau AND v.MaViTri = vm.MaViTri -- Cùng chuyến, cùng ghế
         JOIN CHUYEN_TAU ct ON v.MaChuyenTau = ct.MaChuyenTau
         JOIN DANH_SACH_GA ds_cu_di ON ct.MaTuyenTau = ds_cu_di.MaTuyenTau AND v.GaXuatPhat = ds_cu_di.MaGaTau

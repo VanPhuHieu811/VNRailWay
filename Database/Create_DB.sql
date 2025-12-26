@@ -148,7 +148,8 @@ CREATE TABLE TAI_KHOAN (
     TrangThai BIT NOT NULL,
     VaiTro VARCHAR(20),
     CONSTRAINT PK_TAI_KHOAN PRIMARY KEY (Email),
-    CONSTRAINT UQ_TenTaiKhoan UNIQUE (TenTaiKhoan)
+    CONSTRAINT UQ_TenTaiKhoan UNIQUE (TenTaiKhoan),
+    CONSTRAINT CK_VaiTro CHECK (VaiTro IN (N'Khách hàng', N'Nhân viên', N'Quản trị'))
 );
 
 -- 13. Bảng DON_NGHI_PHEP
