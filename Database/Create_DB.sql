@@ -146,7 +146,7 @@ CREATE TABLE TAI_KHOAN (
     TenTaiKhoan VARCHAR(50), 
     MatKhau VARCHAR(50) NOT NULL,
     TrangThai BIT NOT NULL,
-    VaiTro VARCHAR(20),
+    VaiTro NVARCHAR(20),
     CONSTRAINT PK_TAI_KHOAN PRIMARY KEY (Email),
     CONSTRAINT UQ_TenTaiKhoan UNIQUE (TenTaiKhoan),
     CONSTRAINT CK_VaiTro CHECK (VaiTro IN (N'Khách hàng', N'Nhân viên', N'Quản trị'))
