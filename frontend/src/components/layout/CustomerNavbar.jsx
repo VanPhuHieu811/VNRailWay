@@ -26,10 +26,10 @@ const CustomerNavbar = () => {
           <Ticket size={18} /> Vé của tôi
         </Link>
 
-        <div className="user-profile">
+        <Link to="/profile" className="user-profile" style={{textDecoration: 'none'}}>
           <User size={18} />
           <span>{user.fullName}</span>
-        </div>
+        </Link>
       </div>
     </nav>
   );
