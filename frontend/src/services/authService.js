@@ -1,31 +1,49 @@
-import { TAI_KHOAN_DB } from './db_mock'; // Import dữ liệu chuẩn
+import { TAI_KHOAN_DB, NHAN_VIEN_DB, KHACH_HANG_DB } from './db_mock';
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+export const loginUser = (credentials) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      // 1. Tìm trong bảng Tài Khoản
+      const account = TAI_KHOAN_DB.find(
+        acc => acc.username === credentials.username && acc.password === credentials.password
+      );
 
-// API Đăng nhập
-export const loginUser = async (loginData) => {
-  await delay(800); 
+      if (!account) {
+        return reject(new Error("Tên đăng nhập hoặc mật khẩu không đúng!"));
+      }
 
-  // Tìm user trong "Database giả" khớp username & password
-  const user = TAI_KHOAN_DB.find(
-    u => u.TenDangNhap === loginData.username && u.MatKhau === loginData.password
-  );
+      let userInfo = {};
+      let finalRole = "";
 
-  if (!user) {
-    throw new Error("Sai tên đăng nhập hoặc mật khẩu.");
-  }
+      // 2. Join bảng để lấy thông tin chi tiết
+      if (account.vaiTro === 'NHAN_VIEN') {
+        const employee = NHAN_VIEN_DB.find(nv => nv.maNhanVien === account.refID);
+        if (employee) {
+          userInfo = { ...employee };
+          finalRole = employee.loaiNhanVien; // Lấy role cụ thể: MANAGER, SALES, CREW
+        }
+      } else {
+        const customer = KHACH_HANG_DB.find(kh => kh.maKhachHang === account.refID);
+        if (customer) {
+          userInfo = { ...customer };
+          finalRole = 'CUSTOMER';
+        }
+      }
 
-  // Trả về dữ liệu đã map sang chuẩn JSON để Frontend dùng
-  return {
-    status: 200,
-    message: "Đăng nhập thành công!",
-    data: {
-      id: user.MaTK,
-      fullName: user.HoTen,
-      role: user.VaiTro, // Giá trị sẽ là: 'quản trị', 'nhân viên', hoặc 'khách hàng'
-      token: "mock-jwt-token-xyz"
-    }
-  };
+      // 3. Trả về dữ liệu đã gộp
+      resolve({
+        data: {
+          token: "mock-jwt-token-123456",
+          id: account.refID,
+          username: account.username,
+          fullName: userInfo.hoTen,
+          role: finalRole, // Role cuối cùng dùng để điều hướng
+          ...userInfo
+        }
+      });
+
+    }, 800); // Giả lập độ trễ mạng
+  });
 };
 
 // API Đăng ký (Cập nhật để check trùng với DB chuẩn)
