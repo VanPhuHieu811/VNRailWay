@@ -30,4 +30,4 @@ export const authLoginService = async (email, password) => {
     } catch (error) {
         throw error;
     }
-}
+};

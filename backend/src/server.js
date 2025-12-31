@@ -1,10 +1,12 @@
 import app from './app.js';
 import authRoutes from './routes/auth.route.js';
+import userRoutes from './routes/user.route.js';
 import { getPool } from './config/sqlserver.config.js';
 
 const PORT = process.env.PORT;
 
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // Start server
 app.listen(PORT, async () => {
