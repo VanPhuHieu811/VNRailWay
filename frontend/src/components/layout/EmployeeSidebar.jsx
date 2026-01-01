@@ -74,7 +74,7 @@ const EmployeeSidebar = ({ userRole, onLogout }) => {
           <>
             <GroupLabel label="Nghiệp vụ vé" />
             <NavItem to="/employee/sales/counter" icon={Ticket} label="Bán vé tại quầy" />
-            <NavItem to="/employee/sales/exchange" icon={RefreshCw} label="Đổi vé / Hoàn vé" />
+            <NavItem to="/employee/sales/exchange" icon={RefreshCw} label="Đổi vé" />
             <NavItem to="/employee/sales/history" icon={Search} label="Tra cứu khách hàng" />
           </>
         )}

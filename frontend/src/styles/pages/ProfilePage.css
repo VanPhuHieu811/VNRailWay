@@ -1,58 +1,69 @@
-/* Container chung */
-.profile-container {
+/* --- LAYOUT CHUNG --- */
+.profile-page-wrapper {
+    width: 100%;
     min-height: 100vh;
-    background-color: #f8fafc;
-    padding-bottom: 40px;
-    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8fafc; /* Màu nền xám nhạt cho toàn trang */
+    display: flex;
+    flex-direction: column;
 }
 
-.profile-content {
-    max-width: 1100px; /* Rộng hơn chút để chứa 2 cột */
-    margin: 30px auto;
-    padding: 0 20px;
+/* Navbar Container: Luôn full width */
+.profile-header-full {
+    width: 100%;
+    background-color: white;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky; /* Giữ navbar trên cùng khi cuộn */
+    top: 0;
+    z-index: 100;
 }
 
+/* Container chứa nội dung chính (Căn giữa) */
+.profile-main-container {
+    flex: 1;
+    width: 100%;
+    max-width: 1000px; /* Độ rộng tối đa của nội dung */
+    margin: 0 auto;    /* Căn giữa */
+    padding: 32px 16px;
+}
+
+/* --- HEADER CỦA TRANG --- */
 .page-header {
-    margin-bottom: 30px;
+    margin-bottom: 32px;
 }
 
 .page-title {
-    font-size: 28px;
+    font-size: 24px;
     font-weight: 800;
     color: #1e293b;
-    margin: 0;
+    margin-bottom: 8px;
 }
 
 .page-subtitle {
     color: #64748b;
     font-size: 14px;
-    margin-top: 5px;
 }
 
-/* Layout 2 cột: Trái (2 phần) - Phải (1 phần) */
+/* --- GRID LAYOUT (Chia cột) --- */
 .profile-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1fr;
     gap: 24px;
+    align-items: start;
 }
 
-/* Responsive mobile: 1 cột */
-@media (max-width: 768px) {
+/* Màn hình desktop: Chia 2 cột (Chính 70% - Phụ 30%) */
+@media (min-width: 1024px) {
     .profile-grid {
-        grid-template-columns: 1fr;
-    }
-    /* Đảo thứ tự: Để Card Avatar lên đầu trên mobile */
-    .profile-sidebar {
-        order: -1; 
+        grid-template-columns: 3fr 1fr;
     }
 }
 
-/* Style chung cho các Card trắng */
+/* --- CARDS (Khung trắng) --- */
 .profile-card {
-    background: white;
+    background-color: white;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
     border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     padding: 24px;
     margin-bottom: 24px;
 }
@@ -61,42 +72,40 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #334155;
     margin-bottom: 20px;
-    padding-bottom: 15px;
-    border-bottom: 1px dashed #e2e8f0;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
 }
 
-/* --- Form Styles --- */
+/* --- FORM ELEMENTS --- */
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 
 .form-label {
     display: block;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: #475569;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .form-input {
     width: 100%;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border: 1px solid #cbd5e1;
-    border-radius: 8px;
+    border-radius: 6px;
     font-size: 14px;
     outline: none;
-    background-color: #fcfcfc;
     transition: all 0.2s;
 }
 
 .form-input:focus {
-    border-color: #0ea5e9;
-    background-color: white;
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .form-input:disabled {
@@ -105,89 +114,98 @@
     cursor: not-allowed;
 }
 
+/* --- BUTTONS --- */
 .btn-save {
-    background-color: #0ea5e9;
+    width: 100%;
+    padding: 10px;
+    background-color: #2563eb;
     color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
     font-weight: 600;
     border: none;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.btn-save:hover {
-    background-color: #0284c7;
-}
-
-/* --- Sidebar (Profile Summary) --- */
-.avatar-section {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.avatar-circle {
-    width: 100px;
-    height: 100px;
-    background: #0ea5e9;
-    color: white;
-    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 15px;
-    border: 4px solid #e0f2fe;
-}
-
-.user-name-large {
-    font-size: 20px;
-    font-weight: 800;
-    color: #1e293b;
-    margin: 0;
-}
-
-.user-email-small {
+    gap: 8px;
+    transition: background 0.2s;
     font-size: 14px;
-    color: #64748b;
 }
 
-.stats-divider {
-    border-top: 1px solid #f1f5f9;
-    margin: 20px 0;
+.btn-save:hover {
+    background-color: #1d4ed8;
 }
 
-.stat-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    margin-bottom: 12px;
-}
-
-.stat-label { color: #64748b; }
-.stat-value { font-weight: 700; color: #334155; }
-
-/* Nút Đăng xuất */
 .btn-logout {
     width: 100%;
-    margin-top: 24px;
-    padding: 12px;
-    border: 1px solid #ef4444; /* Viền đỏ */
-    background-color: white;
-    color: #ef4444;
-    border-radius: 8px;
+    margin-top: 16px;
+    padding: 10px;
+    background-color: #fee2e2;
+    color: #dc2626;
     font-weight: 600;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
     transition: all 0.2s;
+    font-size: 14px;
 }
 
 .btn-logout:hover {
-    background-color: #fef2f2; /* Nền đỏ rất nhạt khi hover */
-    box-shadow: 0 2px 5px rgba(239, 68, 68, 0.15);
+    background-color: #fecaca;
+}
+
+/* --- SIDEBAR INFO --- */
+.avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    background-color: #eff6ff;
+    color: #2563eb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 12px;
+    border: 3px solid #dbeafe;
+}
+
+.user-name-large {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.user-email-small {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.stats-divider {
+    height: 1px;
+    background-color: #e2e8f0;
+    margin: 16px 0;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 8px;
+    color: #475569;
+}
+
+.stat-value {
+    font-weight: 700;
+    color: #0f172a;
 }

@@ -75,7 +75,27 @@ export const KHACH_HANG_DB = [
     hoTen: "Phạm Văn Khách",
     loaiThanhVien: "Vàng",
     sdt: "0912345678",
-    cccd: "012345678999"
+    cccd: "012345678999",
+    diaChi: "TP.HCM",
+    hangThanhVien: "Silver"
+  },
+  {
+    maKhachHang: "KH002",
+    hoTen: "Trần Thị B",
+    soDienThoai: "0909999999",
+    email: "tranthib@email.com",
+    cccd: "987654321",
+    diaChi: "TP.HCM",
+    hangThanhVien: "Silver"
+  },
+  {
+    maKhachHang: "KH003",
+    hoTen: "Nguyễn Văn A",
+    soDienThoai: "0901234567",
+    email: "nguyenvana@email.com",
+    cccd: "123456789",
+    diaChi: "Hà Nội",
+    hangThanhVien: "Gold",
   }
 ];
 // 2. Dữ liệu Ga tàu
@@ -99,7 +119,7 @@ export const LICH_TRINH_DB = [
     loaiTau: "Thống nhất",
     gaDi: "HN",
     gaDen: "SG",
-    ngayDi: "2025-12-26",
+    ngayDi: "2026-01-02",
     gioDi: "06:00",
     gioDen: "18:30",
     thoiGianChay: "36h 30m",
@@ -114,7 +134,7 @@ export const LICH_TRINH_DB = [
     loaiTau: "Thống nhất",
     gaDi: "HN",
     gaDen: "SG",
-    ngayDi: "2025-12-27",
+    ngayDi: "2026-01-02",
     gioDi: "06:00",
     gioDen: "18:30",
     thoiGianChay: "36h 30m",
@@ -127,7 +147,7 @@ export const LICH_TRINH_DB = [
     loaiTau: "Thống nhất",
     gaDi: "HN",
     gaDen: "SG",
-    ngayDi: "2025-12-27",
+    ngayDi: "2026-01-02",
     gioDi: "19:00",
     gioDen: "07:30",
     thoiGianChay: "36h 30m",
@@ -140,7 +160,7 @@ export const LICH_TRINH_DB = [
     loaiTau: "Bắc Nam",
     gaDi: "HN",
     gaDen: "SG",
-    ngayDi: "2025-12-27",
+    ngayDi: "2026-01-03",
     gioDi: "22:00",
     gioDen: "10:00",
     thoiGianChay: "36h 00m",
@@ -155,7 +175,7 @@ export const LICH_TRINH_DB = [
     loaiTau: "Thống nhất",
     gaDi: "HN",
     gaDen: "SG",
-    ngayDi: "2025-12-28",
+    ngayDi: "2026-01-03",
     gioDi: "06:00",
     gioDen: "18:30",
     thoiGianChay: "36h 30m",
@@ -168,7 +188,7 @@ export const LICH_TRINH_DB = [
     loaiTau: "Thường",
     gaDi: "HN",
     gaDen: "SG",
-    ngayDi: "2025-12-28",
+    ngayDi: "2026-01-04",
     gioDi: "14:00",
     gioDen: "05:00",
     thoiGianChay: "39h 00m",
@@ -183,7 +203,7 @@ export const LICH_TRINH_DB = [
     loaiTau: "Thống nhất",
     gaDi: "HN",
     gaDen: "SG",
-    ngayDi: "2025-12-29",
+    ngayDi: "2026-01-04",
     gioDi: "19:00",
     gioDen: "07:30",
     thoiGianChay: "36h 30m",
@@ -233,7 +253,7 @@ export const VE_DA_DAT_DB = [
       tenTau: "SE1",
       gaDi: "Hà Nội",
       gaDen: "TP.Hồ Chí Minh",
-      ngayDi: "2025-12-28",
+      ngayDi: "2026-01-02",
       gioDi: "06:00",
       gioDen: "18:30"
     },
@@ -267,7 +287,7 @@ export const VE_DA_DAT_DB = [
       tenTau: "SE3",
       gaDi: "Đà Nẵng",
       gaDen: "Huế",
-      ngayDi: "2025-12-30", // Tương lai -> Có thể đổi
+      ngayDi: "2026-01-03", // Tương lai -> Có thể đổi
       gioDi: "14:00",
       gioDen: "16:30"
     },
@@ -284,7 +304,7 @@ export const VE_DA_DAT_DB = [
       tenTau: "TN1",
       gaDi: "Sài Gòn",
       gaDen: "Nha Trang",
-      ngayDi: "2024-02-01", // Quá khứ -> Không thể đổi
+      ngayDi: "2026-01-07", // Quá khứ -> Không thể đổi
       gioDi: "20:00",
       gioDen: "05:00"
     },
@@ -559,5 +579,64 @@ export const DON_NGHI_PHEP_DB = [
     lyDo: "Khám sức khỏe định kỳ",
     trangThai: "DaDuyet",
     ngayTao: "15/12/2024"
+  }
+];
+
+
+// ... (GIỮ NGUYÊN TOÀN BỘ CODE CŨ CỦA BẠN Ở TRÊN) ...
+
+// --- 9. DỮ LIỆU LỊCH SỬ VÉ (MỚI - Dùng cho chức năng Tra cứu) ---
+// Lưu ý: khachHangId phải khớp với id hoặc maKhachHang trong KHACH_HANG_DB
+export const LICH_SU_VE_DB = [
+  // Lịch sử của KH001 (Nguyễn Văn A hoặc Phạm Văn Khách)
+  {
+    maVe: "VE-2024-001",
+    khachHangId: "KH001", 
+    maChuyenTau: "SE1",
+    tenTau: "SE1",
+    tuyen: "Hà Nội → TP.HCM",
+    thoiGianKhoiHanh: "2024-01-15 06:00",
+    ghe: "Toa 1 - A12",
+    giaVe: 850000,
+    ngayDat: "2024-01-10",
+    trangThai: "DaDi" // DaDi, SapDi, DaHuy
+  },
+  {
+    maVe: "VE-2023-999",
+    khachHangId: "KH001",
+    maChuyenTau: "SE7",
+    tenTau: "SE7",
+    tuyen: "Hà Nội → Huế",
+    thoiGianKhoiHanh: "2024-01-05 08:00",
+    ghe: "Toa 2 - C3",
+    giaVe: 320000,
+    ngayDat: "2024-01-01",
+    trangThai: "DaHuy"
+  },
+
+  // Lịch sử của KH002 (Trần Thị B)
+  {
+    maVe: "VE-2024-045",
+    khachHangId: "KH002",
+    maChuyenTau: "SE3",
+    tenTau: "SE3",
+    tuyen: "TP.HCM → Đà Nẵng",
+    thoiGianKhoiHanh: "2024-02-20 14:00",
+    ghe: "Toa 3 - B5",
+    giaVe: 450000,
+    ngayDat: "2024-02-15",
+    trangThai: "SapDi"
+  },
+  {
+    maVe: "VE-2024-102",
+    khachHangId: "KH002",
+    maChuyenTau: "TN1",
+    tenTau: "TN1",
+    tuyen: "Hà Nội → Vinh",
+    thoiGianKhoiHanh: "2024-03-10 14:00",
+    ghe: "Toa 5 - D10",
+    giaVe: 250000,
+    ngayDat: "2024-03-01",
+    trangThai: "SapDi"
   }
 ];

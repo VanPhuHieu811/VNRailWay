@@ -64,3 +64,32 @@ export const registerUser = async (data) => {
     data: { ...data, role: 'khách hàng' } // Mặc định đăng ký mới là khách hàng
   };
 };
+
+
+/**
+ * Hàm kiểm tra vé dựa trên Mã vé và CCCD hành khách
+ * @param {string} ticketCode - Mã vé (ví dụ: "TK1763952793154")
+ * @param {string} passengerCCCD - Số CCCD/CMND của hành khách
+ * @returns {object|null} - Trả về thông tin vé và ghế tìm thấy, hoặc null nếu không khớp
+ */
+export const checkTicketByCodeAndCCCD = (ticketCode, passengerCCCD) => {
+  // 1. Tìm vé có mã khớp
+  const foundTicket = VE_DA_DAT_DB.find(ticket => ticket.maVe === ticketCode);
+
+  if (!foundTicket) {
+    return null; // Không tìm thấy mã vé
+  }
+
+  // 2. Tìm trong danh sách ghế của vé đó xem có hành khách nào trùng CCCD không
+  const foundSeat = foundTicket.seats.find(seat => seat.passengerID === passengerCCCD);
+
+  if (foundSeat) {
+    // Trả về dữ liệu bao gồm thông tin vé chung và thông tin ghế/hành khách cụ thể
+    return {
+      ticketInfo: foundTicket, // Toàn bộ thông tin vé
+      seatInfo: foundSeat      // Thông tin ghế và hành khách khớp CCCD
+    };
+  }
+
+  return null; // Có mã vé nhưng không có hành khách nào trùng CCCD trong vé đó
+};

@@ -1,0 +1,261 @@
+/* --- LAYOUT CHUNG --- */
+.exchange-page-wrapper {
+    background-color: #f8fafc; /* Gray 50 */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Container cho Navbar và Steps: Luôn full 100% width */
+.exchange-header-full {
+    width: 100%;
+    background-color: white;
+    z-index: 50;
+}
+
+.exchange-navbar-wrapper {
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.exchange-steps-wrapper {
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* --- CONTAINER NỘI DUNG CHÍNH (QUAN TRỌNG) --- */
+/* Đây là nơi quy định độ rộng của phần nội dung */
+.exchange-main-container {
+    flex: 1;
+    width: 100%;
+    
+    /* 👇 CHỈNH ĐỘ RỘNG TRANG TẠI ĐÂY 👇 */
+    max-width: 1000px; 
+    /* ----------------------------------- */
+    
+    margin: 0 auto; /* Căn giữa */
+    padding: 32px 16px; /* Padding trên/dưới trái/phải */
+}
+
+/* Nút quay lại */
+.btn-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: #64748b; /* Slate 500 */
+    font-weight: 500;
+    margin-bottom: 24px;
+    transition: color 0.2s;
+}
+
+.btn-back-link:hover {
+    color: #2563eb; /* Blue 600 */
+}
+
+/* --- GRID LAYOUT --- */
+.exchange-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 32px;
+    align-items: start;
+}
+
+/* Màn hình lớn (Desktop) chia 3 cột (2 phần trái, 1 phần phải) */
+@media (min-width: 1024px) {
+    .exchange-grid-layout {
+        grid-template-columns: 2fr 1fr;
+    }
+}
+
+/* --- CỘT TRÁI: DANH SÁCH GHẾ --- */
+.exchange-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+    padding: 24px;
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+
+.card-desc {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+/* Item ghế */
+.seat-select-item {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 8px;
+    border: 2px solid #f1f5f9; /* Slate 100 */
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.seat-select-item:hover {
+    border-color: #cbd5e1;
+    background-color: #f8fafc;
+}
+
+/* Trạng thái khi được chọn */
+.seat-select-item.selected {
+    border-color: #3b82f6; /* Blue 500 */
+    background-color: #eff6ff; /* Blue 50 */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Checkbox tròn */
+.custom-checkbox-circle {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 4px;
+    transition: all 0.2s;
+    background-color: white;
+}
+
+.seat-select-item.selected .custom-checkbox-circle {
+    background-color: #3b82f6;
+    border-color: #3b82f6;
+}
+
+/* Text styles trong item ghế */
+.seat-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.seat-name {
+    font-weight: 700;
+    font-size: 18px;
+    color: #334155;
+}
+
+.seat-price {
+    font-weight: 700;
+    font-size: 18px;
+    color: #2563eb;
+}
+
+.passenger-info-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 24px;
+    font-size: 14px;
+    color: #475569;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.badge-seat-type {
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    border: 1px solid #e2e8f0;
+}
+
+/* --- CỘT PHẢI: SIDEBAR --- */
+.exchange-sidebar-sticky {
+    position: sticky;
+    top: 24px; /* Cách mép trên khi cuộn */
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+}
+
+.sidebar-header {
+    background-color: #f8fafc;
+    padding: 16px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.sidebar-content {
+    padding: 20px;
+}
+
+.info-row {
+    margin-bottom: 16px;
+}
+
+.info-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #94a3b8;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #334155;
+    font-size: 16px;
+}
+
+.sidebar-footer {
+    background-color: #eff6ff; /* Blue 50 */
+    padding: 20px;
+    border-top: 1px solid #dbeafe;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #475569;
+}
+
+.total-price-display {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+.btn-submit-exchange {
+    width: 100%;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    color: white;
+    background-color: #2563eb;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.btn-submit-exchange:hover:not(:disabled) {
+    background-color: #1d4ed8;
+    transform: translateY(-2px);
+}
+
+.btn-submit-exchange:disabled {
+    background-color: #cbd5e1;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}

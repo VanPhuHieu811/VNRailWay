@@ -1,20 +1,28 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, User, Train } from 'lucide-react';
+import { ArrowLeft, Check, User, Train, Calendar } from 'lucide-react';
 import CustomerNavbar from '../components/layout/CustomerNavbar';
 import ExchangeSteps from '../components/common/ExchangeSteps';
-import '../styles/pages/ExchangeFlow.css';
+import '../styles/pages/ExchangeSelectSeatsPage.css'; // Import file CSS đã tách
 
 const ExchangeSelectSeatsPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Lấy thông tin vé từ trang trước
+  // Lấy thông tin vé từ trang "Vé của tôi"
   const { ticket } = location.state || {};
 
-  // Nếu không có dữ liệu (user vào thẳng link), đẩy về trang chủ
+  // Nếu không có dữ liệu vé, hiển thị thông báo lỗi
   if (!ticket) {
-    return <div className="p-10 text-center">Không tìm thấy thông tin vé.</div>;
+    return (
+        <div className="exchange-page-wrapper">
+            <CustomerNavbar />
+            <div className="flex-1 flex flex-col items-center justify-center p-10 text-slate-500">
+                <p className="mb-4">Không tìm thấy thông tin vé.</p>
+                <button onClick={() => navigate('/')} className="text-blue-600 underline font-medium">Về trang chủ</button>
+            </div>
+        </div>
+    );
   }
 
   // State lưu danh sách ID ghế muốn đổi
@@ -29,120 +37,158 @@ const ExchangeSelectSeatsPage = () => {
     }
   };
 
-  // Tính tổng tiền vé muốn đổi (để tham khảo)
+  // Tính tổng tiền vé muốn đổi (để hiển thị)
   const totalExchangeValue = ticket.seats
     .filter(seat => selectedSeatIds.includes(seat.id))
     .reduce((sum, seat) => sum + seat.price, 0);
 
+  // --- SỬA ĐỔI QUAN TRỌNG Ở ĐÂY ---
   const handleContinue = () => {
     if (selectedSeatIds.length === 0) {
       alert("Vui lòng chọn ít nhất một ghế để đổi!");
       return;
     }
     
-    // Logic: Chuyển sang bước 3 (Tìm tàu mới)
-    // Mang theo thông tin vé cũ và danh sách ghế muốn đổi
+    // Điều hướng sang trang Tìm kiếm (ExchangeSearchPage)
+    // Thay vì đi thẳng sang trang kết quả như trước
     navigate('/exchange/search', { 
       state: { 
         oldTicket: ticket,
-        seatsToExchange: selectedSeatIds,
-        exchangeValue: totalExchangeValue
+        seatsToExchange: selectedSeatIds, // Danh sách ghế cũ đã chọn
+        exchangeValue: totalExchangeValue // Tổng tiền vé cũ
       } 
     });
   };
 
   return (
-    <div className="exchange-container">
-      <CustomerNavbar />
+    <div className="exchange-page-wrapper">
       
-      {/* Bước 2: Chi tiết vé (Active) */}
-      <ExchangeSteps currentStep={2} />
+      {/* 1. NAVBAR FULL WIDTH */}
+      <div className="exchange-header-full exchange-navbar-wrapper">
+         <CustomerNavbar />
+      </div>
 
-      <div className="exchange-content">
+      {/* 2. STEPS FULL WIDTH */}
+      <div className="exchange-header-full exchange-steps-wrapper">
+         {/* Bước 1: Chi tiết vé */}
+         <ExchangeSteps currentStep={1} />
+      </div>
+
+      {/* 3. MAIN CONTENT (Căn giữa, max-width 1200px) */}
+      <div className="exchange-main-container">
+        
         {/* Nút quay lại */}
-        <div onClick={() => navigate(-1)} className="btn-back mb-4 flex items-center gap-2 cursor-pointer text-slate-600 hover:text-blue-600">
-          <ArrowLeft size={18} /> Quay lại
+        <div onClick={() => navigate(-1)} className="btn-back-link">
+          <ArrowLeft size={20} /> Quay lại vé của tôi
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="exchange-grid-layout">
           
-          {/* CỘT TRÁI: Danh sách ghế để chọn */}
-          <div className="md:col-span-2">
-            <h2 className="text-xl font-bold text-slate-800 mb-4">Chọn vé muốn đổi</h2>
-            <p className="text-slate-500 mb-4 text-sm">Vui lòng chọn các hành khách/ghế mà bạn muốn thực hiện đổi vé.</p>
-
+          {/* CỘT TRÁI: DANH SÁCH GHẾ */}
+          <div className="exchange-column-main">
             <div className="exchange-card">
-              {ticket.seats.map((seat) => {
-                const isSelected = selectedSeatIds.includes(seat.id);
-                return (
-                  <div 
-                    key={seat.id} 
-                    className={`seat-select-item ${isSelected ? 'selected' : ''}`}
-                    onClick={() => toggleSeatSelection(seat.id)}
-                  >
-                    {/* Checkbox */}
-                    <div className="custom-checkbox">
-                      {isSelected && <Check size={14} />}
-                    </div>
+                <h2 className="card-title">Chọn vé muốn đổi</h2>
+                <p className="card-desc">Vui lòng chọn các hành khách/ghế mà bạn muốn thực hiện đổi vé.</p>
 
-                    {/* Nội dung ghế + Hành khách */}
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="seat-tag">Toa {seat.maToa} - Ghế {seat.seatNum}</span>
-                          <div className="passenger-details mt-1">
-                            <h4 className="flex items-center gap-2">
-                              <User size={14} className="text-slate-400"/>
-                              {seat.passengerName || "Khách lẻ"}
-                            </h4>
-                            <p>CMND/CCCD: {seat.passengerID || "---"}</p>
-                          </div>
+                <div className="space-y-4">
+                {ticket.seats.map((seat) => {
+                    const isSelected = selectedSeatIds.includes(seat.id);
+                    return (
+                    <div 
+                        key={seat.id} 
+                        className={`seat-select-item ${isSelected ? 'selected' : ''}`}
+                        onClick={() => toggleSeatSelection(seat.id)}
+                    >
+                        {/* Checkbox Custom */}
+                        <div className="custom-checkbox-circle">
+                            {isSelected && <Check size={14} className="text-white" strokeWidth={3}/>}
                         </div>
-                        <div className="text-right">
-                          <div className="font-bold text-slate-700">{seat.price.toLocaleString()} đ</div>
-                          <div className="text-xs text-slate-400">{seat.loaiToa}</div>
+
+                        {/* Thông tin chi tiết */}
+                        <div className="flex-1">
+                            <div className="seat-info-row">
+                                <span className="seat-name">Toa {seat.maToa} - Ghế {seat.seatNum}</span>
+                                <span className="seat-price">{seat.price.toLocaleString()} đ</span>
+                            </div>
+                            
+                            <div className="passenger-info-grid">
+                                <div className="info-item">
+                                    <User size={16} className="text-slate-400"/>
+                                    <span className="font-medium">{seat.passengerName || "Khách lẻ"}</span>
+                                </div>
+                                <div className="info-item">
+                                    <span className="text-slate-400">CCCD:</span>
+                                    <span>{seat.passengerID || "---"}</span>
+                                </div>
+                                <div className="info-item">
+                                    <span className="badge-seat-type">{seat.loaiToa}</span>
+                                </div>
+                            </div>
                         </div>
-                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                    );
+                })}
+                </div>
             </div>
           </div>
 
-          {/* CỘT PHẢI: Tóm tắt vé gốc & Action */}
-          <div>
-            <div className="booking-sidebar sticky top-24">
-              <h3 className="sidebar-title">Thông tin vé gốc</h3>
+          {/* CỘT PHẢI: SIDEBAR (Sticky) */}
+          <div className="exchange-column-sidebar">
+            <div className="exchange-sidebar-sticky">
+                <div className="sidebar-header">
+                    <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                        <Train size={20} className="text-blue-600"/> Thông tin vé gốc
+                    </h3>
+                </div>
               
-              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-4">
-                <div className="font-bold text-blue-700 text-lg mb-1">{ticket.tripInfo.tenTau}</div>
-                <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
-                  <Train size={14} /> 
-                  {ticket.tripInfo.gaDi} ➝ {ticket.tripInfo.gaDen}
-                </div>
-                <div className="text-sm text-slate-500">
-                  Ngày đi: <strong>{new Date(ticket.tripInfo.ngayDi).toLocaleDateString('vi-VN')}</strong>
-                </div>
-              </div>
+                <div className="sidebar-content">
+                    <div className="info-row">
+                        <div className="info-label">Chuyến tàu</div>
+                        <div className="info-value">{ticket.tripInfo.tenTau}</div>
+                    </div>
 
-              <div className="total-section mt-4 pt-4 border-t border-slate-100">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-slate-600">Số vé chọn đổi:</span>
-                  <span className="font-bold">{selectedSeatIds.length}</span>
+                    <div className="flex gap-4">
+                        <div className="flex-1 info-row">
+                            <div className="info-label">Ga đi</div>
+                            <div className="info-value">{ticket.tripInfo.gaDi}</div>
+                        </div>
+                        <div className="flex-1 info-row text-right">
+                            <div className="info-label">Ga đến</div>
+                            <div className="info-value">{ticket.tripInfo.gaDen}</div>
+                        </div>
+                    </div>
+
+                    <div className="info-row">
+                        <div className="info-label">Ngày khởi hành</div>
+                        <div className="flex items-center gap-2 info-value">
+                            <Calendar size={16} className="text-blue-500"/>
+                            {new Date(ticket.tripInfo.ngayDi).toLocaleDateString('vi-VN')}
+                        </div>
+                    </div>
                 </div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-slate-800 font-bold">Giá trị hoàn đổi:</span>
-                  <span className="text-xl font-bold text-blue-600">{totalExchangeValue.toLocaleString()} đ</span>
+
+                <div className="sidebar-footer">
+                    <div className="summary-row">
+                        <span>Số vé chọn đổi:</span>
+                        <span className="font-bold text-slate-800">{selectedSeatIds.length}</span>
+                    </div>
+                    <div className="summary-row mb-6">
+                        <span className="font-bold text-slate-700">Giá trị hoàn đổi:</span>
+                        <span className="total-price-display">{totalExchangeValue.toLocaleString()} đ</span>
+                    </div>
+                    
+                    <button 
+                        className="btn-submit-exchange"
+                        onClick={handleContinue}
+                        disabled={selectedSeatIds.length === 0}
+                    >
+                        Tiếp tục đổi vé
+                    </button>
+                    
+                    <p className="text-xs text-slate-400 mt-3 text-center italic">
+                        * Phí đổi vé sẽ được tính ở bước xác nhận cuối cùng.
+                    </p>
                 </div>
-                
-                <button className="btn-continue" onClick={handleContinue}>
-                  Tiếp tục đổi vé
-                </button>
-                <p className="text-xs text-slate-400 mt-2 text-center italic">
-                  * Phí đổi vé sẽ được tính ở bước xác nhận cuối cùng.
-                </p>
-              </div>
             </div>
           </div>
 

@@ -1,46 +1,85 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, User, MapPin, Clock, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, User, MapPin, Clock, ChevronLeft, ChevronRight, Search, Calendar, AlertCircle } from 'lucide-react';
 import CustomerNavbar from '../components/layout/CustomerNavbar';
-import BookingSteps from '../components/common/BookingSteps';   // Navbar cho Đặt mới
-import ExchangeSteps from '../components/common/ExchangeSteps'; // Navbar cho Đổi vé
-import { LICH_TRINH_DB } from '../services/db_mock';
+import BookingSteps from '../components/common/BookingSteps';    
+import ExchangeSteps from '../components/common/ExchangeSteps'; 
+import { LICH_TRINH_DB, GA_TAU_DB } from '../services/db_mock';
 import '../styles/pages/BookingFlow.css';
 
-const SearchResultsPage = () => {
+const SearchResultsPage = ({ isEmployee = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // 1. Lấy dữ liệu state (bao gồm cả cờ isExchange)
+  // Lấy dữ liệu từ trang trước
   const stateData = location.state || {};
-  const { from, to, date, isExchange, exchangeData } = stateData;
+  const { isExchange, exchangeData } = stateData;
 
-  // Fallback nếu không có dữ liệu tìm kiếm
-  const initialDateStr = date || new Date().toISOString().split('T')[0];
-  const [selectedDateStr, setSelectedDateStr] = useState(initialDateStr);
+  // --- HÀM HELPER ---
+  const formatLocalISODate = (date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const normalizeStationCode = (input) => {
+    if (!input) return null;
+    const foundByCode = GA_TAU_DB.find(g => g.maGa === input);
+    if (foundByCode) return input;
+    const foundByName = GA_TAU_DB.find(g => g.tenGa === input || g.tenGa.toLowerCase() === input.toLowerCase());
+    return foundByName ? foundByName.maGa : input; 
+  };
+
+  const getStationName = (code) => GA_TAU_DB.find(g => g.maGa === code)?.tenGa || code;
+
+  // --- CẤU HÌNH NGÀY MẪU ---
+  const MOCK_DATA_DATE = '2026-01-02'; 
+  const todayStr = formatLocalISODate(new Date());
+
+  // --- KHỞI TẠO STATE ---
+  const [searchCriteria, setSearchCriteria] = useState(() => {
+    let initialDate = stateData.date || stateData.ngayDi;
+    if (!initialDate || initialDate === todayStr) {
+      initialDate = MOCK_DATA_DATE;
+    }
+    return {
+      from: normalizeStationCode(stateData.from || stateData.gaDi) || 'HN',
+      to: normalizeStationCode(stateData.to || stateData.gaDen) || 'SG',
+      date: initialDate 
+    };
+  });
+
+  const [employeeInput, setEmployeeInput] = useState({ ...searchCriteria });
+  const [selectedDateStr, setSelectedDateStr] = useState(searchCriteria.date);
+
+  // --- ĐỒNG BỘ DỮ LIỆU ---
+  useEffect(() => {
+    if (!isEmployee && location.state) {
+        let newDate = location.state.date || location.state.ngayDi;
+        if (newDate === todayStr) newDate = MOCK_DATA_DATE;
+
+        const newState = {
+            from: normalizeStationCode(location.state.from || location.state.gaDi) || 'HN',
+            to: normalizeStationCode(location.state.to || location.state.gaDen) || 'SG',
+            date: newDate
+        };
+        setSearchCriteria(newState);
+        setSelectedDateStr(newState.date);
+    }
+  }, [location.state, isEmployee]);
 
   // --- LOGIC DATE LINE ---
   const getNormalizedDate = (dStr) => {
-    const d = new Date(dStr);
-    d.setHours(0, 0, 0, 0);
-    return d;
+    if (!dStr) return new Date(MOCK_DATA_DATE);
+    const [y, m, d] = dStr.split('-').map(Number);
+    return new Date(y, m - 1, d); 
   };
-  const todayDate = getNormalizedDate(new Date().toISOString().split('T')[0]);
-  const selectedDateObj = getNormalizedDate(selectedDateStr);
 
   const dateList = useMemo(() => {
-    const center = new Date(selectedDateStr);
-    center.setHours(0, 0, 0, 0);
-    
-    // Mặc định lùi 3 ngày để ngày chọn nằm giữa
+    const center = getNormalizedDate(selectedDateStr);
     let startDate = new Date(center);
     startDate.setDate(center.getDate() - 3);
-
-    // Nếu lùi quá ngày hôm nay -> Ép bắt đầu từ hôm nay
-    if (startDate < todayDate) {
-      startDate = new Date(todayDate);
-    }
-
     const dates = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(startDate);
@@ -48,106 +87,206 @@ const SearchResultsPage = () => {
       dates.push(d);
     }
     return dates;
-  }, [selectedDateStr, todayDate]);
+  }, [selectedDateStr]);
 
   const handleChangeDate = (direction) => {
-    const newDate = new Date(selectedDateObj);
-    newDate.setDate(selectedDateObj.getDate() + direction);
-    if (newDate < todayDate) return;
-    setSelectedDateStr(newDate.toISOString().split('T')[0]);
+    const currentDate = getNormalizedDate(selectedDateStr);
+    const newDate = new Date(currentDate);
+    newDate.setDate(currentDate.getDate() + direction);
+    const newDateStr = formatLocalISODate(newDate);
+    setSelectedDateStr(newDateStr);
+    setSearchCriteria(prev => ({ ...prev, date: newDateStr }));
   };
 
   const formatDateDisplay = (dateObj) => {
     const days = ['CN', 'Th 2', 'Th 3', 'Th 4', 'Th 5', 'Th 6', 'Th 7'];
-    const dayName = days[dateObj.getDay()];
-    const dateNum = `${dateObj.getDate()}/${dateObj.getMonth() + 1}`;
-    return { dayName, dateNum };
+    return { dayName: days[dateObj.getDay()], dateNum: `${dateObj.getDate()}/${dateObj.getMonth() + 1}` };
   };
   
-  const toISODate = (dateObj) => dateObj.toISOString().split('T')[0];
-  const canGoBackDate = selectedDateObj > todayDate;
-
-  // --- LỌC TÀU ---
-  const filteredTrains = LICH_TRINH_DB.filter(train => train.ngayDi === selectedDateStr);
-  const displayTrains = filteredTrains.length > 0 ? filteredTrains : [];
-
-  // --- LOGIC CHỌN TÀU (QUAN TRỌNG) ---
-  const handleSelectTrip = (tripId) => {
-    // Tìm thông tin chi tiết chuyến tàu được chọn
-    const selectedTripInfo = LICH_TRINH_DB.find(t => t.id === tripId);
-
-    if (isExchange) {
-      // Nếu là đổi vé: Chuyển sang trang chọn ghế kèm dữ liệu đổi và thông tin tàu mới
-      navigate(`/booking/seats/${tripId}`, {
-        state: { 
-          tripId,
-          isExchange: true,
-          exchangeData: exchangeData,
-          newTripInfo: selectedTripInfo // Truyền thông tin tàu mới sang bước sau
-        }
-      });
-    } else {
-      // Nếu đặt mới: Chuyển bình thường
-      navigate(`/booking/seats/${tripId}`);
-    }
+  const handleEmployeeSearch = () => {
+    setSearchCriteria(employeeInput);
+    setSelectedDateStr(employeeInput.date);
   };
 
+  const handleReverseSearch = () => {
+    const reversed = { ...searchCriteria, from: searchCriteria.to, to: searchCriteria.from };
+    setSearchCriteria(reversed);
+    setEmployeeInput(reversed);
+  };
+
+  // --- LỌC TÀU ---
+  const allTrainsOnDate = LICH_TRINH_DB.filter(t => t.ngayDi === searchCriteria.date);
+  const displayTrains = allTrainsOnDate.filter(train => {
+    const matchFrom = train.gaDi === searchCriteria.from;
+    const matchTo = train.gaDen === searchCriteria.to;
+    return matchFrom && matchTo;
+  });
+  
+  // --- TÁCH LUỒNG LOGIC TẠI ĐÂY (FIX BUG & SEPARATION) ---
+const handleSelectTrip = (tripId) => {
+    const selectedTripInfo = LICH_TRINH_DB.find(t => t.id === tripId);
+    
+    // Mặc định đường dẫn cho khách hàng
+    let basePath = '/booking'; 
+
+    if (isEmployee) {
+        if (isExchange) {
+            // 👇 QUAN TRỌNG: Nếu là Đổi vé -> Dùng đường dẫn có chứa '/exchange'
+            basePath = '/employee/sales/exchange'; 
+        } else {
+            // Nếu là Bán vé -> Dùng đường dẫn sales thường
+            basePath = '/employee/sales';
+        }
+    }
+    
+    let navigateState = {
+        tripId,
+        searchParams: searchCriteria,
+        newTripInfo: selectedTripInfo,
+        isExchange: false
+    };
+
+    if (isExchange) {
+        navigateState.isExchange = true;
+        navigateState.exchangeData = exchangeData;
+    }
+
+    // Lúc này URL sẽ là: /employee/sales/exchange/seats/:tripId (Sidebar sẽ nhận ra Exchange)
+    navigate(`${basePath}/seats/${tripId}`, {
+      state: navigateState
+    });
+  };
+
+  // Xác định bước cho ExchangeSteps (Nếu đang đổi vé)
+  // Sales: Bước 2 (Tìm tàu), Khách: Bước 3
+  const currentStepNum = isEmployee ? 3 : 3;
+
   return (
-    <div className="booking-container">
-      <CustomerNavbar />
+    <div className="booking-container" style={isEmployee ? {paddingTop: '20px'} : {}}>
       
-      {/* HIỂN THỊ NAVBAR TÙY NGỮ CẢNH */}
+      {/* 1. NAVBAR KHÁCH HÀNG (Ẩn với Sales) */}
+      {!isEmployee && <CustomerNavbar />}
+      
+      {/* 2. THANH TIẾN TRÌNH (STEPS) */}
       {isExchange ? (
-        <ExchangeSteps currentStep={4} /> // Bước 4: Chọn tàu mới
+        // A. TRƯỜNG HỢP ĐỔI VÉ (Sales hoặc Khách): Hiện ExchangeSteps
+        <ExchangeSteps currentStep={currentStepNum} isEmployee={isEmployee} />
       ) : (
-        <BookingSteps currentStep={2} />  // Bước 2: Chọn chuyến
+        !isEmployee && <BookingSteps currentStep={2} />
       )}
 
       <div className="booking-content">
-        <div onClick={() => navigate(-1)} className="btn-back">
-          <ArrowLeft size={18} /> Quay lại
-        </div>
-
-        {/* Thông tin hành trình */}
-        <div className="info-card">
-          <h3 className="info-title">
-            {isExchange ? "Chọn chuyến tàu thay thế" : "Kết quả tìm kiếm"}
-          </h3>
-          <div className="info-route">
-            <MapPin size={16} /> <span>{from || 'Hà Nội'}</span> 
-            <span>➝</span>
-            <MapPin size={16} /> <span>{to || 'TP.Hồ Chí Minh'}</span>
+        
+        {/* Nút Quay lại (Chỉ hiện cho Khách) */}
+        {!isEmployee && (
+          <div onClick={() => navigate(-1)} className="btn-back">
+            <ArrowLeft size={18} /> Quay lại
           </div>
-        </div>
+        )}
 
-        {/* Date Line */}
-        <div className="date-line-container">
-          <button className="nav-arrow-btn" onClick={() => handleChangeDate(-1)} disabled={!canGoBackDate}>
-            <ChevronLeft size={24} />
-          </button>
-          <div className="date-scroll-wrapper">
-            {dateList.map((dateObj, index) => {
-              const dStr = toISODate(dateObj);
-              const { dayName, dateNum } = formatDateDisplay(dateObj);
-              const isActive = dStr === selectedDateStr;
-              return (
-                <div 
-                  key={index} 
-                  className={`date-item ${isActive ? 'active' : ''}`} 
-                  onClick={() => setSelectedDateStr(dStr)}
-                >
-                  <span className="day-label">{dayName}</span>
-                  <span className="date-label">{dateNum}</span>
+        {isEmployee ? (
+          // --- GIAO DIỆN TÌM KIẾM CỦA SALES ---
+          <div className="bg-white p-5 rounded-xl shadow-sm border border-blue-200 mb-6">
+            {/* Tiêu đề thay đổi tùy theo ngữ cảnh */}
+            <h2 className="text-lg font-bold text-blue-800 mb-4 flex items-center gap-2">
+              <Search size={20}/> {isExchange ? "Tìm chuyến tàu thay thế" : "Bán vé tại quầy"}
+            </h2>
+            
+            <div className="flex gap-4 items-end flex-wrap">
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Ga đi</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-2.5 text-blue-600" size={16}/>
+                  <select 
+                    className="w-full pl-9 p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+                    value={employeeInput.from}
+                    onChange={e => setEmployeeInput({...employeeInput, from: e.target.value})}
+                  >
+                    {GA_TAU_DB.map(g => <option key={g.maGa} value={g.maGa}>{g.tenGa}</option>)}
+                  </select>
                 </div>
-              );
-            })}
+              </div>
+
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Ga đến</label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-2.5 text-red-600" size={16}/>
+                  <select 
+                    className="w-full pl-9 p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+                    value={employeeInput.to}
+                    onChange={e => setEmployeeInput({...employeeInput, to: e.target.value})}
+                  >
+                    {GA_TAU_DB.map(g => <option key={g.maGa} value={g.maGa}>{g.tenGa}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex-1 min-w-[150px]">
+                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Ngày đi</label>
+                <div className="relative">
+                  <Calendar className="absolute left-3 top-2.5 text-slate-500" size={16}/>
+                  <input 
+                    type="date" 
+                    className="w-full pl-9 p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-medium"
+                    value={employeeInput.date}
+                    onChange={e => setEmployeeInput({...employeeInput, date: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <button 
+                onClick={handleEmployeeSearch}
+                className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 h-[42px] flex items-center gap-2"
+              >
+                <Search size={18}/> Tìm chuyến
+              </button>
+            </div>
           </div>
-          <button className="nav-arrow-btn" onClick={() => handleChangeDate(1)}>
-            <ChevronRight size={24} />
-          </button>
+        ) : (
+          // --- GIAO DIỆN KHÁCH HÀNG ---
+          <div className="info-card">
+            <h3 className="info-title">
+              {isExchange ? "Chọn chuyến tàu thay thế" : "Kết quả tìm kiếm"}
+            </h3>
+            <div className="info-route">
+              <MapPin size={16} /> <span>{getStationName(searchCriteria.from)}</span> 
+              <span>➝</span>
+              <MapPin size={16} /> <span>{getStationName(searchCriteria.to)}</span>
+            </div>
+          </div>
+        )}
+
+        {/* --- DATE LINE --- */}
+        <div className="date-line-container">
+            <button className="nav-arrow-btn" onClick={() => handleChangeDate(-1)}>
+              <ChevronLeft size={24} />
+            </button>
+            <div className="date-scroll-wrapper">
+              {dateList.map((dateObj, index) => {
+                const dStr = formatLocalISODate(dateObj);
+                const { dayName, dateNum } = formatDateDisplay(dateObj);
+                const isActive = dStr === selectedDateStr;
+                return (
+                  <div 
+                    key={index} 
+                    className={`date-item ${isActive ? 'active' : ''}`} 
+                    onClick={() => {
+                        setSelectedDateStr(dStr);
+                        setSearchCriteria(prev => ({ ...prev, date: dStr }));
+                    }}
+                  >
+                    <span className="day-label">{dayName}</span>
+                    <span className="date-label">{dateNum}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <button className="nav-arrow-btn" onClick={() => handleChangeDate(1)}>
+              <ChevronRight size={24} />
+            </button>
         </div>
 
-        {/* Danh sách tàu */}
+        {/* --- LIST KẾT QUẢ --- */}
         <div className="train-list">
           {displayTrains.length > 0 ? (
             displayTrains.map((train) => (
@@ -159,7 +298,7 @@ const SearchResultsPage = () => {
                 <div className="train-schedule">
                   <div className="time-box">
                     <div className="time-big">{train.gioDi}</div>
-                    <div className="station-name">{train.gaDi === 'HN' ? 'Hà Nội' : train.gaDi}</div>
+                    <div className="station-name">{getStationName(train.gaDi)}</div>
                   </div>
                   <div className="duration-line">
                     <Clock size={14} style={{marginBottom: 4}}/>
@@ -168,7 +307,7 @@ const SearchResultsPage = () => {
                   </div>
                   <div className="time-box right">
                     <div className="time-big">{train.gioDen}</div>
-                    <div className="station-name">{train.gaDen === 'SG' ? 'TP.Hồ Chí Minh' : train.gaDen}</div>
+                    <div className="station-name">{getStationName(train.gaDen)}</div>
                   </div>
                 </div>
                 <div className="train-footer">
@@ -186,10 +325,45 @@ const SearchResultsPage = () => {
               </div>
             ))
           ) : (
-            <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-300">
-              <CalendarDays size={40} className="mx-auto text-gray-300 mb-3"/>
-              <p className="text-gray-500 font-medium">Không tìm thấy chuyến tàu nào trong ngày {selectedDateStr}</p>
-              <p className="text-sm text-gray-400">Vui lòng chọn ngày khác hoặc bấm nút mũi tên để xem ngày kế tiếp.</p>
+            <div className="text-center py-10 bg-white rounded-lg border border-dashed border-gray-300 mt-4">
+              <Calendar size={40} className="mx-auto text-gray-300 mb-3"/>
+              <p className="text-gray-500 font-medium text-lg">Không tìm thấy chuyến tàu nào.</p>
+              
+              <div className="mt-3 text-sm text-slate-500">
+                <p>Điều kiện tìm kiếm:</p>
+                <div className="flex justify-center gap-2 items-center mt-1 font-semibold">
+                    <span>{getStationName(searchCriteria.from)}</span>
+                    <span>→</span>
+                    <span>{getStationName(searchCriteria.to)}</span>
+                </div>
+                <p className="mt-1">Ngày: {selectedDateStr}</p>
+              </div>
+
+              {allTrainsOnDate.length > 0 && (
+                 <div className="mt-6 p-4 bg-orange-50 border border-orange-100 rounded-lg inline-block text-left max-w-md">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="text-orange-600 shrink-0" size={20}/>
+                        <div>
+                            <p className="text-orange-800 font-bold text-sm mb-1">
+                                Gợi ý (Debug): Có {allTrainsOnDate.length} tàu chạy ngày này nhưng khác tuyến!
+                            </p>
+                            <ul className="text-xs text-orange-700 space-y-1 list-disc pl-4">
+                                {allTrainsOnDate.map(t => (
+                                    <li key={t.id}>
+                                        Tàu <b>{t.tenTau}</b> chạy tuyến: {getStationName(t.gaDi)} → {getStationName(t.gaDen)}
+                                    </li>
+                                ))}
+                            </ul>
+                            <button 
+                                onClick={handleReverseSearch}
+                                className="mt-3 text-xs bg-orange-200 text-orange-800 px-3 py-1.5 rounded font-bold hover:bg-orange-300 w-full"
+                            >
+                                Đảo chiều tìm kiếm để xem thử?
+                            </button>
+                        </div>
+                    </div>
+                 </div>
+              )}
             </div>
           )}
         </div>

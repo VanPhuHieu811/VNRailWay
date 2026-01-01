@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { User, Lock, Save, CreditCard, LogOut } from 'lucide-react'; // Thêm icon LogOut
+import { useNavigate } from 'react-router-dom';
+import { User, Lock, Save, CreditCard, LogOut } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import CustomerNavbar from '../components/layout/CustomerNavbar';
 import { VE_DA_DAT_DB } from '../services/db_mock'; 
 import '../styles/pages/ProfilePage.css';
 
 const ProfilePage = () => {
-  const navigate = useNavigate(); // Hook chuyển trang
+  const navigate = useNavigate();
   const { register, handleSubmit, setValue } = useForm();
   
   const [currentUser, setCurrentUser] = useState({});
@@ -36,27 +36,28 @@ const ProfilePage = () => {
     toast.info("Chức năng đổi mật khẩu đang được xử lý...");
   };
 
-  // --- HÀM ĐĂNG XUẤT ---
   const handleLogout = () => {
     const confirm = window.confirm("Bạn có chắc chắn muốn đăng xuất?");
     if (confirm) {
-      // 1. Xóa thông tin đăng nhập trong LocalStorage
-      localStorage.removeItem('token'); // Xóa token xác thực
-      localStorage.removeItem('user');  // Xóa thông tin user
-      
-      // 2. Chuyển hướng về trang Đăng nhập
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
       navigate('/');
-      
-      // Hoặc về trang chủ nếu muốn: navigate('/');
     }
   };
 
   return (
-    <div className="profile-container">
-      <CustomerNavbar />
+    <div className="profile-page-wrapper">
+      
+      {/* 1. NAVBAR FULL WIDTH (Nằm tách biệt để phủ kín ngang) */}
+      <div className="profile-header-full">
+         <CustomerNavbar />
+      </div>
+
       <ToastContainer position="top-right" autoClose={2000} />
 
-      <div className="profile-content">
+      {/* 2. MAIN CONTENT (Căn giữa bởi max-width) */}
+      <div className="profile-main-container">
+        
         <div className="page-header">
           <h1 className="page-title">Tài khoản của tôi</h1>
           <p className="page-subtitle">Quản lý thông tin cá nhân và bảo mật</p>
@@ -64,8 +65,10 @@ const ProfilePage = () => {
 
         <div className="profile-grid">
           
-          {/* CỘT TRÁI: FORM (Giữ nguyên) */}
+          {/* CỘT TRÁI: FORM */}
           <div className="profile-main">
+            
+            {/* Card Thông tin cá nhân */}
             <div className="profile-card">
               <div className="card-header">
                 <User size={20} className="text-blue-500" />
@@ -90,6 +93,7 @@ const ProfilePage = () => {
               </form>
             </div>
 
+            {/* Card Đổi mật khẩu */}
             <div className="profile-card">
               <div className="card-header">
                 <Lock size={20} className="text-blue-500" />
@@ -117,7 +121,7 @@ const ProfilePage = () => {
               
               <div className="avatar-section">
                 <div className="avatar-circle">
-                  <User size={48} />
+                  <User size={40} />
                 </div>
                 <h3 className="user-name-large">{currentUser.fullName}</h3>
                 <p className="user-email-small">{currentUser.email}</p>
@@ -139,7 +143,6 @@ const ProfilePage = () => {
                 <span className="stat-value">01/2024</span>
               </div>
 
-              {/* --- NÚT ĐĂNG XUẤT (MỚI) --- */}
               <button className="btn-logout" onClick={handleLogout}>
                 <LogOut size={16} /> Đăng xuất
               </button>
