@@ -75,9 +75,9 @@ BEGIN TRY
     ('T02', 'GA12', 1, 0), ('T02', 'GA08', 2, 935), ('T02', 'GA05', 3, 1407), ('T02', 'GA01', 4, 1726);
 
     INSERT INTO DOAN_TAU VALUES 
-    ('DT01', 'SE1', 'Siemens', '2019-01-01', N'Hạng sang'),
-    ('DT02', 'SE2', 'Siemens', '2019-01-01', N'Hạng sang'),
-    ('DT03', 'TN1', 'DongFeng', '2010-01-01', N'Bình thường');
+    ('DT01', 'SE1', 'Siemens', '2019-01-01', N'Hạng sang', N'Hoạt động'),
+    ('DT02', 'SE2', 'Siemens', '2019-01-01', N'Hạng sang', N'Hoạt động'),
+    ('DT03', 'TN1', 'DongFeng', '2010-01-01', N'Bình thường', N'Hoạt động');
 
     -- TẠO GHẾ & TOA (Vòng lặp)
     DECLARE @MaDoanTau VARCHAR(10), @MaToa VARCHAR(10), @MaVT VARCHAR(10), @i INT, @j INT

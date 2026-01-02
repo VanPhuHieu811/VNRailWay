@@ -56,8 +56,10 @@ CREATE TABLE DOAN_TAU (
     HangSanXuat NVARCHAR(100),
     NgayVanHanh DATE NOT NULL,
     LoaiTau NVARCHAR(20) NOT NULL,
+    TrangThai NVARCHAR(20),
     CONSTRAINT PK_DOAN_TAU PRIMARY KEY (MaDoanTau),
-    CONSTRAINT CK_LoaiTau CHECK (LoaiTau IN (N'Hạng sang', N'Bình thường'))
+    CONSTRAINT CK_LoaiTau CHECK (LoaiTau IN (N'Hạng sang', N'Bình thường')),
+    CONSTRAINT CK_TrangThaiTau CHECK (TrangThai IN (N'Hoạt động', N'Bảo trì'))
 );
 
 -- 5. Bảng TOA_TAU
