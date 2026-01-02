@@ -640,3 +640,29 @@ export const LICH_SU_VE_DB = [
     trangThai: "SapDi"
   }
 ];
+
+// src/data/mockTrains.js
+
+export const MOCK_TRAINS = [
+  {
+    id: 'SE1',
+    name: 'Tàu thống nhất SE1',
+    company: 'Đường sắt Việt Nam',
+    status: 'active', // 'active' | 'maintenance'
+    totalPlannedCoaches: 12, // Số toa dự kiến theo hình 10
+    coaches: [
+      { id: 'c1', seatNum: 1, type: 'Giường nằm khoang 4', capacity: 32, amenities: ['Điều hòa', 'WiFi'] },
+      { id: 'c2', seatNum: 2, type: 'Giường nằm khoang 6', capacity: 48, amenities: ['Điều hòa'] },
+    ]
+  },
+  {
+    id: 'SE2',
+    name: 'Tàu thống nhất SE2',
+    company: 'Đường sắt Việt Nam',
+    status: 'maintenance',
+    totalPlannedCoaches: 10,
+    coaches: [
+      { id: 'c3', seatNum: 1, type: 'VIP', capacity: 10, amenities: ['Điều hòa', 'WiFi', 'TV'] },
+    ]
+  }
+];

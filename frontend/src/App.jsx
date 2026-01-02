@@ -31,11 +31,13 @@ import EmployeeProfilePage from './pages/employee/EmployeeProfilePage';
 import CustomerLookupPage from './pages/employee/CustomerLookupPage';
 import TicketExchangePage from './pages/employee/TicketExchangePage';
 
+// 👇 IMPORT TRANG QUẢN LÝ TÀU MỚI
+import TrainManagementPage from './pages/TrainManagementPage'; 
+
 // Placeholder
 const RevenueReportPage = () => <div className="p-10">Báo cáo doanh thu</div>;
 const ManageStaffPage = () => <div className="p-10">Quản lý nhân sự</div>;
 const ApproveLeavePage = () => <div className="p-10">Duyệt nghỉ phép</div>;
-const ManageTrainsPage = () => <div className="p-10">Quản lý tàu</div>;
 const ManagePricingPage = () => <div className="p-10">Quản lý giá</div>;
 
 const PrivateRoute = ({ children }) => {
@@ -70,14 +72,14 @@ function App() {
         <Route path="/my-tickets" element={<PrivateRoute><MyTicketsPage /></PrivateRoute>} />
         <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
         
-        {/* Luồng Đặt vé & Đổi vé (Khách hàng) */}
+        {/* Luồng Đặt vé */}
         <Route path="/booking/search-results" element={<PrivateRoute><SearchResultsPage /></PrivateRoute>} />
         <Route path="/booking/seats/:tripId" element={<PrivateRoute><SeatSelectionPage /></PrivateRoute>} />
         <Route path="/booking/passengers" element={<PrivateRoute><PassengerInfoPage /></PrivateRoute>} />
         <Route path="/booking/payment" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
         <Route path="/booking/success" element={<PrivateRoute><BookingSuccessPage /></PrivateRoute>} />
 
-        {/* Flow Đổi Vé */}
+        {/* Luồng Đổi Vé */}
         <Route path="/exchange/select-seats" element={<PrivateRoute><ExchangeSelectSeatsPage /></PrivateRoute>} />
         <Route path="/exchange/search" element={<PrivateRoute><ExchangeSearchPage /></PrivateRoute>} />
         <Route path="/exchange/confirm" element={<PrivateRoute><ExchangeConfirmPage /></PrivateRoute>} />
@@ -91,29 +93,28 @@ function App() {
           <Route path="schedule" element={<EmployeeSchedulePage />} />
           <Route path="leave-request" element={<LeaveRequestPage />} />
 
-          {/* --- SALES ROLES --- */}
+          {/* SALES ROLES */}
           <Route path="sales/history" element={<CustomerLookupPage />} />
           <Route path="sales/exchange" element={<TicketExchangePage />} />
-
-          {/* Flow Bán vé Mới */}
           <Route path="sales/counter" element={<SearchResultsPage isEmployee={true} />} />
           <Route path="sales/seats/:tripId" element={<SeatSelectionPage isEmployee={true} />} />
           <Route path="sales/passengers" element={<PassengerInfoPage isEmployee={true} />} />
           <Route path="sales/payment" element={<PaymentPage isEmployee={true} />} />
           <Route path="sales/success" element={<BookingSuccessPage isEmployee={true} />} />
-
-          {/* Flow Đổi Vé (Tách riêng route để giữ Sidebar) */}
+          
           <Route path="sales/exchange/search" element={<SearchResultsPage isEmployee={true} />} />
           <Route path="sales/exchange/seats/:tripId" element={<SeatSelectionPage isEmployee={true} />} />
-          {/* 👇 QUAN TRỌNG: Route Confirm & Success nằm trong EmployeeLayout */}
           <Route path="sales/exchange/confirm" element={<ExchangeConfirmPage />} />
           <Route path="sales/exchange/success" element={<ExchangeSuccessPage />} />
 
-          {/* Manager Roles */}
+          {/* MANAGER ROLES */}
           <Route path="manager/revenue" element={<RevenueReportPage />} />
           <Route path="manager/staff" element={<ManageStaffPage />} />
           <Route path="manager/approve-leave" element={<ApproveLeavePage />} />
-          <Route path="manager/trains" element={<ManageTrainsPage />} />
+          
+          {/* 👇 CẬP NHẬT ROUTE QUẢN LÝ TÀU */}
+          <Route path="manager/trains" element={<TrainManagementPage />} />
+          
           <Route path="manager/pricing" element={<ManagePricingPage />} />
         </Route>
       </Routes>
