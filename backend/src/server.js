@@ -2,7 +2,7 @@ import app from './app.js';
 import authRoutes from './routes/auth.route.js';
 import { getPool } from './config/sqlserver.config.js';
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 app.use('/api/v1/auth', authRoutes);
 
