@@ -22,7 +22,7 @@ export const authLoginService = async (email, password) => {
         const user = result.recordset[0];
         const token = jwt.sign(
             { email: user.Email, role: user.VaiTro },
-            process.env.JWT_SECRET || 'default-secret',
+            process.env.JWT_SECRET,
             { expiresIn: '1h' }
         );
 
@@ -30,4 +30,4 @@ export const authLoginService = async (email, password) => {
     } catch (error) {
         throw error;
     }
-}
+};

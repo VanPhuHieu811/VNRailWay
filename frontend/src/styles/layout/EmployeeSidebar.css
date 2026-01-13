@@ -1,0 +1,180 @@
+/* Container chính của Sidebar */
+.sidebar-container {
+    width: 260px;
+    height: 100vh;
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0; /* Slate 200 */
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 50;
+    font-family: 'Segoe UI', sans-serif;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
+}
+
+/* --- LOGO AREA --- */
+.sidebar-header {
+    height: 70px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0 24px;
+    border-bottom: 1px solid #f1f5f9; /* Slate 100 */
+    flex-shrink: 0; /* Không bị co lại */
+}
+
+.logo-icon-box {
+    background-color: #1d4ed8; /* Blue 700 */
+    color: white;
+    padding: 6px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-text {
+    font-size: 20px;
+    font-weight: 800;
+    color: #1e293b; /* Slate 800 */
+    letter-spacing: -0.5px;
+}
+
+/* --- MENU ITEMS --- */
+.sidebar-menu {
+    flex: 1;
+    overflow-y: auto; /* Cuộn dọc nếu menu dài */
+    padding: 20px 12px;
+}
+
+/* Tùy chỉnh thanh cuộn cho gọn đẹp */
+.sidebar-menu::-webkit-scrollbar {
+    width: 5px;
+}
+.sidebar-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+
+.menu-group-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8; /* Slate 400 */
+    text-transform: uppercase;
+    margin: 24px 0 8px 12px;
+    letter-spacing: 0.5px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #475569; /* Slate 600 */
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+    background-color: #f1f5f9; /* Slate 100 */
+    color: #1d4ed8; /* Blue 700 */
+}
+
+.nav-item.active {
+    background-color: #2563eb; /* Blue 600 */
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); /* Bóng xanh nhẹ */
+}
+
+/* --- FOOTER (User Info & Logout) --- */
+.sidebar-footer {
+    padding: 16px;
+    border-top: 1px solid #e2e8f0;
+    background-color: #f8fafc; /* Slate 50 */
+    flex-shrink: 0;
+}
+
+/* User Info Box (Link) */
+.user-info-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.user-info-box:hover {
+    background-color: #e2e8f0; /* Hover nhẹ khi rê chuột vào user */
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #dbeafe; /* Blue 100 */
+    color: #1d4ed8; /* Blue 700 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 16px;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px #bfdbfe;
+}
+
+.user-details {
+    overflow: hidden;
+}
+
+.user-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #334155;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 0;
+}
+
+.user-role {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 500;
+    margin: 0;
+}
+
+/* Nút Đăng xuất */
+.btn-logout-sidebar {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #cbd5e1;
+    background-color: white;
+    color: #475569;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-logout-sidebar:hover {
+    background-color: #fef2f2; /* Red 50 */
+    color: #dc2626; /* Red 600 */
+    border-color: #fecaca; /* Red 200 */
+}

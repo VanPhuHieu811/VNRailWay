@@ -1,0 +1,213 @@
+.salary-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 5px;
+}
+
+.page-subtitle {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 24px;
+}
+
+/* --- FILTER BOX --- */
+.filter-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.filter-group {
+    flex: 1;
+}
+
+.filter-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+
+.filter-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.btn-view-salary {
+    background-color: #1d4ed8;
+    color: white;
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    height: 42px; /* Khớp chiều cao input */
+}
+
+.btn-view-salary:hover {
+    background-color: #1e40af;
+}
+
+/* --- PAYSLIP CARD --- */
+.payslip-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+}
+
+/* Header */
+.payslip-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8fafc;
+}
+
+.payslip-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 4px;
+}
+
+.payslip-employee-info {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.status-badge {
+    background-color: #dcfce7;
+    color: #166534;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 4px;
+}
+
+.payment-date {
+    font-size: 12px;
+    color: #94a3b8;
+    text-align: right;
+}
+
+/* Body Grid */
+.payslip-body {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.section-box {
+    border: 1px solid #f1f5f9;
+    border-radius: 8px;
+    padding: 20px;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+}
+
+.row-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: #334155;
+}
+
+.row-item.total {
+    border-top: 1px dashed #cbd5e1;
+    padding-top: 12px;
+    margin-top: 12px;
+    font-weight: 700;
+    font-size: 15px;
+}
+
+.text-right { text-align: right; }
+
+/* Footer (Total Net Pay) */
+.payslip-footer {
+    padding: 20px 24px;
+    background-color: #f0f9ff;
+    border-top: 1px solid #e0f2fe;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.net-pay-label {
+    font-size: 14px;
+    color: #64748b;
+}
+
+.net-pay-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1d4ed8;
+    display: block;
+}
+
+.footer-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid #cbd5e1;
+    background: white;
+    color: #475569;
+}
+
+.btn-action.primary {
+    background-color: #1d4ed8;
+    color: white;
+    border-color: #1d4ed8;
+}
+
+.no-data-msg {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
+    font-style: italic;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+}

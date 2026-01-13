@@ -381,3 +381,30 @@ ALTER TABLE HOA_DON ADD CONSTRAINT FK_HOADON_DATVE FOREIGN KEY (MaDatVe) REFEREN
 ALTER TABLE HOA_DON ADD CONSTRAINT FK_HOADON_DOIVE FOREIGN KEY (MaDoiVe) REFERENCES DOI_VE(MaDoiVe);
 ALTER TABLE HOA_DON ADD CONSTRAINT FK_HOADON_NHANVIEN FOREIGN KEY (MaNVLap) REFERENCES NHAN_VIEN(MaNV);
 GO
+
+
+-- Tạo dữ liệu giả để test
+INSERT INTO KHACH_HANG (MaKhachHang, HoTen, CCCD, NgaySinh, GioiTinh, DiaChi, SoDienThoai)
+VALUES ('KH_A', N'Nguyễn Văn A', '001', '1990-01-01', N'Nam', N'HN', '0901');
+
+INSERT INTO KHACH_HANG (MaKhachHang, HoTen, CCCD, NgaySinh, GioiTinh, DiaChi, SoDienThoai)
+VALUES ('KH_B', N'Trần Thị B', '002', '1992-02-02', N'Nữ', N'HCM', '0902');
+
+INSERT INTO TAI_KHOAN (Email, MaKH, MatKhau, TrangThai, VaiTro, TenTaiKhoan) 
+VALUES ('a@mail.com', 'KH_A', '123', 1, N'Khách hàng', 'user_a'); -- Điền user_a
+
+INSERT INTO TAI_KHOAN (Email, MaKH, MatKhau, TrangThai, VaiTro, TenTaiKhoan) 
+VALUES ('b@mail.com', 'KH_B', '123', 1, N'Khách hàng', 'user_b'); -- Điền user_b
+
+-- Tạo chuyến tàu, đoàn tàu, toa tàu, vị trí
+INSERT INTO GA_TAU VALUES ('GA_HN', N'Hà Nội', N'Hà Nội'), ('GA_SG', N'Sài Gòn', N'HCM');
+INSERT INTO TUYEN_TAU VALUES ('TN1', N'Bắc Nam', 1700);
+INSERT INTO DOAN_TAU VALUES ('DT01', 'SE1', 'VN', '2025-01-01', N'Hạng sang');
+INSERT INTO TOA_TAU VALUES ('TOA01', 'DT01', 1, N'Ghế', 50);
+INSERT INTO VI_TRI_TREN_TOA VALUES ('VT001', 'TOA01', 1, N'Ghế'); -- Vị trí cần tranh chấp
+
+INSERT INTO CHUYEN_TAU VALUES ('CT01', 'TN1', 'DT01', 'GA_HN', 'GA_SG', N'Chuẩn bị');
+
+-- Tạo bảng giá và đơn đặt vé (bắt buộc vì FK)
+INSERT INTO CHINH_SACH_GIA (MaBangGia, MaDoanTau, GiaTien) VALUES ('BG01', 'DT01', 500000);
+INSERT INTO DAT_VE (MaDatVe, Email, MaChuyenTau, ThoiGianDat, HanThanhToan) VALUES ('DV01', 'a@mail.com', 'CT01', GETDATE(), GETDATE()+1);

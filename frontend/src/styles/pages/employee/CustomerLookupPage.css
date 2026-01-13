@@ -1,0 +1,384 @@
+.lookup-container {
+    padding: 20px;
+    font-family: 'Segoe UI', sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 24px;
+}
+
+/* --- SEARCH BOX --- */
+.search-card {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.search-label {
+    display: block;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 15px;
+    outline: none;
+    transition: border 0.2s;
+    margin-bottom: 8px;
+}
+
+.search-input:focus {
+    border-color: #0ea5e9;
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.search-hint {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-bottom: 16px;
+    display: block;
+}
+
+.btn-search-lookup {
+    width: 100%;
+    background-color: #0ea5e9;
+    color: white;
+    font-weight: 600;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.btn-search-lookup:hover {
+    background-color: #0284c7;
+}
+
+/* --- CUSTOMER INFO --- */
+.info-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 16px;
+}
+
+.customer-info-card {
+    background: white;
+    padding: 24px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.info-group {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.info-icon {
+    color: #0ea5e9;
+    background: #f0f9ff;
+    padding: 8px;
+    border-radius: 6px;
+}
+
+.info-content label {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 2px;
+}
+
+.info-content p {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+}
+
+/* --- HISTORY TABLE --- */
+.history-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.history-table th {
+    text-align: left;
+    padding: 16px;
+    background: #f8fafc;
+    color: #64748b;
+    font-weight: 600;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.history-table td {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+    vertical-align: middle;
+}
+
+.train-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    color: #0ea5e9;
+}
+
+.price-text {
+    font-weight: 700;
+    color: #334155;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.status-badge.dadi {
+    background-color: #475569;
+    color: white;
+}
+
+.status-badge.sapdi {
+    background-color: #22c55e;
+    color: white;
+}
+
+.status-badge.dahuy {
+    background-color: #ef4444;
+    color: white;
+}
+
+.empty-result {
+    text-align: center;
+    padding: 40px;
+    color: #64748b;
+}
+
+/* ... (Giữ nguyên CSS cũ) ... */
+
+/* --- TICKET DETAIL VIEW --- */
+.ticket-detail-container {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Status Banner */
+.status-banner {
+    padding: 16px 24px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.status-banner.success {
+    background-color: #ecfdf5; /* Green 50 */
+    color: #047857; /* Green 700 */
+    border: 1px solid #a7f3d0;
+}
+
+.status-banner.warning {
+    background-color: #fffbeb; 
+    color: #047857; 
+    border: 1px solid #a7f3d0;
+}
+
+.status-banner.danger {
+    background-color: #fef2f2; 
+    color: #b91c1c; 
+    border: 1px solid #fca5a5;
+}
+
+/* Card Style */
+.detail-card {
+    background: white;
+    padding: 32px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+}
+
+.detail-header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.detail-header h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.detail-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 24px;
+}
+
+.detail-field label {
+    display: block;
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 4px;
+    font-weight: 500;
+}
+
+.detail-field p {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+/* Trip Info Route */
+.trip-route-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f8fafc;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 12px;
+}
+
+.station-point {
+    text-align: center;
+}
+
+.station-point .city {
+    font-weight: 700;
+    font-size: 16px;
+    color: #1e293b;
+    display: block;
+}
+
+.station-point .time {
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.route-arrow {
+    color: #cbd5e1;
+    font-size: 24px;
+}
+
+/* Footer Total */
+.detail-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 2px dashed #e2e8f0;
+}
+
+.total-price {
+    font-size: 24px;
+    font-weight: 800;
+    color: #0ea5e9;
+}
+
+/* Actions */
+.action-bar {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+}
+
+.btn-print {
+    flex: 2;
+    background-color: #0f172a;
+    color: white;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-print:hover { background-color: #334155; }
+
+.btn-secondary {
+    flex: 1;
+    background-color: white;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+    padding: 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: center;
+}
+
+.btn-secondary:hover { background-color: #f8fafc; }
+
+/* --- PRINT MEDIA QUERY --- */
+@media print {
+    /* Ẩn Sidebar, Header và các phần không liên quan khi in */
+    .sidebar-container, .sidebar-header, .sidebar-menu, .sidebar-footer { display: none !important; }
+    .page-header, .search-card { display: none !important; }
+    .btn-print, .btn-secondary, .btn-back-lookup { display: none !important; }
+    
+    /* Căn chỉnh lại trang in */
+    .lookup-container { padding: 0; margin: 0; width: 100%; max-width: none; }
+    .ticket-detail-container { border: none; background: white; }
+    .detail-card { border: 1px solid #000; box-shadow: none; }
+    
+    body { background-color: white; }
+}

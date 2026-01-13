@@ -1,0 +1,211 @@
+.leave-container {
+    padding: 0 20px 40px 20px;
+    font-family: 'Segoe UI', sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.page-header {
+    margin-bottom: 24px;
+}
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.page-subtitle {
+    color: #64748b;
+    font-size: 14px;
+    margin-left: 34px;
+}
+
+/* --- TABS --- */
+.tabs-wrapper {
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 8px;
+    display: inline-flex;
+    margin-bottom: 24px;
+}
+
+.tab-btn {
+    padding: 8px 24px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    background: white;
+    color: #1d4ed8;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+/* --- CREATE FORM --- */
+.create-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 8px;
+}
+
+.form-select, .form-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    transition: border 0.2s;
+}
+
+.form-select:focus, .form-textarea:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.selected-shift-preview {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 10px;
+}
+
+.btn-submit {
+    background: #1d4ed8;
+    color: white;
+    font-weight: 700;
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    transition: background 0.2s;
+}
+.btn-submit:hover { background: #1e40af; }
+.btn-submit:disabled { background: #94a3b8; cursor: not-allowed; }
+
+/* --- HISTORY LIST --- */
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.history-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+}
+
+.card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.train-badge {
+    background: #0284c7;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-label {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-label.pending { background: #fef3c7; color: #d97706; }
+.status-label.approved { background: #dcfce7; color: #166534; }
+.status-label.rejected { background: #fee2e2; color: #dc2626; }
+
+.route-text {
+    font-weight: 600;
+    color: #64748b;
+    font-size: 14px;
+}
+
+.time-text {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.reason-box {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: #475569;
+}
+
+.date-created {
+    font-size: 11px;
+    color: #cbd5e1;
+    margin-top: 12px;
+}
+
+/* --- EMPTY STATE --- */
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+}
+.empty-icon-box {
+    width: 60px;
+    height: 60px;
+    background: #fef3c7;
+    color: #d97706;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px auto;
+}
