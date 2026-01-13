@@ -35,10 +35,12 @@ import TicketExchangePage from './pages/employee/TicketExchangePage';
 import TrainManagementPage from './pages/manager/TrainManagementPage'; 
 import RevenueReportPage from './pages/manager/RevenueReportPage';
 import PromotionManagement from './pages/manager/PromotionManagement';
+import EmployeeManagement from './pages/manager/EmployeeManagement';
+import TrainScheduling from './pages/manager/TrainScheduling';
+import LeaveRequestManagement from './pages/manager/LeaveRequestManagement';
+import TicketPriceManagement from './pages/manager/TicketPriceManagement';
+import RouteStationManagement from './pages/manager/RouteStationManagement';
 // Placeholder
-const ManageStaffPage = () => <div className="p-10">Quản lý nhân sự</div>;
-const ApproveLeavePage = () => <div className="p-10">Duyệt nghỉ phép</div>;
-const ManagePricingPage = () => <div className="p-10">Quản lý giá</div>;
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   return token ? children : <Navigate to="/login" />;
@@ -108,13 +110,14 @@ function App() {
 
           {/* MANAGER ROLES */}
           <Route path="manager/revenue" element={<RevenueReportPage />} />
-          <Route path="manager/staff" element={<ManageStaffPage />} />
-          <Route path="manager/approve-leave" element={<ApproveLeavePage />} />
+          <Route path="manager/staff" element={<EmployeeManagement />} />
+          <Route path="manager/approve-leave" element={<LeaveRequestManagement />} />
+          <Route path="manager/trips" element={<TrainScheduling />} />
           <Route path="manager/discounts" element={<PromotionManagement />} />
           {/* 👇 CẬP NHẬT ROUTE QUẢN LÝ TÀU */}
           <Route path="manager/trains" element={<TrainManagementPage />} />
-          
-          <Route path="manager/pricing" element={<ManagePricingPage />} />
+          <Route path="manager/routes-stations" element={<RouteStationManagement />} />
+          <Route path="manager/pricing" element={<TicketPriceManagement />} />
         </Route>
       </Routes>
     </BrowserRouter>
