@@ -1,0 +1,363 @@
+/* --- LAYOUT CHUNG --- */
+.train-mgmt-container {
+    padding: 24px;
+    background-color: #f9fafb; /* Gray 50 */
+    min-height: 100vh;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* --- HEADER CỦA TRANG --- */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.page-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937; /* Gray 800 */
+    margin: 0;
+}
+
+.page-subtitle {
+    color: #6b7280; /* Gray 500 */
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* Button chính (Thêm mới) */
+.btn-primary-add {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #2563eb; /* Blue 600 */
+    color: white;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: background-color 0.2s;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary-add:hover {
+    background-color: #1d4ed8; /* Blue 700 */
+}
+
+/* --- DANH SÁCH TÀU (Train Card) --- */
+.train-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.train-card {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb; /* Gray 200 */
+    overflow: hidden;
+}
+
+/* Header của Card Tàu */
+.train-card-header {
+    padding: 16px;
+    background-color: white;
+    border-bottom: 1px solid #f3f4f6; /* Gray 100 */
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.train-info-group {
+    display: flex;
+    gap: 16px;
+}
+
+.train-icon-box {
+    background-color: #dbeafe; /* Blue 100 */
+    padding: 12px;
+    border-radius: 8px;
+    color: #2563eb; /* Blue 600 */
+    height: fit-content;
+}
+
+.train-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+/* Badge Trạng thái */
+.status-badge {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-weight: 700;
+    margin-left: 12px;
+}
+
+.status-badge.active {
+    background-color: #dcfce7; /* Green 100 */
+    color: #15803d; /* Green 700 */
+}
+
+.status-badge.maintenance {
+    background-color: #ffedd5; /* Orange 100 */
+    color: #c2410c; /* Orange 700 */
+}
+
+.train-meta-text {
+    font-size: 14px;
+    color: #6b7280;
+    margin-top: 4px;
+}
+
+.text-medium {
+    font-weight: 500;
+    color: #374151;
+}
+
+/* Nút thao tác nhỏ (Sửa/Xóa) */
+.action-btn-group {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-icon-action {
+    padding: 8px;
+    border-radius: 6px;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+
+.btn-icon-action.edit {
+    color: #9ca3af;
+}
+.btn-icon-action.edit:hover {
+    background-color: #f3f4f6;
+    color: #4b5563;
+}
+
+.btn-icon-action.delete {
+    color: #f87171;
+}
+.btn-icon-action.delete:hover {
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
+/* --- KHU VỰC DANH SÁCH TOA (Coach List) --- */
+.coach-area {
+    padding: 16px;
+    background-color: #f9fafb; /* Gray 50 */
+}
+
+.coach-area-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.coach-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+}
+
+.btn-add-coach {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2563eb;
+    background-color: white;
+    border: 1px solid #bfdbfe;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.btn-add-coach:hover {
+    background-color: #eff6ff;
+}
+
+/* Item Toa Tàu */
+.coach-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: white;
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin-left: 16px;
+    position: relative;
+    margin-bottom: 12px;
+}
+
+/* Đường nối cây thư mục giả */
+.coach-item::before {
+    content: '';
+    position: absolute;
+    height: 70%; /* Nối lên trên */
+    width: 16px;
+    border-left: 2px solid #d1d5db;
+    border-bottom: 2px solid #d1d5db;
+    left: -16px;
+    top: -20%;
+    border-bottom-left-radius: 8px;
+    z-index: 0;
+}
+
+/* Fix đường nối cho phần tử cuối cùng nếu cần, hoặc để mặc định */
+
+.coach-info-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 10;
+    position: relative;
+}
+
+.coach-number-box {
+    background-color: #eff6ff;
+    color: #1d4ed8;
+    font-weight: 700;
+    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 1px solid #dbeafe;
+}
+
+.coach-name {
+    font-weight: 700;
+    color: #1f2937;
+    font-size: 16px;
+}
+
+.badge-coach-type {
+    margin-left: 8px;
+    font-size: 12px;
+    font-weight: 400;
+    background-color: #f3f4f6;
+    color: #4b5563;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.coach-meta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-top: 4px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.amenity-tag {
+    display: inline-flex;
+    align-items: center;
+    background-color: #eff6ff;
+    color: #2563eb;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    border: 1px solid #dbeafe;
+    margin-right: 4px;
+}
+
+/* --- FORM TRONG MODAL --- */
+.form-description {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 16px;
+}
+
+.form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.form-input, .form-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    outline: none;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus, .form-select:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.form-input[readonly] {
+    background-color: #f3f4f6;
+    cursor: default;
+}
+
+.amenities-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #374151;
+}
+
+.checkbox-input {
+    width: 16px;
+    height: 16px;
+    accent-color: #2563eb;
+    border-radius: 4px;
+}
+
+/* Footer Modal Actions */
+.modal-btn-cancel {
+    padding: 8px 16px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    color: #374151;
+    font-weight: 500;
+    background: white;
+    cursor: pointer;
+}
+.modal-btn-cancel:hover { background-color: #f9fafb; }
+
+.modal-btn-save {
+    padding: 8px 16px;
+    background-color: #2563eb;
+    color: white;
+    border-radius: 8px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+}
+.modal-btn-save:hover { background-color: #1d4ed8; }
