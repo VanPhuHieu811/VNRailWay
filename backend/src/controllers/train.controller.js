@@ -1,6 +1,50 @@
-import { createTrainService, createCarriageService } from '../services/train.service.js';
+import { createTrainService, createCarriageService, getTrainService, getTrainIdService, getCarriagesService } from '../services/train.service.js';
 
-// Controller for creating a Train
+///////////////////////////////////////////////////////////////////////////////////
+// Train 
+export const getTrain = async (req, res) => {
+    try {
+        const trains = await getTrainService();
+        return res.status(200).json({
+            success: true,
+            data: trains
+        });
+    } catch (error) {
+        if (error.originalError && error.originalError.info) {
+             return res.status(400).json({
+                success: false,
+                message: error.originalError.info.message 
+            });
+        }
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Internal server error'
+        });
+    }   
+}
+
+export const getTrainById = async (req, res) => {
+    try {
+        const trainId = req.params.id;
+        const trains = await getTrainIdService(trainId);
+        return res.status(200).json({
+            success: true,
+            data: trains
+        });
+    } catch (error) {
+        if (error.originalError && error.originalError.info) {
+             return res.status(400).json({
+                success: false,
+                message: error.originalError.info.message 
+            });
+        }
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Internal server error'
+        });
+    }   
+}
+
 export const createTrain = async (req, res) => {
     try {
         // Extract data from request body
@@ -37,7 +81,30 @@ export const createTrain = async (req, res) => {
     }
 };
 
-// Controller for creating a Carriage
+//////////////////////////////////////////////////////////////////////////////
+// Carriage
+export const getCarriages = async (req, res) => {
+    try {
+        const trainId = req.params.id;
+        const carriages = await getCarriagesService(trainId);
+        return res.status(200).json({
+            success: true,
+            data: carriages
+        });
+    } catch (error) {
+        if (error.originalError && error.originalError.info) {
+             return res.status(400).json({
+                success: false,
+                message: error.originalError.info.message
+            });
+        }
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Internal server error'
+        });
+    }
+};
+
 export const createCarriage = async (req, res) => {
     try {
         // Extract data from request body
