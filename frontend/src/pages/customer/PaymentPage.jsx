@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Wallet, QrCode, Train, CheckCircle } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import BookingSteps from '../components/common/BookingSteps';
-import { LICH_TRINH_DB } from '../services/db_mock';
-import '../styles/pages/BookingFlow.css';
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import BookingSteps from '../../components/common/BookingSteps';
+import { LICH_TRINH_DB } from '../../services/db_mock';
+import '../../styles/pages/BookingFlow.css';
 
 const PaymentPage = ({ isEmployee = false }) => {
   const navigate = useNavigate();

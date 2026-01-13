@@ -5,7 +5,7 @@ import {
   CreditCard, Armchair, Clock, MapPin 
 } from 'lucide-react';
 import { VE_DA_DAT_DB } from '../../services/db_mock';
-import ExchangeSteps from '../../components/common/ExchangeSteps'; // Import Component Navbar
+import ExchangeSteps from '../../components/common/ExchangeSteps'; 
 import '../../styles/pages/employee/TicketExchangePage.css';
 
 const TicketExchangePage = () => {

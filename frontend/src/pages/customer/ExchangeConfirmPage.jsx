@@ -4,10 +4,10 @@ import {
   ArrowLeft, ArrowDown, CreditCard, Wallet, Edit3, QrCode, Smartphone, 
   Train, Calendar, Banknote, ArrowRight 
 } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import ExchangeSteps from '../components/common/ExchangeSteps';
-import EditPassengerModal from '../components/common/EditPassengerModal';
-import '../styles/pages/ExchangeConfirmPage.css'; // Import CSS mới
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import ExchangeSteps from '../../components/common/ExchangeSteps';
+import EditPassengerModal from '../../components/common/EditPassengerModal';
+import '../../styles/pages/ExchangeConfirmPage.css'; // Import CSS mới
 
 const FEE_PERCENT = 0.0; 
 

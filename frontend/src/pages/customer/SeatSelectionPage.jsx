@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import BookingSteps from '../components/common/BookingSteps';
-import ExchangeSteps from '../components/common/ExchangeSteps';
-import { getGheByTauId } from '../services/db_mock';
-import '../styles/pages/BookingFlow.css';
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import BookingSteps from '../../components/common/BookingSteps';
+import ExchangeSteps from '../../components/common/ExchangeSteps';
+import { getGheByTauId } from '../../services/db_mock';
+import '../../styles/pages/BookingFlow.css';
 
 const SeatSelectionPage = ({ isEmployee = false }) => {
   const { tripId } = useParams();

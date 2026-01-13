@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, User, Train, Calendar } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import ExchangeSteps from '../components/common/ExchangeSteps';
-import '../styles/pages/ExchangeSelectSeatsPage.css'; // Import file CSS đã tách
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import ExchangeSteps from '../../components/common/ExchangeSteps';
+import '../../styles/pages/ExchangeSelectSeatsPage.css'; // Import file CSS đã tách
 
 const ExchangeSelectSeatsPage = () => {
   const location = useLocation();

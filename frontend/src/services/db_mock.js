@@ -666,3 +666,37 @@ export const MOCK_TRAINS = [
     ]
   }
 ];
+
+// src/services/report_mock.js
+
+export const REPORT_DATA = {
+  today: {
+    summary: { revenue: 190000000, tickets: 658, avgPrice: 289000, growthRevenue: 12.5, growthTickets: 8.2 },
+    chartData: [
+      { time: '00:00', revenue: 5, tickets: 20 },
+      { time: '04:00', revenue: 2, tickets: 8 },
+      { time: '08:00', revenue: 45, tickets: 150 },
+      { time: '12:00', revenue: 38, tickets: 120 },
+      { time: '16:00', revenue: 52, tickets: 180 },
+      { time: '20:00', revenue: 35, tickets: 110 },
+    ],
+    routes: [
+      { route: 'Hà Nội - Sài Gòn', tickets: 245, revenue: 85600000, growth: 12 },
+      { route: 'Sài Gòn - Đà Nẵng', tickets: 182, revenue: 42500000, growth: 8 },
+      { route: 'Hà Nội - Huế', tickets: 165, revenue: 38000000, growth: -3 },
+    ]
+  },
+  week: {
+    summary: { revenue: 1250000000, tickets: 4500, avgPrice: 278000, growthRevenue: 5.4, growthTickets: 3.1 },
+    chartData: [
+      { time: 'T2', revenue: 150, tickets: 600 },
+      { time: 'T3', revenue: 180, tickets: 720 },
+      { time: 'T4', revenue: 160, tickets: 640 },
+      { time: 'T5', revenue: 170, tickets: 680 },
+      { time: 'T6', revenue: 220, tickets: 880 },
+      { time: 'T7', revenue: 250, tickets: 950 },
+      { time: 'CN', revenue: 210, tickets: 820 },
+    ],
+    routes: [ /* ... tương tự ... */ ]
+  }
+};

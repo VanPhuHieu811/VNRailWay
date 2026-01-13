@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, User, Edit2, Ticket } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import BookingSteps from '../components/common/BookingSteps';
-import '../styles/pages/BookingFlow.css';
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import BookingSteps from '../../components/common/BookingSteps';
+import '../../styles/pages/BookingFlow.css';
 
 const PassengerInfoPage = ({ isEmployee = false }) => {
   const navigate = useNavigate();

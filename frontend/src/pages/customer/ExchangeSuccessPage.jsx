@@ -1,9 +1,9 @@
 import React from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Check, Home, Ticket, Printer, RotateCcw } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import ExchangeSteps from '../components/common/ExchangeSteps';
-import '../styles/pages/BookingFlow.css';
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import ExchangeSteps from '../../components/common/ExchangeSteps';
+import '../../styles/pages/BookingFlow.css';
 
 const ExchangeSuccessPage = () => {
   const location = useLocation();

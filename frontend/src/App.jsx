@@ -5,22 +5,22 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import CustomerDashboard from './pages/CustomerDashboard';
-import MyTicketsPage from './pages/MyTicketsPage';
-import ProfilePage from './pages/ProfilePage';
+import CustomerDashboard from './pages/customer/CustomerDashboard';
+import MyTicketsPage from './pages/customer/MyTicketsPage';
+import ProfilePage from './pages/customer/ProfilePage';
 
 // --- TRANG DÙNG CHUNG ---
-import SearchResultsPage from './pages/SearchResultsPage'; 
-import SeatSelectionPage from './pages/SeatSelectionPage'; 
-import PassengerInfoPage from './pages/PassengerInfoPage'; 
-import PaymentPage from './pages/PaymentPage'; 
-import BookingSuccessPage from './pages/BookingSuccessPage'; 
+import SearchResultsPage from './pages/customer/SearchResultsPage'; 
+import SeatSelectionPage from './pages/customer/SeatSelectionPage'; 
+import PassengerInfoPage from './pages/customer/PassengerInfoPage'; 
+import PaymentPage from './pages/customer/PaymentPage'; 
+import BookingSuccessPage from './pages/customer/BookingSuccessPage'; 
 
 // --- TRANG ĐỔI VÉ ---
-import ExchangeSelectSeatsPage from './pages/ExchangeSelectSeatsPage';
-import ExchangeSearchPage from './pages/ExchangeSearchPage';
-import ExchangeConfirmPage from './pages/ExchangeConfirmPage';
-import ExchangeSuccessPage from './pages/ExchangeSuccessPage';
+import ExchangeSelectSeatsPage from './pages/customer/ExchangeSelectSeatsPage';
+import ExchangeSearchPage from './pages/customer/ExchangeSearchPage';
+import ExchangeConfirmPage from './pages/customer/ExchangeConfirmPage';
+import ExchangeSuccessPage from './pages/customer/ExchangeSuccessPage';
 
 // --- EMPLOYEE PAGES ---
 import EmployeeLayout from './components/layout/EmployeeLayout';
@@ -28,18 +28,17 @@ import EmployeeSalary from './pages/employee/MySalaryPage';
 import EmployeeSchedulePage from './pages/employee/EmployeeSchedulePage';
 import LeaveRequestPage from './pages/employee/LeaveRequestPage';
 import EmployeeProfilePage from './pages/employee/EmployeeProfilePage';
-import CustomerLookupPage from './pages/employee/CustomerLookupPage';
+import CustomerLookupPage from './pages/saler/CustomerLookupPage';
 import TicketExchangePage from './pages/employee/TicketExchangePage';
 
-// 👇 IMPORT TRANG QUẢN LÝ TÀU MỚI
-import TrainManagementPage from './pages/TrainManagementPage'; 
-
+//  IMPORT TRANG QUẢN LÝ TÀU MỚI
+import TrainManagementPage from './pages/manager/TrainManagementPage'; 
+import RevenueReportPage from './pages/manager/RevenueReportPage';
+import PromotionManagement from './pages/manager/PromotionManagement';
 // Placeholder
-const RevenueReportPage = () => <div className="p-10">Báo cáo doanh thu</div>;
 const ManageStaffPage = () => <div className="p-10">Quản lý nhân sự</div>;
 const ApproveLeavePage = () => <div className="p-10">Duyệt nghỉ phép</div>;
 const ManagePricingPage = () => <div className="p-10">Quản lý giá</div>;
-
 const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   return token ? children : <Navigate to="/login" />;
@@ -111,7 +110,7 @@ function App() {
           <Route path="manager/revenue" element={<RevenueReportPage />} />
           <Route path="manager/staff" element={<ManageStaffPage />} />
           <Route path="manager/approve-leave" element={<ApproveLeavePage />} />
-          
+          <Route path="manager/discounts" element={<PromotionManagement />} />
           {/* 👇 CẬP NHẬT ROUTE QUẢN LÝ TÀU */}
           <Route path="manager/trains" element={<TrainManagementPage />} />
           

@@ -3,9 +3,9 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, Save, CreditCard, LogOut } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import { VE_DA_DAT_DB } from '../services/db_mock'; 
-import '../styles/pages/ProfilePage.css';
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import { VE_DA_DAT_DB } from '../../services/db_mock'; 
+import '../../styles/pages/ProfilePage.css';
 
 const ProfilePage = () => {
   const navigate = useNavigate();

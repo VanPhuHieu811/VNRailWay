@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, Calendar, Search, ArrowLeft, Train } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import ExchangeSteps from '../components/common/ExchangeSteps';
-import { GA_TAU_DB } from '../services/db_mock';
-import '../styles/pages/ExchangeSelectSeatsPage.css'; // Tái sử dụng CSS của trang chọn ghế để đồng bộ
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import ExchangeSteps from '../../components/common/ExchangeSteps';
+import { GA_TAU_DB } from '../../services/db_mock';
+import '../../styles/pages/ExchangeSelectSeatsPage.css'; // Tái sử dụng CSS của trang chọn ghế để đồng bộ
 
 const ExchangeSearchPage = () => {
   const location = useLocation();

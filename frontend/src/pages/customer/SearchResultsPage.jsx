@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, User, MapPin, Clock, ChevronLeft, ChevronRight, Search, Calendar, AlertCircle } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import BookingSteps from '../components/common/BookingSteps';    
-import ExchangeSteps from '../components/common/ExchangeSteps'; 
-import { LICH_TRINH_DB, GA_TAU_DB } from '../services/db_mock';
-import '../styles/pages/BookingFlow.css';
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import BookingSteps from '../../components/common/BookingSteps';    
+import ExchangeSteps from '../../components/common/ExchangeSteps'; 
+import { LICH_TRINH_DB, GA_TAU_DB } from '../../services/db_mock';
+import '../../styles/pages/BookingFlow.css';
 
 const SearchResultsPage = ({ isEmployee = false }) => {
   const navigate = useNavigate();

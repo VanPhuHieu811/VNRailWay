@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'; 
-import TicketDetailModal from '../components/common/TicketDetailModal'; 
+import TicketDetailModal from '../../components/common/TicketDetailModal'; 
 import { useNavigate } from 'react-router-dom';
 import { Ticket, Calendar, Clock, ArrowRight, RefreshCw, AlertCircle } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import { VE_DA_DAT_DB } from '../services/db_mock';
-import '../styles/pages/MyTickets.css';
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import { VE_DA_DAT_DB } from '../../services/db_mock';
+import '../../styles/pages/MyTickets.css';
 
 const MyTicketsPage = () => {
   const navigate = useNavigate();

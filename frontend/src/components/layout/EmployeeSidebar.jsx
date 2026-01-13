@@ -8,7 +8,10 @@ import {
   // Icon cho Sales
   Ticket, RefreshCw, Search,
   // Icon cho Manager
-  BarChart3, Users, FileCheck, CreditCard
+  BarChart3, Users, FileCheck, CreditCard,
+  // Icon MỚI (Thêm vào)
+  Map,      // Cho Chuyến tàu
+  Percent   // Cho Ưu đãi
 } from 'lucide-react';
 
 // Import file CSS
@@ -85,10 +88,13 @@ const EmployeeSidebar = ({ userRole, onLogout }) => {
           <>
             <GroupLabel label="Quản trị hệ thống" />
             <NavItem to="/employee/manager/revenue" icon={BarChart3} label="Báo cáo doanh thu" />
-            <NavItem to="/employee/manager/staff" icon={Users} label="Quản lý nhân sự" />
+            <NavItem to="/employee/manager/staff" icon={Users} label="Nhân sự" />
             <NavItem to="/employee/manager/approve-leave" icon={FileCheck} label="Duyệt nghỉ phép" />
             <NavItem to="/employee/manager/trains" icon={Train} label="Đoàn tàu & Toa" />
-            <NavItem to="/employee/manager/pricing" icon={CreditCard} label="Quản lý Giá & Ưu đãi" />
+            <NavItem to="/employee/manager/trips" icon={Map} label="Chuyến tàu" />
+            <NavItem to="/employee/manager/pricing" icon={CreditCard} label="Giá vé" />
+            <NavItem to="/employee/manager/discounts" icon={Percent} label="Ưu đãi" />
+
           </>
         )}
 

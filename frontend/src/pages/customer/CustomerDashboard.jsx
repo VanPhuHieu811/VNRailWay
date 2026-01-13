@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom'; // Import hook điều hướng
 import { MapPin, Calendar, Clock, Search } from 'lucide-react';
 
 // Import các thành phần phụ trợ
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import { GA_TAU_DB } from '../services/db_mock'; // Dữ liệu danh sách Ga tàu
-import '../styles/pages/CustomerDashboard.css';  // CSS giao diện
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import { GA_TAU_DB } from '../../services/db_mock'; // Dữ liệu danh sách Ga tàu
+import '../../styles/pages/CustomerDashboard.css';  // CSS giao diện
 
 const CustomerDashboard = () => {
   const { register, handleSubmit } = useForm();

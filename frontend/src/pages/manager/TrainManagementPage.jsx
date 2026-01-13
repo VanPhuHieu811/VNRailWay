@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Plus, TrainFront, Edit, Trash2, Users, Wifi, Wind, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
-import { MOCK_TRAINS } from '../services/db_mock';
-import AddTrainModal from '../components/trains/AddTrainModal';
-import AddCoachModal from '../components/trains/AddCoachModal';
-import '../styles/pages/TrainManagementPage.css'; // Import CSS
+import { MOCK_TRAINS } from '../../services/db_mock';
+import AddTrainModal from '../../components/trains/AddTrainModal';
+import AddCoachModal from '../../components/trains/AddCoachModal';
+import '../../styles/pages/TrainManagementPage.css'; // Import CSS
 
 const TrainManagementPage = () => {
   const [trainsList, setTrainsList] = useState(MOCK_TRAINS);

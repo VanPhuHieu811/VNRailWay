@@ -1,9 +1,9 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Check, Printer, Home, PlusCircle, User } from 'lucide-react';
-import CustomerNavbar from '../components/layout/CustomerNavbar';
-import BookingSteps from '../components/common/BookingSteps';
-import '../styles/pages/BookingFlow.css';
+import CustomerNavbar from '../../components/layout/CustomerNavbar';
+import BookingSteps from '../../components/common/BookingSteps';
+import '../../styles/pages/BookingFlow.css';
 
 const BookingSuccessPage = ({ isEmployee = false }) => {
   const location = useLocation();
