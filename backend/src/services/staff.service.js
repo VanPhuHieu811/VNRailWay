@@ -1,7 +1,7 @@
 import { getPool } from '../config/sqlserver.config.js';
 import sql from 'mssql';
 
-export const getUserByEmailService = async (email) => {
+export const getStaffByEmailService = async (email) => {
     try {
         const pool = await getPool();
 
@@ -15,16 +15,18 @@ export const getUserByEmailService = async (email) => {
                     tk.TenTaiKhoan,
                     tk.TrangThai,
                     tk.VaiTro,
-
-                    kh.MaKhachHang,
-                    kh.HoTen as HoTenKH,
-                    kh.CCCD as CCCD_KH,
-                    kh.NgaySinh as NgaySinhKH,
-                    kh.GioiTinh as GioiTinhKH,
-                    kh.DiaChi as DiaChiKH,
-                    kh.SoDienThoai as SoDienThoaiKH
+                    -- Thông tin nhân viên
+                    nv.MaNV as MaNV_NV,
+                    nv.HoTen as HoTenNV,
+                    nv.CCCD as CCCD_NV,
+                    nv.NgaySinh as NgaySinhNV,
+                    nv.GioiTinh as GioiTinhNV,
+                    nv.DiaChi as DiaChiNV,
+                    nv.SoDienThoai as SoDienThoaiNV,
+                    nv.LoaiNhanVien,
+                    nv.NVQuanLy
                 FROM TAI_KHOAN tk
-                LEFT JOIN KHACH_HANG kh ON tk.MaKH = kh.MaKhachHang
+                LEFT JOIN NHAN_VIEN nv ON tk.MaNV = nv.MaNV
                 WHERE tk.Email = @email AND tk.TrangThai = 1
             `);
 
@@ -35,7 +37,7 @@ export const getUserByEmailService = async (email) => {
         const data = result.recordset[0];
 
         // Format response
-        const userInfo = {
+        const staffInfo = {
             account: {
                 email: data.Email,
                 tenTaiKhoan: data.TenTaiKhoan,
@@ -44,33 +46,35 @@ export const getUserByEmailService = async (email) => {
             },
         };
 
-        if (data.MaKhachHang) {
-            userInfo.khachHang = {
-                maKhachHang: data.MaKhachHang,
-                hoTen: data.HoTenKH,
-                cccd: data.CCCD_KH,
-                ngaySinh: data.NgaySinhKH,
-                gioiTinh: data.GioiTinhKH,
-                diaChi: data.DiaChiKH,
-                soDienThoai: data.SoDienThoaiKH,
+        if (data.MaNV_NV) {
+            staffInfo.nhanVien = {
+                maNV: data.MaNV_NV,
+                hoTen: data.HoTenNV,
+                cccd: data.CCCD_NV,
+                ngaySinh: data.NgaySinhNV,
+                gioiTinh: data.GioiTinhNV,
+                diaChi: data.DiaChiNV,
+                soDienThoai: data.SoDienThoaiNV,
+                loaiNhanVien: data.LoaiNhanVien,
+                nvQuanLy: data.NVQuanLy,
             };
         }
 
-        return userInfo;
+        return staffInfo;
     } catch (error) {
         throw error;
     }
 };
 
-export const updateUserService = async (email, updateData) => {
+export const updateStaffService = async (email, updateData) => {
     try {
         const pool = await getPool();
 
-        // Lấy thông tin tài khoản để biết là khách hàng hay nhân viên
+        // Lấy thông tin tài khoản để biết là nhân viên
         const accountResult = await pool.request()
             .input('email', sql.VarChar(255), email)
             .query(`
-                SELECT MaKH, MaNV
+                SELECT MaNV
                 FROM TAI_KHOAN
                 WHERE Email = @email AND TrangThai = 1
             `);
@@ -81,14 +85,14 @@ export const updateUserService = async (email, updateData) => {
 
         const account = accountResult.recordset[0];
 
-        // Nếu là khách hàng - cập nhật thông tin khách hàng
-        if (account.MaKH) {
+        // Nếu là nhân viên - cập nhật thông tin nhân viên
+        if (account.MaNV) {
             const updateFields = [];
             const request = pool.request().input('email', sql.VarChar(255), email);
 
             if (updateData.hoTen !== undefined) {
                 updateFields.push('HoTen = @hoTen');
-                request.input('hoTen', sql.NVarChar(50), updateData.hoTen);
+                request.input('hoTen', sql.NVarChar(100), updateData.hoTen);
             }
             if (updateData.cccd !== undefined) {
                 updateFields.push('CCCD = @cccd');
@@ -110,17 +114,25 @@ export const updateUserService = async (email, updateData) => {
                 updateFields.push('SoDienThoai = @soDienThoai');
                 request.input('soDienThoai', sql.VarChar(10), updateData.soDienThoai);
             }
+            if (updateData.loaiNhanVien !== undefined) {
+                updateFields.push('LoaiNhanVien = @loaiNhanVien');
+                request.input('loaiNhanVien', sql.NVarChar(20), updateData.loaiNhanVien);
+            }
+            if (updateData.nvQuanLy !== undefined) {
+                updateFields.push('NVQuanLy = @nvQuanLy');
+                request.input('nvQuanLy', sql.VarChar(10), updateData.nvQuanLy);
+            }
 
             if (updateFields.length === 0) {
                 return { updated: false, message: 'No fields to update' };
             }
 
-            request.input('maKH', sql.VarChar(10), account.MaKH);
+            request.input('maNV', sql.VarChar(10), account.MaNV);
 
             const updateQuery = `
-                UPDATE KHACH_HANG
+                UPDATE NHAN_VIEN
                 SET ${updateFields.join(', ')}
-                WHERE MaKhachHang = @maKH
+                WHERE MaNV = @maNV
             `;
 
             await request.query(updateQuery);
@@ -151,13 +163,13 @@ export const updateUserService = async (email, updateData) => {
         }
 
         // Lấy lại thông tin đã cập nhật
-        return await getUserByEmailService(email);
+        return await getStaffByEmailService(email);
     } catch (error) {
         throw error;
     }
 };
 
-export const deleteUserService = async (email) => {
+export const deleteStaffService = async (email) => {
     try {
         const pool = await getPool();
 
@@ -174,13 +186,13 @@ export const deleteUserService = async (email) => {
             return null;
         }
 
-        return { deleted: true, message: 'User account deactivated successfully' };
+        return { deleted: true, message: 'Staff account deactivated successfully' };
     } catch (error) {
         throw error;
     }
 };
 
-export const getAllUsersService = async () => {
+export const getAllStaffService = async () => {
     try {
         const pool = await getPool();
 
@@ -193,25 +205,23 @@ export const getAllUsersService = async () => {
                     tk.TenTaiKhoan,
                     tk.TrangThai,
                     tk.VaiTro,
-
-                    kh.MaKhachHang,
-                    kh.HoTen as HoTenKH,
-                    kh.CCCD as CCCD_KH,
-                    kh.NgaySinh as NgaySinhKH,
-                    kh.GioiTinh as GioiTinhKH,
-                    kh.DiaChi as DiaChiKH,
-                    kh.SoDienThoai as SoDienThoaiKH
+                    -- Thông tin nhân viên
+                    nv.MaNV as MaNV_NV,
+                    nv.HoTen as HoTenNV,
+                    nv.CCCD as CCCD_NV,
+                    nv.NgaySinh as NgaySinhNV,
+                    nv.GioiTinh as GioiTinhNV,
+                    nv.DiaChi as DiaChiNV,
+                    nv.SoDienThoai as SoDienThoaiNV,
+                    nv.LoaiNhanVien,
+                    nv.NVQuanLy
                 FROM TAI_KHOAN tk
-                LEFT JOIN KHACH_HANG kh ON tk.MaKH = kh.MaKhachHang
-                WHERE tk.MaKH IS NOT NULL
+                LEFT JOIN NHAN_VIEN nv ON tk.MaNV = nv.MaNV
+                WHERE tk.MaNV IS NOT NULL
             `);
-
-        if (result.recordset.length === 0) {
-            return null;
-        }
 
         return result.recordset;
     } catch (error) {
         throw error;
     }
-}
+};
