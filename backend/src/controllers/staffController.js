@@ -17,7 +17,7 @@ export const getMySchedule = async (req, res) => {
   try {
     const maNV = req.headers['x-staff-id']; 
     // Lấy tuNgay và denNgay từ URL: ?tuNgay=2025-11-24&denNgay=2025-11-30
-    const { tuNgay, denNgay } = req.query; 
+    const { tuNgay, denNgay } = req.query;
 
     const data = await staffService.getScheduleFromDB(maNV, tuNgay, denNgay);
     res.status(200).json({ success: true, data });
@@ -26,15 +26,6 @@ export const getMySchedule = async (req, res) => {
   }
 };
 
-// export const getMyPayslips = async (req, res) => {
-//   try {
-//     const maNV = req.headers['x-staff-id'];
-//     const data = await staffService.getPayslipsFromDB(maNV);
-//     res.status(200).json({ success: true, data });
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
 export const getMyPayslips = async (req, res) => {
   try {
     const maNV = req.headers['x-staff-id']; 
@@ -46,9 +37,9 @@ export const getMyPayslips = async (req, res) => {
 
     const data = await staffService.getPayslipsFromDB(maNV, parseInt(thang), parseInt(nam));
     
-    if (!data) {
-      return res.status(404).json({ success: false, message: 'Không có dữ liệu lương tháng này.' });
-    }
+    // if (!data) {
+    //   return res.status(200).json({ success: true, data});
+    // }
 
     res.status(200).json({ success: true, data });
   } catch (error) {
@@ -188,11 +179,12 @@ export const getMyLeaveHistory = async (req, res) => {
   try {
     const maNV = req.headers['x-staff-id']; // Lấy ID từ header đăng nhập
     const history = await staffService.getLeaveHistory(maNV);
-    
+
     res.status(200).json({ 
       success: true, 
       data: history 
     });
+
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

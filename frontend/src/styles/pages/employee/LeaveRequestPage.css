@@ -137,7 +137,7 @@
 
 .train-badge {
     background: #0284c7;
-    color: white;
+    color: #ffffff;
     padding: 6px 10px;
     border-radius: 6px;
     font-weight: 700;
@@ -168,7 +168,7 @@
 
 .time-text {
     font-size: 13px;
-    color: #94a3b8;
+    color: #01080f94;
     margin-top: 4px;
     display: flex;
     align-items: center;
@@ -185,8 +185,8 @@
 }
 
 .date-created {
-    font-size: 11px;
-    color: #cbd5e1;
+    font-size: 12px;
+    color: #797a7c;
     margin-top: 12px;
 }
 
@@ -208,4 +208,18 @@
     align-items: center;
     justify-content: center;
     margin: 0 auto 16px auto;
+}
+
+.tabs-with-filter {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; /* QUAN TRỌNG */
+  margin-bottom: 24px;
+}
+
+/* Label phía trên */
+.leave-date-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #039eec; /* slate-600 */
 }
