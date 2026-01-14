@@ -30,11 +30,7 @@ const BookingSuccessPage = ({ isEmployee = false }) => {
 
   // Nút quay về trang chủ (Khách) hoặc Bán vé mới (Sales)
   const handleHomeAction = () => {
-    if (isEmployee) {
-      navigate('/employee/sales/counter'); // Quay lại trang bán vé
-    } else {
-      navigate('/customer/dashboard'); // Quay lại dashboard
-    }
+    navigate('/customer/dashboard'); 
   };
 
   return (

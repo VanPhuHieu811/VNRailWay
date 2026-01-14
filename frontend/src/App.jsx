@@ -16,6 +16,12 @@ import PassengerInfoPage from './pages/customer/PassengerInfoPage';
 import PaymentPage from './pages/customer/PaymentPage'; 
 import BookingSuccessPage from './pages/customer/BookingSuccessPage'; 
 
+// --- EMPLOYEE SALES PAGES (File Mới - Xem ở dưới) ---
+import SalesCounterPage from './pages/saler/booking/SalesCounterPage';         
+import SalesSeatSelectionPage from './pages/saler/booking/SalesSeatSelectionPage'; 
+import SalesPassengerInfoPage from './pages/saler/booking/SalesPassengerInfoPage'; 
+import SalesPaymentPage from './pages/saler/booking/SalesPaymentPage';           
+import SalesSuccessPage from './pages/saler/booking/SalesSuccessPage';
 // --- TRANG ĐỔI VÉ ---
 import ExchangeSelectSeatsPage from './pages/customer/ExchangeSelectSeatsPage';
 import ExchangeSearchPage from './pages/customer/ExchangeSearchPage';
@@ -97,16 +103,18 @@ function App() {
           {/* SALES ROLES */}
           <Route path="sales/history" element={<CustomerLookupPage />} />
           <Route path="sales/exchange" element={<TicketExchangePage />} />
-          <Route path="sales/counter" element={<SearchResultsPage isEmployee={true} />} />
-          <Route path="sales/seats/:tripId" element={<SeatSelectionPage isEmployee={true} />} />
-          <Route path="sales/passengers" element={<PassengerInfoPage isEmployee={true} />} />
-          <Route path="sales/payment" element={<PaymentPage isEmployee={true} />} />
-          <Route path="sales/success" element={<BookingSuccessPage isEmployee={true} />} />
+
+          <Route path="sales/counter" element={<SalesCounterPage />} /> 
+          <Route path="sales/seats/:tripId" element={<SalesSeatSelectionPage />} />
+          <Route path="sales/passengers" element={<SalesPassengerInfoPage />} />
+          <Route path="sales/payment" element={<SalesPaymentPage />} />
+          <Route path="sales/success" element={<SalesSuccessPage />} />
           
-          <Route path="sales/exchange/search" element={<SearchResultsPage isEmployee={true} />} />
-          <Route path="sales/exchange/seats/:tripId" element={<SeatSelectionPage isEmployee={true} />} />
-          <Route path="sales/exchange/confirm" element={<ExchangeConfirmPage />} />
-          <Route path="sales/exchange/success" element={<ExchangeSuccessPage />} />
+          <Route path="sales/counter" element={<SalesCounterPage />} /> 
+          <Route path="sales/seats/:tripId" element={<SalesSeatSelectionPage />} />
+          <Route path="sales/passengers" element={<SalesPassengerInfoPage />} />
+          <Route path="sales/payment" element={<SalesPaymentPage />} />
+          <Route path="sales/success" element={<SalesSuccessPage />} />
 
           {/* MANAGER ROLES */}
           <Route path="manager/revenue" element={<RevenueReportPage />} />
