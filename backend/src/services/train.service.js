@@ -42,7 +42,6 @@ export const createTrainService = async (trainData) => {
         
         // Execute sp_TaoDoanTau
         await pool.request()
-            .input('MaDoanTau', sql.VarChar(10), trainData.maDoanTau)
             .input('TenTau', sql.NVarChar(100), trainData.tenTau)
             .input('HangSanXuat', sql.NVarChar(100), trainData.hangSanXuat)
             .input('NgayVanHanh', sql.Date, trainData.ngayVanHanh)
@@ -144,13 +143,10 @@ export const createCarriageService = async (carriageData) => {
         const pool = await getPool();
 
         await pool.request()
-            .input('MaToaTau', sql.VarChar(10), carriageData.maToaTau)
             .input('MaDoanTau', sql.VarChar(10), carriageData.maDoanTau)
-            .input('STT', sql.Int, carriageData.stt)
             .input('LoaiToa', sql.NVarChar(10), carriageData.loaiToa)
             .input('SLViTri', sql.Int, carriageData.slViTri)
             .execute('sp_TaoToaTau');
-
         return { maToaTau: carriageData.maToaTau };
     } catch (error) {
         if (error.originalError?.info) {

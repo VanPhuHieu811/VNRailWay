@@ -25,7 +25,7 @@ export const getTrainById = async (req, res, next) => {
 export const createTrain = async (req, res, next) => {
     try {
         // Extract data from request body
-        const { maDoanTau, tenTau, hangSanXuat, ngayVanHanh, loaiTau, trangThai } = req.body;
+        const { tenTau, hangSanXuat, ngayVanHanh, loaiTau, trangThai } = req.body;
 
         // Basic validation
         if (!tenTau) {
@@ -44,7 +44,7 @@ export const createTrain = async (req, res, next) => {
             return res.status(400).json({ success: false, message: 'Missing required field: trangThai'});
         }
 
-        await createTrainService({ maDoanTau, tenTau, hangSanXuat, ngayVanHanh, loaiTau });
+        await createTrainService({ tenTau, hangSanXuat, ngayVanHanh, loaiTau, trangThai });
         return res.status(201).json({ success: true, message: 'Create train successfully'});
 
     } catch (error) {
@@ -79,12 +79,15 @@ export const getCarriages = async (req, res, next) => {
 export const createCarriage = async (req, res, next) => {
     try {
         // Extract data from request body
-        const { maToaTau, maDoanTau, stt, loaiToa, slViTri } = req.body;
-        if (!maToaTau || !maDoanTau || !loaiToa) {
-             return res.status(400).json({ success: false, message: 'Missing required fields (maToaTau, maDoanTau, loaiToa)' });
-        }
+        const { maDoanTau, loaiToa, slViTri } = req.body;
+        if(!maDoanTau)
+            return res.status(400).json({ success: false, message: 'Missing required field: maDoanTau' });
+        if(!loaiToa)
+            return res.status(400).json({ success: false, message: 'Missing required field: loaiToa' });
+        if(!slViTri)
+            return res.status(400).json({ success: false, message: 'Missing required field: slViTri' });
 
-        await createCarriageService({ maToaTau, maDoanTau, stt, loaiToa, slViTri });
+        await createCarriageService({ maDoanTau, loaiToa, slViTri });
         return res.status(201).json({ success: true, message: 'Create carriage successfully'});
     } catch (error) {
         next(error);

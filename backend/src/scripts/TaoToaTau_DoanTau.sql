@@ -4,70 +4,100 @@ GO
 -- Tạo đoàn tàu
 -- Sau khi xử lý việc tạo một đoàn tàu, ở phía front end sẽ tiếp tục gọi API để tạo toa tàu
 CREATE OR ALTER PROCEDURE sp_TaoDoanTau
-    @MaDoanTau VARCHAR(10),
     @TenTau NVARCHAR(100),
     @HangSanXuat NVARCHAR(100),
     @NgayVanHanh DATE,
     @LoaiTau NVARCHAR(20),
-	@TrangThai NVARCHAR(20)
+    @TrangThai NVARCHAR(20)
 AS
 BEGIN
-    -- Kiểm tra trùng mã
-    IF EXISTS (SELECT 1 FROM DOAN_TAU WHERE MaDoanTau = @MaDoanTau)
+    SET NOCOUNT ON;
+
+    DECLARE @MaDoanTauGenerate NVARCHAR(10);
+
+    IF @LoaiTau NOT IN (N'Hạng sang', N'Bình thường')
     BEGIN
-        RAISERROR(N'Mã đoàn tàu đã tồn tại.', 16, 1);
+        RAISERROR(N'Loại tàu không hợp lệ.', 16, 1);
         RETURN;
     END
 
-	-- Kiểm tra loại tàu
-	IF @LoaiTau NOT IN (N'Hạng sang', N'Bình thường')
-	BEGIN
-		RAISERROR(N'Loại tàu không hợp lệ.', 16, 1);
-		RETURN;
-	END
+    IF @TrangThai NOT IN (N'Hoạt động', N'Bảo trì')
+    BEGIN
+        RAISERROR(N'Trạng thái không hợp lệ.', 16, 1);
+        RETURN;
+    END
 
-	IF @TrangThai NOT IN (N'Hoạt động', N'Bảo trì')
-	BEGIN
-		RAISERROR(N'Trạng thái không hợp lệ.', 16, 1);
-		RETURN;
-	END
+    BEGIN TRY
+        BEGIN TRAN;
 
-    INSERT INTO DOAN_TAU (MaDoanTau, TenTau, HangSanXuat, NgayVanHanh, LoaiTau, TrangThai)
-    VALUES (@MaDoanTau, @TenTau, @HangSanXuat, @NgayVanHanh, @LoaiTau, @TrangThai);
+        -- Ngăn chặn race condition
+        SELECT @MaDoanTauGenerate =
+            'SE' + RIGHT('000' + CAST(ISNULL(MAX(CAST(SUBSTRING(MaDoanTau, 3, LEN(MaDoanTau)) AS INT)), 0) + 1 AS VARCHAR), 3)
+        FROM DOAN_TAU WITH (UPDLOCK, HOLDLOCK);
+
+        INSERT INTO DOAN_TAU (MaDoanTau, TenTau, HangSanXuat, NgayVanHanh, LoaiTau, TrangThai)
+        VALUES (@MaDoanTauGenerate, @TenTau, @HangSanXuat, @NgayVanHanh, @LoaiTau, @TrangThai);
+
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+        THROW;
+    END CATCH
 END;
 GO
 
+
 -- Tạo toa tàu
 CREATE OR ALTER PROCEDURE sp_TaoToaTau
-    @MaToaTau VARCHAR(10),
-    @MaDoanTau VARCHAR(10),
-    @STT INT,
+    @MaDoanTau NVARCHAR(10),
     @LoaiToa NVARCHAR(10),
     @SLViTri INT
 AS
 BEGIN
-    -- Kiểm tra xem mã đoàn tàu đã tồn tại chưa
+    SET NOCOUNT ON;
+
+    DECLARE 
+        @STT INT,
+        @MaToaTau NVARCHAR(20),
+        @DoanTauNumber NVARCHAR(5);
+
+    -- Kiểm tra mã đoàn tàu tồn tại
     IF NOT EXISTS (SELECT 1 FROM DOAN_TAU WHERE MaDoanTau = @MaDoanTau)
     BEGIN
         RAISERROR(N'Mã đoàn tàu không tồn tại.', 16, 1);
         RETURN;
     END
 
-    -- Kiểm tra trùng mã toa
-    IF EXISTS (SELECT 1 FROM TOA_TAU WHERE MaToaTau = @MaToaTau)
+    -- Kiểm tra loại toa hợp lệ
+    IF @LoaiToa NOT IN (N'Ghế', N'Giường')
     BEGIN
-        RAISERROR(N'Mã toa tàu đã tồn tại.', 16, 1);
+        RAISERROR(N'Loại toa không hợp lệ.', 16, 1);
         RETURN;
     END
 
-	-- Kiểm tra loại toa hợp lệ
-	IF @LoaiToa NOT IN (N'Ghế', N'Giường')
-	BEGIN
-		RAISERROR(N'Loại toa không hợp lệ.', 16, 1);
-		RETURN;
-	END
+    BEGIN TRY
+        BEGIN TRAN;
+        -- Tạo STT an toàn theo từng MaDoanTau
+        SELECT @STT = ISNULL(MAX(STT), 0) + 1
+        FROM TOA_TAU WITH (UPDLOCK, HOLDLOCK)
+        WHERE MaDoanTau = @MaDoanTau;
 
-    INSERT INTO TOA_TAU (MaToaTau, MaDoanTau, STT, LoaiToa, SLViTri)
-    VALUES (@MaToaTau, @MaDoanTau, @STT, @LoaiToa, @SLViTri);
+        -- MaDoanTau (SE001 → 001)
+        SET @DoanTauNumber = RIGHT(@MaDoanTau, 3);
+
+        -- MaToaTau: SE001_01, SE001_02, ...
+        SET @MaToaTau = 'SE' + @DoanTauNumber + '_' + RIGHT('00' + CAST(@STT AS VARCHAR), 2);
+
+        INSERT INTO TOA_TAU (MaToaTau, MaDoanTau, STT, LoaiToa, SLViTri)
+        VALUES (@MaToaTau, @MaDoanTau, @STT, @LoaiToa, @SLViTri);
+        COMMIT;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+        THROW;
+    END CATCH
 END;
 GO

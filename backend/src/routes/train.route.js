@@ -10,13 +10,10 @@ router.get('/', authenticationMiddleware, authorizeManager, getTrain);
 router.get('/:id', authenticationMiddleware, authorizeManager, getTrainById);
 router.post('/', authenticationMiddleware, authorizeManager, createTrain);
 router.patch('/:id', authenticationMiddleware, authorizeManager, updateTrain);
-// router.delete('/:id', authenticationMiddleware, authorizeManager, deleteTrain);
 
 // Carriage
 router.get('/:id/carriages', authenticationMiddleware, authorizeManager, getCarriages);
 router.post('/carriages', authenticationMiddleware, authorizeManager, createCarriage);
 router.patch('/carriages/:id', authenticationMiddleware, authorizeManager, updateCarriage);
-// router.delete('/carriages/:id', authenticationMiddleware, authorizeManager, deleteCarriage);
-
 
 export default router;
