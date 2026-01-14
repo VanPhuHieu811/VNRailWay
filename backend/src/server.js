@@ -6,20 +6,24 @@ import tripRoutes from './routes/trip.route.js';
 import routeRoutes from './routes/route.route.js';
 import trainRoutes from './routes/train.route.js';
 
+import { errorHandler } from './middlewares/errorHandler.middleware.js';
 import { getPool } from './config/sqlserver.config.js';
 
 const PORT = process.env.PORT;
 
-// Middleware
+// Authorization
 app.use('/api/v1/auth', authRoutes);
 
-// User Routes
+// User
 app.use('/api/v1/users', userRoutes);
 
-// New! Train Routes
+// Train, route, trip
 app.use('/api/v1/trips', tripRoutes);
 app.use('/api/v1/routes', routeRoutes);
 app.use('/api/v1/trains', trainRoutes);
+
+// Global error handler
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, async () => {

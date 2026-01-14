@@ -8,7 +8,8 @@ CREATE OR ALTER PROCEDURE sp_TaoDoanTau
     @TenTau NVARCHAR(100),
     @HangSanXuat NVARCHAR(100),
     @NgayVanHanh DATE,
-    @LoaiTau NVARCHAR(20)
+    @LoaiTau NVARCHAR(20),
+	@TrangThai NVARCHAR(20)
 AS
 BEGIN
     -- Kiểm tra trùng mã
@@ -25,8 +26,14 @@ BEGIN
 		RETURN;
 	END
 
-    INSERT INTO DOAN_TAU (MaDoanTau, TenTau, HangSanXuat, NgayVanHanh, LoaiTau)
-    VALUES (@MaDoanTau, @TenTau, @HangSanXuat, @NgayVanHanh, @LoaiTau);
+	IF @TrangThai NOT IN (N'Hoạt động', N'Bảo trì')
+	BEGIN
+		RAISERROR(N'Trạng thái không hợp lệ.', 16, 1);
+		RETURN;
+	END
+
+    INSERT INTO DOAN_TAU (MaDoanTau, TenTau, HangSanXuat, NgayVanHanh, LoaiTau, TrangThai)
+    VALUES (@MaDoanTau, @TenTau, @HangSanXuat, @NgayVanHanh, @LoaiTau, @TrangThai);
 END;
 GO
 
