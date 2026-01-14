@@ -1,0 +1,28 @@
+@baseUrl = http://localhost:3000/api/v1
+### Login Request
+# @name loginRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@rail.vn",
+  "password": "123"
+}
+
+### Luu token vao bien
+@authToken = {{loginRequest.response.body.$.data.token}}
+
+### Get Staff Profile
+# @name getStaffProfile
+GET {{baseUrl}}/staff/me
+Authorization: Bearer {{authToken}}
+
+### Get all users
+# @name getAllUsers
+GET {{baseUrl}}/users/all
+Authorization: Bearer {{authToken}}
+
+### Get all staff
+# @name getAllStaff
+GET {{baseUrl}}/staff/all
+Authorization: Bearer {{authToken}}

@@ -7,6 +7,7 @@ import routeRoutes from './routes/route.route.js';
 import trainRoutes from './routes/train.route.js';
 
 import { errorHandler } from './middlewares/errorHandler.middleware.js';
+import staffRoutes from './routes/staff.route.js';
 import { getPool } from './config/sqlserver.config.js';
 
 const PORT = process.env.PORT;
@@ -16,6 +17,7 @@ app.use('/api/v1/auth', authRoutes);
 
 // User
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/staff', staffRoutes);
 
 // Train, route, trip
 app.use('/api/v1/trips', tripRoutes);

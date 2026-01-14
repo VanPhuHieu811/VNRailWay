@@ -1,0 +1,93 @@
+@baseUrl = http://localhost:3000/api/v1
+
+# ==========================================
+# 1. AUTHENTICATION (Get Token)
+# ==========================================
+
+### Login Request (Admin/Manager Account)
+# @name loginRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@rail.vn",
+  "password": "123"
+}
+
+### Save Token to Variable
+@authToken = {{loginRequest.response.body.$.data.token}}
+
+
+# ==========================================
+# 2. PUBLIC ENDPOINTS (No Token Needed)
+# ==========================================
+
+### Get All Routes
+GET {{baseUrl}}/routes
+
+### Get Route Details (Replace TT01 with a real ID)
+GET {{baseUrl}}/routes/TT01
+
+
+# ==========================================
+# 3. PROTECTED ENDPOINTS (Token Required)
+# ==========================================
+
+### Create New Route (Header Only)
+# @name createRoute
+POST {{baseUrl}}/routes
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "maTuyenTau": "TT_TEST",
+  "tenTuyen": "Tuyen Test API",
+  "khoangCach": 100
+}
+
+### Update Route Info
+PUT {{baseUrl}}/routes/TT_TEST
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "tenTuyen": "Tuyen Test API Updated",
+  "khoangCach": 150
+}
+
+# ==========================================
+# 4. STATION MANAGEMENT IN ROUTE
+# ==========================================
+
+### Add Station to Route
+# Note: "maGaTau" must exist in your GA_TAU table.
+# Replace "GA01" with a valid Station ID from your database.
+POST {{baseUrl}}/routes/TT_TEST/stations
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "maGaTau": "GA01",
+  "thuTu": 1,
+  "khoangCach": 0
+}
+
+### Add Second Station to Route
+# Replace "GA02" with a valid Station ID.
+POST {{baseUrl}}/routes/TT_TEST/stations
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "maGaTau": "GA02",
+  "thuTu": 2,
+  "khoangCach": 50
+}
+
+### Verify Stations were added (Get Detail again)
+GET {{baseUrl}}/routes/TT_TEST
+
+### Remove Station from Route
+# Deletes GA01 from TT_TEST
+DELETE {{baseUrl}}/routes/TT_TEST/stations/GA01
+Authorization: Bearer {{authToken}}

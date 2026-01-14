@@ -1,0 +1,51 @@
+@baseUrl = http://localhost:3000/api/v1
+
+### Login Request
+# @name loginRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@rail.vn",
+  "password": "123"
+}
+
+
+### Luu token vao bien
+@authToken = {{loginRequest.response.body.$.data.token}}
+
+
+### get all trains
+GET {{baseUrl}}/trains
+Authorization: Bearer {{authToken}}
+
+### get TRAINS by ID
+GET {{baseUrl}}/trains/SE01
+Authorization: Bearer {{authToken}}
+
+### get carriages
+GET {{baseUrl}}/trains/SE01/carriages
+Authorization: Bearer {{authToken}}
+
+### update train info
+PATCH {{baseUrl}}/trains/SE01
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "tenTau": "A",
+    "hangSanXuat": "A",
+    "ngayVanHanh": "2024-07-01",
+    "loaiTau": "Bình thường",
+    "trangThai": "Bảo trì"
+}
+
+### Update carriage info
+PATCH {{baseUrl}}/trains/carriages/T01_01
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "loaiToa": "Giường",
+    "slViTri": 120
+}

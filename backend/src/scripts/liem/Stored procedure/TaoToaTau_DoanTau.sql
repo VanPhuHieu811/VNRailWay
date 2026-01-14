@@ -31,8 +31,8 @@ BEGIN
         BEGIN TRAN;
 
         -- Ngăn chặn race condition
-        SELECT @MaDoanTauGenerate =
-            'SE' + RIGHT('000' + CAST(ISNULL(MAX(CAST(SUBSTRING(MaDoanTau, 3, LEN(MaDoanTau)) AS INT)), 0) + 1 AS VARCHAR), 3)
+        SELECT @MaDoanTauGenerate = 
+            'SE' + RIGHT('00' + CAST(ISNULL(MAX(CAST(SUBSTRING(MaDoanTau, 3, LEN(MaDoanTau)) AS INT)), 0) + 1 AS VARCHAR), 2)
         FROM DOAN_TAU WITH (UPDLOCK, HOLDLOCK);
 
         INSERT INTO DOAN_TAU (MaDoanTau, TenTau, HangSanXuat, NgayVanHanh, LoaiTau, TrangThai)
@@ -84,11 +84,11 @@ BEGIN
         FROM TOA_TAU WITH (UPDLOCK, HOLDLOCK)
         WHERE MaDoanTau = @MaDoanTau;
 
-        -- MaDoanTau (SE001 → 001)
-        SET @DoanTauNumber = RIGHT(@MaDoanTau, 3);
+        -- MaDoanTau (T01 → 01)
+        SET @DoanTauNumber = RIGHT(@MaDoanTau, 2);
 
-        -- MaToaTau: SE001_01, SE001_02, ...
-        SET @MaToaTau = 'SE' + @DoanTauNumber + '_' + RIGHT('00' + CAST(@STT AS VARCHAR), 2);
+        -- MaToaTau: T01_01, T01_02, ...
+        SET @MaToaTau = 'T' + @DoanTauNumber + '_' + RIGHT('00' + CAST(@STT AS VARCHAR), 2);
 
         INSERT INTO TOA_TAU (MaToaTau, MaDoanTau, STT, LoaiToa, SLViTri)
         VALUES (@MaToaTau, @MaDoanTau, @STT, @LoaiToa, @SLViTri);

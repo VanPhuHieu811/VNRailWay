@@ -1,0 +1,70 @@
+@baseUrl = http://localhost:3000/api/v1
+
+### Login Request
+# @name loginRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@rail.vn",
+  "password": "123"
+}
+
+### Luu token vao bien
+@authToken = {{loginRequest.response.body.$.data.token}}
+
+
+# TRAIN (ĐOÀN TÀU) TESTS
+### 2. Create New Train (Success Case)
+# @name createTrain
+# Note: loaiTau must be 'Hạng sang' or 'Bình thường'
+POST {{baseUrl}}/trains
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "tenTau": "Thong Nhat SE TEST",
+    "hangSanXuat": "Gia Lam Railway",
+    "ngayVanHanh": "2024-06-01",
+    "loaiTau": "Hạng sang",
+    "trangThai": "Hoạt động"
+}
+
+### 3. Create Train (Error Case: Duplicate ID)
+# Expect: 400 Bad Request - Message: "Mã đoàn tàu đã tồn tại."
+POST {{baseUrl}}/trains
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "tenTau": "Duplicate Test",
+    "hangSanXuat": "Test",
+    "ngayVanHanh": "2024-06-01",
+    "loaiTau": "Hạng sang",
+    "trangThai": "Hoạt động"
+}
+
+# CARRIAGE (TOA TÀU) TESTS
+### 4. Create Carriage 1 (Success - Ghế)
+# Note: maDoanTau must match the one created in Step 2
+# Note: loaiToa must be 'Ghế' or 'Giường'
+POST {{baseUrl}}/trains/carriages
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "maDoanTau": "SE01",
+    "loaiToa": "Ghế",
+    "slViTri": 64
+}
+
+### 6. Create Carriage 2 (Success - Giường)
+POST {{baseUrl}}/trains/carriages
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "maDoanTau": "SE01",
+    "loaiToa": "Giường",
+    "slViTri": 32
+}
