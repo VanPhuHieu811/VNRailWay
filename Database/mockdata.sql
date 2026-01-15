@@ -145,8 +145,9 @@ INSERT INTO KHACH_HANG (MaKhachHang, HoTen, CCCD, NgaySinh, GioiTinh, DiaChi, So
 
 -- TAI_KHOAN
 INSERT INTO TAI_KHOAN (Email, MaKH, MaNV, TenTaiKhoan, MatKhau, TrangThai, VaiTro) VALUES
-('admin@rail.vn', NULL, 'NV11', 'admin', '123', 1, N'Quản trị'),
-('ticket@rail.vn',NULL, 'NV02', 'ticket1','123', 1, N'Nhân viên'),
+('quanly@rail.vn', NULL, 'NV11', 'quanly', '123', 1, N'Quản lý'),
+('ticket@rail.vn',NULL, 'NV02', 'banve','123', 1, N'Bán vé'),
+('LaiTau@rail.vn', NULL, 'NV04', 'laitau','123', 1, N'Nhân viên'),
 ('user1@mail.com', 'KH01', NULL, 'user_a', '123', 1, N'Khách hàng'),
 ('user2@mail.com', 'KH02', NULL, 'user_b', '123', 1, N'Khách hàng');
 
