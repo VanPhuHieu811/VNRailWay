@@ -10,30 +10,27 @@ AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRY
-        SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
 
         BEGIN TRANSACTION;
+        IF NOT EXISTS (
+            SELECT *
+            FROM NHAN_VIEN NV
+            WHERE NV.MaNV = @MaNV)
+        BEGIN
+            RAISERROR(N'Lỗi: Nhân viên không tồn tại trong hệ thống!', 16, 1);
+        END
 
-        -- 1. Kiểm tra LoaiNhanVien có khớp với VaiTro phân công không
         DECLARE @LoaiNV NVARCHAR(20);
         SELECT @LoaiNV = LoaiNhanVien FROM NHAN_VIEN WHERE MaNV = @MaNV;
 
         IF (@VaiTro LIKE N'%lái%' AND @LoaiNV <> N'Lái tàu')
-           OR (@VaiTro LIKE N'%trưởng%' AND @LoaiNV NOT IN (N'Toa tàu'))                               ---- CÓ THỂ BỎ
+           OR (@VaiTro LIKE N'%trưởng%' AND @LoaiNV NOT IN (N'Toa tàu', N'Quản lý'))                               ---- CÓ THỂ BỎ
            OR (@VaiTro LIKE N'%toa%' AND @LoaiNV <> N'Toa tàu')
         BEGIN
             RAISERROR(N'Lỗi: Loại nhân viên không phù hợp với vai trò được phân công.', 16, 1);
         END
 
-        -- 2. Kiểm tra nếu không phải nhân viên toa thì MaToa phải NULL (Note 2 trong Trigger)
-        IF @VaiTro <> N'Nhân viên phụ trách toa' AND @MaToa IS NOT NULL                                            ----SỬA VAI TRO
-        BEGIN
-            RAISERROR(N'Lỗi: Chỉ nhân viên phụ trách toa mới được gán mã toa.', 16, 1);
-        END
-
         -- 3. Thực hiện phân công
-        -- Lưu ý: Các Trigger (trg_KiemTraVaiTroPhanCong, trg_KiemTraPhanCongNhanVien) 
-        -- sẽ tự động chặn nếu trùng lái tàu/trưởng tàu hoặc trùng lịch[cite: 1, 18].
         DECLARE @Num INT;
         SELECT @Num = ISNULL(MAX(CAST(SUBSTRING(MaPhanCong,3,10) AS INT)),0) + 1 
         FROM PHAN_CONG_CHUYEN_TAU;
@@ -41,6 +38,10 @@ BEGIN
         
         INSERT INTO PHAN_CONG_CHUYEN_TAU (MaPhanCong, MaNV, MaChuyenTau, VaiTro, MaToa, TrangThai)
         VALUES (@MaPC, @MaNV, @MaChuyenTau, @VaiTro, @MaToa, N'Nhận việc');
+
+        WAITFOR DELAY '00:00:10' 
+
+        RAISERROR(N'Lỗi hệ thống bất ngờ (Mất điện/Crash)! Transaction bị hủy.', 16, 1);
 
         COMMIT TRANSACTION;
         PRINT N'Phân công nhân sự thành công.';
@@ -52,3 +53,11 @@ BEGIN
     END CATCH
 END;
 GO
+
+EXEC sp_PhanCongNhanSu
+    @MaNV = 'NV005', 
+    @MaChuyenTau = 'CT006', 
+    @VaiTro = N'Nhân viên phụ trách lái';
+
+DELETE FROM PHAN_CONG_CHUYEN_TAU 
+    WHERE MaNV = 'NV005' AND MaChuyenTau = 'CT006'
