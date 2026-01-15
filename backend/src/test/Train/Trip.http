@@ -1,0 +1,31 @@
+@baseUrl = http://localhost:3000/api/v1
+
+### Login Request
+# @name loginRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "123"
+}
+
+### Luu token vao bien
+@authToken = {{loginRequest.response.body.$.data.token}}
+
+### Trip Search request
+# @name tripSearchRequest
+GET {{baseUrl}}/trips/search
+Authorization: Bearer {{authToken}}
+
+### Trip search specific - /trips/search/?gaXuatPhat=...&gaKetThuc=...&trangThai=...&ngayDi=...
+GET {{baseUrl}}/trips/search?gaXuatPhat=GA01&gaKetThuc=GA12
+Authorization: Bearer {{authToken}}
+
+### Trip detail - /trips/{tripId}
+GET {{baseUrl}}/trips/CT01
+Authorization: Bearer {{authToken}}
+
+### Trip seats - /trips/{tripId}/seats
+GET {{baseUrl}}/trips/CT01/seats
+Authorization: Bearer {{authToken}}

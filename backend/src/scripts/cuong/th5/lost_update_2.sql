@@ -22,19 +22,6 @@ begin
     return;
   end
   
-  -- check xem nhan vien gui don co ton tai va dang hoat dong khong
-  if not exists (
-    select 1
-    from TAI_KHOAN tk
-    join NHAN_VIEN nv on tk.MaNV = nv.MaNV
-    where tk.MaNV = @MaNhanVienGuiDon AND tk.TrangThai = 1
-  )
-  begin 
-    print N'[T2] Nhân viên gửi đơn không tồn tại hoặc không hoạt động.';
-    rollback transaction;
-    return;
-  end
-  
   waitfor delay '00:00:10';
 
   -- cap nhat don nghi phep
@@ -44,6 +31,8 @@ begin
     NVDuyetDon = @MaQuanLyDuyetDon,
     TrangThai = N'Chấp nhận'
   where MaDon = @MaDonNghiPhep;
+
+  waitfor delay '00:00:05';
 
   commit transaction;
   print N'[T2] ✓ COMMIT thành công - Nhân viên thay thế: ' + @MaNhanVienThayThe;
