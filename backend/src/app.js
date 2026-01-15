@@ -12,4 +12,8 @@ app.use(express.urlencoded({ extended: true }));
 // Đăng ký các Route của bạn
 app.use('/api/v1/staff', staffRoutes);
 
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 export default app;

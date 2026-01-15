@@ -90,6 +90,7 @@ const EmployeeSidebar = ({ userRole, onLogout }) => {
             <NavItem to="/employee/manager/revenue" icon={BarChart3} label="Báo cáo doanh thu" />
             <NavItem to="/employee/manager/staff" icon={Users} label="Nhân sự" />
             <NavItem to="/employee/manager/approve-leave" icon={FileCheck} label="Duyệt nghỉ phép" />
+            <NavItem to="/employee/manager/routes-stations" icon={FileCheck} label="Tuyến/ga" />
             <NavItem to="/employee/manager/trains" icon={Train} label="Đoàn tàu & Toa" />
             <NavItem to="/employee/manager/trips" icon={Map} label="Chuyến tàu" />
             <NavItem to="/employee/manager/pricing" icon={CreditCard} label="Giá vé" />
