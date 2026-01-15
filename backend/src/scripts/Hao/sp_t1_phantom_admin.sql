@@ -1,6 +1,8 @@
 use VNRAILWAY
-select * FROM THOI_GIAN_CHUYEN_TAU
-select * from DANH_SACH_GA
+select *
+from NHAN_VIEN nv
+join TAI_KHOAN tk on tk.MaNV=nv.MaNV
+where nv.LoaiNhanVien= N'Quản trị'
 GO
 create or alter procedure sp_ThemMoiChuyen
     @MaChuyenTau NVARCHAR(20),
