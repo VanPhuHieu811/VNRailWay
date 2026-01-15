@@ -6,8 +6,8 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "username": "user_a",
-  "password": "123"
+  "username": "thanhtung95",
+  "password": "kh123456"
 }
 
 ### Luu token vao bien
