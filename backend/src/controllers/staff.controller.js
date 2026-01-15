@@ -149,7 +149,7 @@ export const getMyPayslips = async (req, res) => {
   try {
     const maNV = req.headers['x-staff-id']; 
     const { thang, nam } = req.query; // Nhận từ các ô chọn trên UI
-
+    console.log(maNV, thang, nam);
     if (!thang || !nam) {
       return res.status(400).json({ success: false, message: 'Vui lòng chọn tháng và năm.' });
     }
@@ -159,6 +159,7 @@ export const getMyPayslips = async (req, res) => {
     // if (!data) {
     //   return res.status(200).json({ success: true, data});
     // }
+    console.log(data);
 
     res.status(200).json({ success: true, data });
   } catch (error) {
