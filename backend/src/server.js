@@ -10,6 +10,7 @@ import { errorHandler } from './middlewares/errorHandler.middleware.js';
 import staffRoutes from './routes/staff.route.js';
 import { getPool } from './config/sqlserver.config.js';
 
+import reportRoutes from './routes/report.route.js'; 
 const PORT = process.env.PORT || 3000;
 
 // Authorization
@@ -24,6 +25,7 @@ app.use('/api/v1/trips', tripRoutes);
 app.use('/api/v1/routes', routeRoutes);
 app.use('/api/v1/trains', trainRoutes);
 
+app.use('/api/v1/reports', reportRoutes);
 // Global error handler
 app.use(errorHandler);
 
