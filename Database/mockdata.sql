@@ -8,7 +8,6 @@ DELETE FROM HOA_DON;
 DELETE FROM DOI_VE;
 DELETE FROM VE_TAU;
 DELETE FROM DAT_VE;
-DELETE FROM CHINH_SACH_GIA;
 DELETE FROM BANG_LUONG;
 DELETE FROM DON_NGHI_PHEP;
 DELETE FROM PHAN_CONG_CHUYEN_TAU;
@@ -25,6 +24,9 @@ DELETE FROM DANH_SACH_GA;
 DELETE FROM TUYEN_TAU;
 DELETE FROM GA_TAU;
 DELETE FROM UU_DAI_GIA;
+DELETE FROM GIA_THEO_TANG;
+DELETE FROM GIA_THEO_LOAI_TOA;
+DELETE FROM GIA_THEO_LOAI_TAU;
 DELETE FROM THAM_SO;
 DELETE FROM NHAN_VIEN;
 GO
@@ -105,11 +107,11 @@ GO
 -- =============================================
 -- 6. DOAN_TAU
 -- =============================================
-INSERT INTO DOAN_TAU (MaDoanTau, TenTau, HangSanXuat, NgayVanHanh, LoaiTau) VALUES
-('DT01', N'SE1', N'Đường sắt Việt Nam', '2020-01-15', N'Hạng sang'),
-('DT02', N'SE2', N'Đường sắt Việt Nam', '2020-03-20', N'Hạng sang'),
-('DT03', N'TN1', N'Đường sắt Việt Nam', '2015-06-10', N'Bình thường'),
-('DT04', N'TN2', N'Đường sắt Việt Nam', '2016-08-25', N'Bình thường');
+INSERT INTO DOAN_TAU (MaDoanTau, TenTau, HangSanXuat, NgayVanHanh, LoaiTau, TrangThai) VALUES
+('DT01', N'SE1', N'Đường sắt Việt Nam', '2020-01-15', N'Hạng sang', N'Hoạt động'),
+('DT02', N'SE2', N'Đường sắt Việt Nam', '2020-03-20', N'Hạng sang', N'Hoạt động'),
+('DT03', N'TN1', N'Đường sắt Việt Nam', '2015-06-10', N'Bình thường', N'Hoạt động'),
+('DT04', N'TN2', N'Đường sắt Việt Nam', '2016-08-25', N'Bình thường', N'Hoạt động');
 GO
 
 -- =============================================
@@ -268,10 +270,10 @@ GO
 -- 12. TAI_KHOAN
 -- =============================================
 INSERT INTO TAI_KHOAN (Email, MaKH, MaNV, TenTaiKhoan, MatKhau, TrangThai, VaiTro) VALUES
-('admin@vnrailway.vn', NULL, 'NV010', 'admin', 'admin123', 1, N'Quản trị'),
-('quanly@vnrailway.vn', NULL, 'NV001', 'quanly', 'ql123456', 1, N'Nhân viên'),
-('banve01@vnrailway.vn', NULL, 'NV002', 'banve01', 'bv123456', 1, N'Nhân viên'),
-('banve02@vnrailway.vn', NULL, 'NV003', 'banve02', 'bv123456', 1, N'Nhân viên'),
+('admin@vnrailway.vn', NULL, 'NV010', 'admin', 'admin123', 1, N'Quản lý'),
+('quanly@vnrailway.vn', NULL, 'NV001', 'quanly', 'ql123456', 1, N'Quản lý'),
+('banve01@vnrailway.vn', NULL, 'NV002', 'banve01', 'bv123456', 1, N'Bán vé'),
+('banve02@vnrailway.vn', NULL, 'NV003', 'banve02', 'bv123456', 1, N'Bán vé'),
 ('laitau01@vnrailway.vn', NULL, 'NV004', 'laitau01', 'lt123456', 1, N'Nhân viên'),
 ('laitau02@vnrailway.vn', NULL, 'NV005', 'laitau02', 'lt123456', 1, N'Nhân viên'),
 ('toatau01@vnrailway.vn', NULL, 'NV007', 'toatau01', 'tt123456', 1, N'Nhân viên'),
@@ -373,21 +375,31 @@ INSERT INTO BANG_LUONG (MaBangLuong, NgayNhanLuong, MaNV, LuongChinh, PhuCap, Ti
 GO
 
 -- =============================================
--- 19. CHINH_SACH_GIA
+-- 19. GIA_THEO_LOAI_TAU
 -- =============================================
-INSERT INTO CHINH_SACH_GIA (MaBangGia, NgayApDung, NgayKetThuc, LoaiTau, LoaiVT, Tang, MaDoanTau, SoKm, GiaTien) VALUES
-('BG001', '2026-01-01 00:00', '2026-12-31 23:59', N'Hạng sang', N'Ghế', NULL, 'DT01', 100, 150000),
-('BG002', '2026-01-01 00:00', '2026-12-31 23:59', N'Hạng sang', N'Ghế', NULL, 'DT02', 100, 150000),
-('BG003', '2026-01-01 00:00', '2026-12-31 23:59', N'Hạng sang', N'Giường', 1, 'DT01', 100, 280000),
-('BG004', '2026-01-01 00:00', '2026-12-31 23:59', N'Hạng sang', N'Giường', 2, 'DT01', 100, 250000),
-('BG005', '2026-01-01 00:00', '2026-12-31 23:59', N'Hạng sang', N'Giường', 1, 'DT02', 100, 280000),
-('BG006', '2026-01-01 00:00', '2026-12-31 23:59', N'Hạng sang', N'Giường', 2, 'DT02', 100, 250000),
-('BG007', '2026-01-01 00:00', '2026-12-31 23:59', N'Bình thường', N'Ghế', NULL, 'DT03', 100, 100000),
-('BG008', '2026-01-01 00:00', '2026-12-31 23:59', N'Bình thường', N'Ghế', NULL, 'DT04', 100, 100000);
+INSERT INTO GIA_THEO_LOAI_TAU (MaGiaTau, LoaiTau, GiaTien) VALUES
+('GT01', N'Hạng sang', 150000),
+('GT02', N'Bình thường', 100000);
 GO
 
 -- =============================================
--- 20. DAT_VE
+-- 20. GIA_THEO_LOAI_TOA
+-- =============================================
+INSERT INTO GIA_THEO_LOAI_TOA (MaGiaToa, LoaiToa, GiaTien) VALUES
+('GTO01', N'Ghế', 0),
+('GTO02', N'Giường', 100000);
+GO
+
+-- =============================================
+-- 21. GIA_THEO_TANG
+-- =============================================
+INSERT INTO GIA_THEO_TANG (MaGiaTang, SoTang, GiaTien) VALUES
+('GTG01', 1, 30000),
+('GTG02', 2, 0);
+GO
+
+-- =============================================
+-- 22. DAT_VE
 -- =============================================
 INSERT INTO DAT_VE (MaDatVe, Email, MaChuyenTau, ThoiGianDat, HanThanhToan, TongTienDuKien, KenhDat, TrangThai) VALUES
 ('DV001', 'thanhtung95@gmail.com', 'CT001', '2025-11-28 10:00', '2025-11-28 10:30', 2587500, N'Online', N'Đã thanh toán'),
@@ -401,29 +413,29 @@ INSERT INTO DAT_VE (MaDatVe, Email, MaChuyenTau, ThoiGianDat, HanThanhToan, Tong
 GO
 
 -- =============================================
--- 21. VE_TAU
+-- 23. VE_TAU
 -- =============================================
-INSERT INTO VE_TAU (MaVe, MaKhachHang, MaChuyenTau, MaDatVe, MaBangGia, MaUuDai, ThoiGianXuatVe, GaXuatPhat, GaDen, SoTienGiam, GiaThuc, TrangThai, MaViTri) VALUES
-('VE001', 'KH001', 'CT001', 'DV001', 'BG001', NULL, '2025-11-28 10:15', 'GA01', 'GA12', 0, 2587500, N'Đã dùng', 'VT0101_01'),
-('VE002', 'KH002', 'CT001', 'DV002', 'BG003', NULL, '2025-11-29 14:15', 'GA01', 'GA12', 0, 4830000, N'Đã dùng', 'VT0103_01'),
-('VE003', 'KH003', 'CT003', 'DV003', 'BG001', NULL, '2025-12-25 09:15', 'GA01', 'GA12', 0, 2587500, N'Đã đặt', 'VT0101_05'),
-('VE004', 'KH004', 'CT003', 'DV004', 'BG003', 'UD02', '2025-12-26 16:15', 'GA01', 'GA12', 724500, 4105500, N'Đã đặt', 'VT0103_05'),
-('VE005', 'KH005', 'CT004', 'DV005', 'BG002', 'UD02', '2025-12-28 08:15', 'GA12', 'GA01', 388125, 2199375, N'Đã đặt', 'VT0201_01'),
-('VE006', 'KH006', 'CT004', 'DV006', 'BG002', 'UD01', '2025-12-28 11:15', 'GA12', 'GA01', 258750, 2328750, N'Đã đặt', 'VT0201_02'),
-('VE007', 'KH001', 'CT004', 'DV007', 'BG002', NULL, '2025-12-27 15:15', 'GA12', 'GA01', 0, 2587500, N'Hủy vé', 'VT0201_10'),
-('VE008', 'KH003', 'CT005', 'DV008', 'BG007', NULL, NULL, 'GA01', 'GA08', 0, 791000, N'Giữ chỗ', 'VT0301_01'),
-('VE009', 'KH009', 'CT003', 'DV004', 'BG001', 'UD03', '2025-12-26 16:15', 'GA01', 'GA12', 1293750, 1293750, N'Đã đặt', 'VT0101_06');
+INSERT INTO VE_TAU (MaVe, MaKhachHang, MaChuyenTau, MaDatVe, MaUuDai, ThoiGianXuatVe, GaXuatPhat, GaDen, SoTienGiam, GiaThuc, TrangThai, MaViTri) VALUES
+('VE001', 'KH001', 'CT001', 'DV001', NULL, '2025-11-28 10:15', 'GA01', 'GA12', 0, 2587500, N'Đã dùng', 'VT0101_01'),
+('VE002', 'KH002', 'CT001', 'DV002', NULL, '2025-11-29 14:15', 'GA01', 'GA12', 0, 4830000, N'Đã dùng', 'VT0103_01'),
+('VE003', 'KH003', 'CT003', 'DV003', NULL, '2025-12-25 09:15', 'GA01', 'GA12', 0, 2587500, N'Đã đặt', 'VT0101_05'),
+('VE004', 'KH004', 'CT003', 'DV004', 'UD02', '2025-12-26 16:15', 'GA01', 'GA12', 724500, 4105500, N'Đã đặt', 'VT0103_05'),
+('VE005', 'KH005', 'CT004', 'DV005', 'UD02', '2025-12-28 08:15', 'GA12', 'GA01', 388125, 2199375, N'Đã đặt', 'VT0201_01'),
+('VE006', 'KH006', 'CT004', 'DV006', 'UD01', '2025-12-28 11:15', 'GA12', 'GA01', 258750, 2328750, N'Đã đặt', 'VT0201_02'),
+('VE007', 'KH001', 'CT004', 'DV007', NULL, '2025-12-27 15:15', 'GA12', 'GA01', 0, 2587500, N'Hủy vé', 'VT0201_10'),
+('VE008', 'KH003', 'CT005', 'DV008', NULL, NULL, 'GA01', 'GA08', 0, 791000, N'Giữ chỗ', 'VT0301_01'),
+('VE009', 'KH009', 'CT003', 'DV004', 'UD03', '2025-12-26 16:15', 'GA01', 'GA12', 1293750, 1293750, N'Đã đặt', 'VT0101_06');
 GO
 
 -- =============================================
--- 22. DOI_VE
+-- 24. DOI_VE
 -- =============================================
 INSERT INTO DOI_VE (MaDoiVe, NVThucHien, MaVeCu, MaVeMoi, ThoiGianDoi, PhiPhat, TrangThai) VALUES
 ('DV_01', 'NV002', 'VE003', 'VE005', '2025-12-28 09:00', 129375, 'Đã đổi');
 GO
 
 -- =============================================
--- 23. HOA_DON
+-- 25. HOA_DON
 -- =============================================
 INSERT INTO HOA_DON (MaHoaDon, MaDatVe, MaDoiVe, MaNVLap, ThoiGianThanhToan, HinhThucThanhToan, GiaTien) VALUES
 ('HD001', 'DV001', NULL, NULL, '2025-11-28 10:20', N'Online', 2587500),
@@ -436,5 +448,5 @@ INSERT INTO HOA_DON (MaHoaDon, MaDatVe, MaDoiVe, MaNVLap, ThoiGianThanhToan, Hin
 GO
 
 PRINT N'=== NẠP DỮ LIỆU MẪU HOÀN TẤT ===';
-PRINT N'Tổng: 23 bảng đã được nạp dữ liệu';
+PRINT N'Tổng: 25 bảng đã được nạp dữ liệu';
 GO

@@ -5,7 +5,7 @@ import {
   CreditCard, Armchair, Clock, MapPin 
 } from 'lucide-react';
 import { VE_DA_DAT_DB } from '../../services/db_mock';
-import ExchangeSteps from '../../components/common/ExchangeSteps'; 
+// Đã xóa import ExchangeSteps
 import '../../styles/pages/employee/TicketExchangePage.css';
 
 const TicketExchangePage = () => {
@@ -39,7 +39,6 @@ const TicketExchangePage = () => {
     }
 
     // 2. Tìm ghế của hành khách có CCCD tương ứng trong vé đó
-    // Lưu ý: Dữ liệu seats trong db_mock.js PHẢI có trường passengerID
     const seat = ticket.seats.find(s => s.passengerID === passengerCCCD.trim());
 
     if (!seat) {
@@ -56,8 +55,7 @@ const TicketExchangePage = () => {
     if (!foundResult) return;
     const { ticket, seat } = foundResult;
 
-    // Chuyển hướng sang trang Tìm kiếm chuyến tàu (SearchResultsPage)
-    // Kèm theo dữ liệu vé cũ để tính toán chênh lệch sau này
+    // Chuyển hướng sang trang Tìm kiếm chuyến tàu
     navigate('/employee/sales/exchange/search', { 
       state: {
         isExchange: true,
@@ -67,6 +65,7 @@ const TicketExchangePage = () => {
           exchangeValue: seat.price,
           seatsToExchange: [seat]
         },
+        // Thông tin tìm kiếm mặc định
         from: ticket.tripInfo.gaDi === "Hà Nội" ? "HN" : ticket.tripInfo.gaDi, 
         to: ticket.tripInfo.gaDen === "TP.Hồ Chí Minh" ? "SG" : ticket.tripInfo.gaDen,
         date: new Date().toISOString().split('T')[0] 
@@ -82,14 +81,10 @@ const TicketExchangePage = () => {
     setErrorMsg('');
   };
 
-  // Xác định bước hiện tại cho Navbar: 1 (Tra cứu) hoặc 2 (Chi tiết vé)
-  const currentStep = foundResult ? 2 : 1;
-
   return (
-    <div className="page-wrapper">
-      {/* 1. THANH NAVBAR (ExchangeSteps) */}
-      {/* Truyền isEmployee={true} để hiển thị đúng thứ tự bước của Sales */}
-      <ExchangeSteps currentStep={currentStep} isEmployee={true} />
+    <div className="page-wrapper" style={{ paddingTop: '20px' }}> {/* Thêm padding top nhẹ vì đã mất thanh bar */}
+      
+      {/* ĐÃ XÓA ExchangeSteps Ở ĐÂY */}
 
       <div className="exchange-container">
         
@@ -306,4 +301,4 @@ const TicketExchangePage = () => {
   );
 };
 
-export default TicketExchangePage;  
+export default TicketExchangePage;

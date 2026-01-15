@@ -56,3 +56,5 @@ EXEC sp_th5_cuong_T2
 @MaNhanVienGuiDon = 'NV007',
 @MaQuanLyDuyetDon = 'NV001',
 @MaNhanVienThayThe = 'NV008';
+
+select * from DON_NGHI_PHEP where MaDon = 'DNP005';

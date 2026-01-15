@@ -54,5 +54,9 @@ go
 EXEC sp_th5_cuong_T1
   @MaDonNghiPhep = 'DNP005',
   @MaNhanVienGuiDon = 'NV007',
-  @MaQuanLyDuyetDon = 'NV001',
+  @MaQuanLyDuyetDon = 'NV002',
   @MaNhanVienThayThe = 'NV004';
+
+UPDATE DON_NGHI_PHEP 
+SET NVDuyetDon = NULL, NVThayThe = NULL, TrangThai = N'Đang chờ'
+WHERE MaDon = 'DNP005';

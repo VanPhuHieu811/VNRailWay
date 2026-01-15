@@ -5,7 +5,7 @@ import staffRoutes from './routes/staff.route.js';
 
 import { getPool } from './config/sqlserver.config.js';
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 3000;
 
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);

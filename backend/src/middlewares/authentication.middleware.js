@@ -26,11 +26,11 @@ export const authenticationMiddleware = async (req, res, next) => {
 
         const pool = await getPool();
         const result = await pool.request()
-            .input('email', sql.VarChar(255), decoded.email)
+            .input('username', sql.VarChar(255), decoded.username)
             .query(`
                 SELECT Email, MaKH, MaNV, TenTaiKhoan, TrangThai, VaiTro
                 FROM TAI_KHOAN
-                WHERE Email = @email AND TrangThai = 1
+                WHERE TenTaiKhoan = @username AND TrangThai = 1
             `);
 
         if (result.recordset.length === 0) {
@@ -46,7 +46,7 @@ export const authenticationMiddleware = async (req, res, next) => {
             role: user.VaiTro,
             maKH: user.MaKH,
             maNV: user.MaNV,
-            tenTaiKhoan: user.TenTaiKhoan,
+            username: user.TenTaiKhoan,
         };
 
         next();
