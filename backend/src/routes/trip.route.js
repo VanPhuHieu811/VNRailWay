@@ -12,8 +12,8 @@ import { authorizeAdmin } from '../middlewares/authorize.middleware.js';
 // import { authorizeManager } from '../middlewares/authorization.middleware.js';
 
 const router = express.Router();
-router.get('/search', authenticationMiddleware, authorizeAdmin, searchTrips);
-router.get('/:id/seats', authenticationMiddleware, authorizeAdmin, getTripSeats);
-router.get('/:id', authenticationMiddleware, authorizeAdmin, getTripDetails);
+router.get('/search', authenticationMiddleware, searchTrips);
+router.get('/:id/seats', authenticationMiddleware, getTripSeats);
+router.get('/:id', authenticationMiddleware, getTripDetails);
 
 export default router;

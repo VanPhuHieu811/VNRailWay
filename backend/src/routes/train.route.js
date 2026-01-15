@@ -6,13 +6,13 @@ import { createTrain, createCarriage, getTrain, getTrainById, getCarriages, upda
 const router = express.Router();
 
 // Train
-router.get('/', authenticationMiddleware, authorizeAdmin, getTrain);
-router.get('/:id', authenticationMiddleware, authorizeAdmin, getTrainById);
+router.get('/', authenticationMiddleware, getTrain);
+router.get('/:id', authenticationMiddleware, getTrainById);
 router.post('/', authenticationMiddleware, authorizeAdmin, createTrain);
 router.patch('/:id', authenticationMiddleware, authorizeAdmin, updateTrain);
 
 // Carriage
-router.get('/:id/carriages', authenticationMiddleware, authorizeAdmin, getCarriages);
+router.get('/:id/carriages', authenticationMiddleware, getCarriages);
 router.post('/carriages', authenticationMiddleware, authorizeAdmin, createCarriage);
 router.patch('/carriages/:id', authenticationMiddleware, authorizeAdmin, updateCarriage);
 

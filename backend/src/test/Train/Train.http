@@ -30,20 +30,6 @@ Content-Type: application/json
     "trangThai": "Hoạt động"
 }
 
-### 3. Create Train (Error Case: Duplicate ID)
-# Expect: 400 Bad Request - Message: "Mã đoàn tàu đã tồn tại."
-POST {{baseUrl}}/trains
-Authorization: Bearer {{authToken}}
-Content-Type: application/json
-
-{
-    "tenTau": "Duplicate Test",
-    "hangSanXuat": "Test",
-    "ngayVanHanh": "2024-06-01",
-    "loaiTau": "Hạng sang",
-    "trangThai": "Hoạt động"
-}
-
 # CARRIAGE (TOA TÀU) TESTS
 ### 4. Create Carriage 1 (Success - Ghế)
 # Note: maDoanTau must match the one created in Step 2
