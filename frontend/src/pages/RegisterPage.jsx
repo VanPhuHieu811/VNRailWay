@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { User, CreditCard, Calendar, Phone, MapPin, Mail, Lock, ShieldCheck } from 'lucide-react';
 
-import { registerUser } from '../services/authService';
+import { registerUser } from '../services/authApi';
 
 // QUAN TRỌNG: Import file CSS riêng
 import '../styles/pages/RegisterPage.css';

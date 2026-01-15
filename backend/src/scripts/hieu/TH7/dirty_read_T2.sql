@@ -43,5 +43,5 @@ BEGIN
 END;
 GO
 
--- EXEC sp_LayLichLamViecNhanVien 
---     @MaNV = 'NV005'
+EXEC sp_LayLichLamViecNhanVien 
+    @MaNV = 'NV005'

@@ -228,7 +228,7 @@ export const getAllStaffService = async () => {
 
 //SP01
 export const getScheduleFromDB = async (maNV, tuNgay, denNgay) => {
-  const pool = await poolPromise;
+  const pool = await getPool();
   const result = await pool.request()
     .input('MaNV', sql.VarChar, maNV)
     .input('TuNgay', sql.Date, tuNgay || null)
@@ -240,7 +240,7 @@ export const getScheduleFromDB = async (maNV, tuNgay, denNgay) => {
 
 //SP 02
 export const getPayslipsFromDB = async (maNV, thang, nam) => {
-  const pool = await poolPromise;
+  const pool = await getPool();
   const result = await pool.request()
     .input('MaNV', sql.VarChar, maNV)
     .input('Thang', sql.Int, thang)
@@ -254,7 +254,7 @@ export const getPayslipsFromDB = async (maNV, thang, nam) => {
 // Thêm/Cập nhật trong src/services/staffService.js
 export const createLeaveRequest = async (leaveData) => {
   const { maPhanCong, maNV, lyDo } = leaveData;
-  const pool = await poolPromise;
+  const pool = await getPool();
   
   const result = await pool.request()
     .input('MaPhanCong', sql.VarChar, maPhanCong)
@@ -270,7 +270,7 @@ export const createLeaveRequest = async (leaveData) => {
 // Thêm vào src/services/staffService.js
 export const assignStaffToTrain = async (assignmentData) => {
   const { maNV, maChuyenTau, vaiTro, maToa } = assignmentData;
-  const pool = await poolPromise;
+  const pool = await getPool();
   
   const result = await pool.request()
     .input('MaNV', sql.VarChar, maNV)
@@ -287,7 +287,7 @@ export const assignStaffToTrain = async (assignmentData) => {
 // Thêm vào src/services/staffService.js
 export const approveLeaveRequest = async (approveData) => {
   const { maDon, maNVQuanLy, trangThaiMoi, maNVThayThe } = approveData;
-  const pool = await poolPromise;
+  const pool = await getPool();
   
   const result = await pool.request()
     .input('MaDon', sql.VarChar, maDon)
@@ -304,7 +304,7 @@ export const approveLeaveRequest = async (approveData) => {
 // src/services/staffService.js
 export const getAvailableStaff = async (params) => {
   const { maChuyenTau, loaiNV } = params;
-  const pool = await poolPromise;
+  const pool = await getPool();
   
   const result = await pool.request()
     .input('MaChuyenTauCanPhanCong', sql.VarChar, maChuyenTau)
@@ -317,7 +317,7 @@ export const getAvailableStaff = async (params) => {
 //SP06
 // src/services/staffService.js
 export const calculateMonthlySalary = async (month, year) => {
-  const pool = await poolPromise;
+  const pool = await getPool();
   
   const result = await pool.request()
     .input('Thang', sql.Int, month)
@@ -328,7 +328,7 @@ export const calculateMonthlySalary = async (month, year) => {
 };
 
 export const getLeaveHistory = async (maNV) => {
-  const pool = await poolPromise;
+  const pool = await getPool();
   const result = await pool.request()
     .input('MaNV', sql.VarChar, maNV)
     .execute('sp_LayLichSuDonNghiPhep');
