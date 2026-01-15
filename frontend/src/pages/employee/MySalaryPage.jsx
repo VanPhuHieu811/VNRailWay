@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Printer, Download } from 'lucide-react';
-// import { LUONG_DB } from '../../services/db_mock';
+import { Calendar, Printer, Download, Loader } from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { getMyPayslipsService } from '../../services/staffApi'; 
 import '../../styles/pages/employee/MySalaryPage.css';
-import {handle} from '../../api/api';
 
 const MySalaryPage = () => {
-  // Lấy năm hiện tại
+  // Lấy thời gian hiện tại
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth() + 1;
 
@@ -13,102 +14,69 @@ const MySalaryPage = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentMonth);
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const [salaryData, setSalaryData] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-
-
+  // Helper: Format ngày hiển thị
   const convertDateToDisplay = (isoDate) => {
     if (!isoDate) return '';
-
     const date = new Date(isoDate);
-
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-
     return `${day}/${month}/${year}`;
   };
 
-  const id = "NV05";
-  const [loading, setLoading] = useState(true);
+  // Helper: Format tiền tệ VND
+  const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return '0 ₫';
+    return amount.toLocaleString('vi-VN') + ' ₫';
+  };
 
+  // Hàm gọi API lấy lương
   const fetchEmployeeSalary = async (month, year) => {
     if (!month || !year) return;
+    
     try {
       setLoading(true);
-
-      const queryParams = new URLSearchParams({
-        thang: month,
-        nam: year
-      }).toString();
-
-      const res = await fetch(`http://localhost:3000/api/v1/staff/me/payslips?${queryParams}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "x-staff-id": id
-        }
-      });
-
-      const data = await handle(res);
-
-      console.log(data);
       
-      if (data?.success) {
-        setSalaryData(data.data || null);
+      const res = await getMyPayslipsService(month, year);
+
+      if (res && res.success) {
+        setSalaryData(res.data || null);
+        
+        // --- ĐÃ XÓA ĐOẠN TOAST INFO Ở ĐÂY ---
+        // Lý do: UI bên dưới đã hiển thị thông báo "Chưa có thông tin lương" rồi
+        // nên không cần hiện Toast nữa để tránh bị lặp lại 2 lần khó chịu.
+        
+      } else {
+        setSalaryData(null);
+        // Chỉ hiện toast nếu lỗi hệ thống thực sự, còn không tìm thấy thì thôi
+        // toast.warning("Không tìm thấy dữ liệu lương."); 
       }
-      else {
-        setSalaryData(null); // Xử lý trường hợp không có dữ liệu trả về
-      }
-    }
-    catch (err) {
-      console.log("Lỗi khi tải phiếu lương: ", err);
-    }
-    finally {
+    } catch (err) {
+      console.error("Lỗi khi tải phiếu lương: ", err);
+      setSalaryData(null);
+      
+      const msg = err.response?.data?.message || err.message || "Lỗi kết nối server";
+      toast.error(msg);
+    } finally {
       setLoading(false);
     }
   };
 
-  // Hàm tìm kiếm lương trong Mock DB
-  // const findSalary = (userId, month, year) => {
-  //   const record = LUONG_DB.find(
-  //     s => s.maNhanVien === userId && s.thang == month && s.nam == year
-  //   );
-  //   setSalaryData(record || null);
-  // };
+  useEffect(() => {
+    fetchEmployeeSalary(selectedMonth, selectedYear);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSearch = () => {
-    // Fallback NV001 để test
     fetchEmployeeSalary(selectedMonth, selectedYear);
   };
 
-  // Hàm format tiền tệ
-  const formatCurrency = (amount) => {
-    return amount.toLocaleString('vi-VN') + ' ₫';
-  };
-
-  // Tính tổng thu nhập & Khấu trừ (Dựa trên data tìm được)
-  // const totalIncome = salaryData ? (
-  //   salaryData.luongCoBan + 
-  //   salaryData.phuCapChucVu + 
-  //   salaryData.phuCapDiLai + 
-  //   salaryData.phuCapAnCa + 
-  //   salaryData.phuCapKhac + 
-  //   salaryData.thuong
-  // ) : 0;
-
-  // const totalDeduction = salaryData ? (
-  //   salaryData.baoHiem + 
-  //   salaryData.thueTNCN + 
-  //   salaryData.khauTruKhac
-  // ) : 0;
-
-  // const netPay = totalIncome - totalDeduction;
-
- 
-
-
   return (
     <div className="salary-container">
+      <ToastContainer position="top-right" autoClose={3000} />
+      
       {/* Header */}
       <div className="mb-6">
         <h1 className="page-title">Thông tin lương</h1>
@@ -122,7 +90,7 @@ const MySalaryPage = () => {
           <select 
             className="filter-select" 
             value={selectedMonth} 
-            onChange={(e) => setSelectedMonth(e.target.value)}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
           >
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1}>Tháng {i + 1}</option>
@@ -135,30 +103,34 @@ const MySalaryPage = () => {
           <select 
             className="filter-select"
             value={selectedYear} 
-            onChange={(e) => setSelectedYear(e.target.value)}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
           >
             <option value="2024">2024</option>
             <option value="2025">2025</option>
-            <option value = "2026">2026</option>
+            <option value="2026">2026</option>
           </select>
         </div>
 
-        <button className="btn-view-salary" onClick={handleSearch}>
-          Xem phiếu lương
+        <button className="btn-view-salary" onClick={handleSearch} disabled={loading}>
+          {loading ? 'Đang tải...' : 'Xem phiếu lương'}
         </button>
       </div>
 
+      {/* --- LOADING STATE --- */}
+      {loading && (
+          <div className="flex justify-center py-10">
+              <Loader className="animate-spin text-blue-600" size={32} />
+          </div>
+      )}
+
       {/* --- PAYSLIP RESULT --- */}
-      {salaryData ? (
-        <div className="payslip-card">
+      {!loading && salaryData ? (
+        <div className="payslip-card animate-fade-in">
           
           {/* 1. Header Card */}
           <div className="payslip-header">
             <div>
               <h2 className="payslip-title">Phiếu lương tháng {salaryData.Thang}/{salaryData.Nam}</h2>
-              <p className="payslip-employee-info">
-                Mã phiếu: {salaryData.MaPhieu} • Nhân viên: {salaryData.TenNhanVien}
-              </p>
             </div>
             <div className="text-right">
               <p className="payment-date">Ngày thanh toán: {convertDateToDisplay(salaryData.NgayThanhToan)}</p>
@@ -176,7 +148,7 @@ const MySalaryPage = () => {
                 <span>{formatCurrency(salaryData.LuongCoBan)}</span>
               </div>
               <div className="row-item">
-                <span>Phụ cấp chức vụ</span>
+                <span>Phụ cấp chức vụ (Trách nhiệm)</span>
                 <span>{formatCurrency(salaryData.PhuCapTrachNhiem)}</span>
               </div>
               <div className="row-item">
@@ -184,20 +156,12 @@ const MySalaryPage = () => {
                 <span>{formatCurrency(salaryData.PhuCapDiLai)}</span>
               </div>
               <div className="row-item">
-                <span>Phụ cấp ăn ca</span>
+                <span>Thù lao tăng ca / Ăn ca</span>
                 <span>{formatCurrency(salaryData.ThuLaoTangCa)}</span>
               </div>
-              {/* <div className="row-item">
-                <span>Phụ cấp khác</span>
-                <span>{formatCurrency(salaryData.phuCapKhac)}</span>
-              </div>
-              <div className="row-item">
-                <span>Thưởng</span>
-                <span>{formatCurrency(salaryData.thuong)}</span>
-              </div> */}
               <div className="row-item total">
                 <span>Tổng thu nhập</span>
-                <span>{formatCurrency(salaryData.TongLuongThucNhan)}</span>
+                <span>{formatCurrency(salaryData.TongLuongThucNhan + (salaryData.KhoanKhauTruKhac || 0))}</span> 
               </div>
             </div>
 
@@ -207,17 +171,9 @@ const MySalaryPage = () => {
               {/* Khấu Trừ */}
               <div className="section-box">
                 <h3 className="section-title text-red-700">Các khoản khấu trừ</h3>
-                {/* <div className="row-item">
-                  <span>Bảo hiểm</span>
-                  <span>- {formatCurrency(salaryData.baoHiem)}</span>
-                </div>
                 <div className="row-item">
-                  <span>Thuế TNCN</span>
-                  <span>- {formatCurrency(salaryData.thueTNCN)}</span>
-                </div> */}
-                <div className="row-item">
-                  <span>Khác</span>
-                  <span>- {formatCurrency(salaryData.KhoanKhauTruKhac)}</span>
+                  <span>Khấu trừ khác / Bảo hiểm / Thuế</span>
+                  <span className="text-red-600">- {formatCurrency(salaryData.KhoanKhauTruKhac)}</span>
                 </div>
               </div>
 
@@ -259,11 +215,13 @@ const MySalaryPage = () => {
 
         </div>
       ) : (
-        // Use Case 2.2.1: Không có dữ liệu
-        <div className="no-data-msg">
-          <p>Chưa có thông tin lương cho Tháng {selectedMonth}/{selectedYear}.</p>
-          <p className="text-sm mt-1">Vui lòng liên hệ bộ phận kế toán nếu có thắc mắc.</p>
-        </div>
+        // Không có dữ liệu
+        !loading && (
+            <div className="no-data-msg">
+            <p>Chưa có thông tin lương cho Tháng {selectedMonth}/{selectedYear}.</p>
+            <p className="text-sm mt-1">Vui lòng kiểm tra lại thời gian hoặc liên hệ bộ phận kế toán.</p>
+            </div>
+        )
       )}
     </div>
   );

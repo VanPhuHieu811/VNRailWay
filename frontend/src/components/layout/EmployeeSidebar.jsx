@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   // Icon chung
@@ -16,10 +16,37 @@ import {
 
 // Import file CSS
 import '../../styles/layout/EmployeeSidebar.css';
+// 1. Import API Service
+import { getMyProfileService } from '../../services/staffApi';
 
 const EmployeeSidebar = ({ userRole, onLogout }) => {
   const location = useLocation();
   const isActive = (path) => location.pathname.includes(path);
+  
+  // 2. Thêm State để lưu tên nhân viên
+  const [fullName, setFullName] = useState('Nhân viên');
+
+  // 3. Gọi API lấy thông tin nhân viên khi Sidebar được load
+  useEffect(() => {
+    const fetchStaffInfo = async () => {
+      try {
+        const res = await getMyProfileService();
+        if (res && res.success && res.data.nhanVien) {
+          setFullName(res.data.nhanVien.hoTen);
+        }
+      } catch (error) {
+        // Nếu lỗi thì giữ nguyên mặc định là 'Nhân viên', không chặn giao diện
+        console.error("Không thể lấy tên nhân viên cho Sidebar", error);
+      }
+    };
+
+    fetchStaffInfo();
+  }, []);
+
+  // Helper: Lấy chữ cái đầu của tên để làm Avatar
+  const getAvatarChar = (name) => {
+      return name ? name.charAt(0).toUpperCase() : 'U';
+  };
 
   // Helper component để render từng mục menu
   const NavItem = ({ to, icon: Icon, label }) => (
@@ -61,7 +88,6 @@ const EmployeeSidebar = ({ userRole, onLogout }) => {
       {/* 2. MENU ITEMS */}
       <div className="sidebar-menu">
         
-
         {/* --- NHÓM CREW (Lái tàu, Toa tàu, Trưởng tàu) --- */}
         {userRole === 'CREW' && (
           <>
@@ -70,7 +96,6 @@ const EmployeeSidebar = ({ userRole, onLogout }) => {
             <NavItem to="/employee/leave-request" icon={FileText} label="Đơn nghỉ phép" />
           </>
         )}
-
 
         {/* --- NHÓM SALES (Nhân viên bán vé) --- */}
         {userRole === 'SALES' && (
@@ -81,7 +106,6 @@ const EmployeeSidebar = ({ userRole, onLogout }) => {
             <NavItem to="/employee/sales/history" icon={Search} label="Tra cứu khách hàng" />
           </>
         )}
-
 
         {/* --- NHÓM MANAGER (Quản lý) --- */}
         {userRole === 'MANAGER' && (
@@ -95,10 +119,8 @@ const EmployeeSidebar = ({ userRole, onLogout }) => {
             <NavItem to="/employee/manager/trips" icon={Map} label="Chuyến tàu" />
             <NavItem to="/employee/manager/pricing" icon={CreditCard} label="Giá vé" />
             <NavItem to="/employee/manager/discounts" icon={Percent} label="Ưu đãi" />
-
           </>
         )}
-
 
         {/* --- CHỨC NĂNG CHUNG (Tất cả nhân viên đều có) --- */}
         <GroupLabel label="Cá nhân" />
@@ -113,10 +135,11 @@ const EmployeeSidebar = ({ userRole, onLogout }) => {
         {/* Click vào user info để sang trang Profile */}
         <Link to="/employee/profile" className="user-info-box" style={{textDecoration: 'none', cursor: 'pointer'}}>
           <div className="user-avatar">
-            {userRole?.[0] || 'U'}
+            {getAvatarChar(fullName)}
           </div>
           <div className="user-details">
-            <p className="user-name">Nhân viên</p>
+            {/* 5. Hiển thị tên thật từ API */}
+            <p className="user-name" title={fullName}>{fullName}</p>
             <p className="user-role">{getRoleDisplayName(userRole)}</p>
           </div>
         </Link>

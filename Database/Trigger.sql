@@ -239,6 +239,23 @@ BEGIN
         ROLLBACK TRANSACTION;
         RETURN;
     END
+
+    IF EXISTS (
+        SELECT 1 
+        FROM Inserted i
+        JOIN NHAN_VIEN nv ON i.MaNV = nv.MaNV
+        WHERE 
+            (i.VaiTro = N'Nhân viên phụ trách lái' AND nv.LoaiNhanVien <> N'Lái tàu')
+            OR
+            (i.VaiTro = N'Nhân viên phụ trách toa' AND nv.LoaiNhanVien <> N'Toa tàu')
+            OR
+            (i.VaiTro = N'Nhân viên trưởng' AND nv.LoaiNhanVien NOT IN (N'Toa tàu', N'Lái tàu'))
+    )
+    BEGIN
+        RAISERROR(N'Lỗi Nghiệp vụ: Loại nhân viên không phù hợp với Vai trò được phân công .', 16, 1);
+        ROLLBACK TRANSACTION;
+        RETURN;
+    END
 END;
 GO
 
@@ -341,10 +358,6 @@ BEGIN
 END;
 GO
 
--- =============================================
--- [ĐÃ XÓA] TRIGGER CŨ SỐ 12 (trg_TinhGiaVeChinhXac)
--- Lý do: Logic tính giá sẽ chuyển vào Stored Procedure
--- =============================================
 
 -- =============================================
 -- 12. TRIGGER: KIỂM TRA TỔNG GIỜ LÀM VIỆC LÁI TÀU

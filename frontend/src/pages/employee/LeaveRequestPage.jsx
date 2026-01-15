@@ -1,14 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   FileText, List, Train, Clock, MapPin, 
-  AlertTriangle, CheckCircle, XCircle, Loader, Plus, X 
+  CheckCircle, XCircle, Loader, Plus 
 } from 'lucide-react';
-import { PHAN_CONG_DB, DON_NGHI_PHEP_DB } from '../../services/db_mock';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import '../../styles/pages/employee/LeaveRequestPage.css';
-import { handle } from '../../api/api';
+
+// Import Service
+import { 
+  getMyScheduleService, 
+  getMyLeaveHistoryService, 
+  createLeaveRequestService 
+} from '../../services/staffApi';
 
 const LeaveRequestPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('create');
+  
+  // Data State
   const [availableShifts, setAvailableShifts] = useState([]);
   const [historyList, setHistoryList] = useState([]);
   
@@ -17,173 +28,122 @@ const LeaveRequestPage = () => {
   const [reason, setReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [leaveDate, setLeaveDate] = useState('');
-
-  // --- STATE THÔNG BÁO ---
-  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [loading, setLoading] = useState(false);
-  
-  const id = "NV05"; // ID nhân viên giả định
 
+  // Helper: Format hiển thị ngày
   const convertDateToDisplay = (isoDate) => {
     if (!isoDate) return '';
-
     const date = new Date(isoDate);
-
     const day = String(date.getDate()).padStart(2, '0');
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-
     return `${day}/${month}/${year}`;
   };
 
-  // Helper: Hiển thị thông báo
-  const showNotification = (message, type = 'success') => {
-    setNotification({ show: true, message, type });
-    setTimeout(() => {
-      setNotification({ show: false, message: '', type: '' });
-    }, 3000); // 5 giây tự tắt
-  };
-
-  // --- 1. Load Lịch sử (Dùng Mock hoặc API riêng) ---
+  // --- 1. Load Lịch sử ---
   const fetchHistoryLeaves = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:3000/api/v1/staff/me/leave-history", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "x-staff-id": id
-        }
-      });
-
-      const data = await handle(res);
-      console.log(data.data);
-      if (data?.success) {
-        setHistoryList(data.data || []);
+      const res = await getMyLeaveHistoryService();
+      if (res && res.success) {
+        setHistoryList(res.data || []);
       }
-      else {
-        setHistoryList([]);
-      }
-    }
-    catch (err) {
-      console.log("Lỗi khi tải lịch sử xin nghỉ phép: ", err);
-      showNotification("Lỗi kết nối đến server", "error");
-      setAvailableShifts([]);
-    }
-    finally {
+    } catch (err) {
+      console.error("Lỗi tải lịch sử:", err);
+      // Không toast lỗi ở đây để tránh spam khi mới vào trang
+    } finally {
       setLoading(false);
     }
   };
 
-  // --- 2. EFFECT: Gọi API Lọc chuyến tàu theo ngày ---
+  // --- 2. Load Danh sách chuyến tàu để chọn (Khi chọn ngày) ---
   useEffect(() => {
     if (!leaveDate) return;
 
-    const fetchLeaveRequests = async(date) => {
+    const fetchShiftsForDate = async () => {
       try {
         setLoading(true);
-
-        // Tạo query params
-        const queryParams = new URLSearchParams({
-          tuNgay: date, // Chú ý: Backend bên kia đang nhận startDate/endDate (check lại server.js)
-          denNgay: date
-        }).toString();
-
-        // --- SỬA LỖI 1: Gọi API đúng port 5000 (Backend) ---
-        const response = await fetch(`http://localhost:3000/api/v1/staff/me/schedule?${queryParams}`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "x-staff-id": id 
-          }
-        });
+        // Gọi API lấy lịch, truyền ngày bắt đầu = ngày kết thúc = ngày chọn
+        const res = await getMyScheduleService(leaveDate, leaveDate);
         
-        // --- SỬA LỖI 2: Parse JSON trước khi dùng ---
-        const resJson = await response.json(); 
-
-        if (resJson && resJson.data.length > 0) { // Giả sử API trả về mảng trực tiếp hoặc resJson.data
-           // Nếu API trả về { success: true, data: [...] } thì dùng resJson.data
-           const data = resJson.data || resJson; 
-           setAvailableShifts(data);
+        if (res && res.success && res.data.length > 0) {
+          setAvailableShifts(res.data);
+          toast.info(`Tìm thấy ${res.data.length} ca làm việc.`);
         } else {
-           setAvailableShifts([]);
-           // --- SỬA LỖI 3: Khôi phục thông báo khi không có dữ liệu ---
-           showNotification(
-             `Không có chuyến tàu nào được phân công cho bạn vào ngày ${convertDateToDisplay(date)}.`, 
-             'error'
-           );
+          setAvailableShifts([]);
+          toast.warning(`Bạn không có ca làm việc nào trong ngày ${convertDateToDisplay(leaveDate)}.`);
         }
       } catch (err) {
-        console.log("Lỗi khi tải lịch làm việc: ", err);
-        showNotification("Lỗi kết nối đến server", "error");
+        console.error("Lỗi tải ca làm việc:", err);
         setAvailableShifts([]);
+        toast.error("Không thể tải thông tin ca làm việc.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLeaveRequests(leaveDate);
+    fetchShiftsForDate();
   }, [leaveDate]);
     
+  // --- 3. Init: Kiểm tra đăng nhập & Load lịch sử ---
   useEffect(() => {
-    fetchHistoryLeaves();
-  }, []);
-  // Xử lý khi click vào dropdown mà chưa chọn ngày
-  const handleSelectFocus = (e) => {
-    if (!leaveDate) {
-      e.target.blur();
-      showNotification("Vui lòng chọn ngày xin nghỉ phép trước!", "warning");
+    const employee = localStorage.getItem('employee');
+    if (!employee) {
+        toast.error("Vui lòng đăng nhập lại.");
+        navigate('/login');
+        return;
     }
-  };
+    fetchHistoryLeaves();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-
+  // --- 4. Xử lý Gửi đơn ---
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedShiftId || !reason.trim()) return;
+    if (!selectedShiftId || !reason.trim()) {
+        toast.warning("Vui lòng chọn chuyến tàu và nhập lý do.");
+        return;
+    }
 
     try {
       setIsSubmitting(true);
+      
+      const res = await createLeaveRequestService(selectedShiftId, reason);
 
-      const res = await fetch("http://localhost:3000/api/v1/staff/me/leave-requests", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-staff-id": id
-        },
-        body: JSON.stringify({
-          maPhanCong: selectedShiftId,
-          lyDo: reason
-        })
-      });
+      if (res && res.success) {
+        toast.success("Gửi đơn nghỉ phép thành công!");
+        
+        // Reset form
+        setSelectedShiftId('');
+        setReason('');
+        setLeaveDate('');
+        setAvailableShifts([]);
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        showNotification(data.message || "Gửi đơn thất bại", "error");
-        return;
-      }
-
-      setSelectedShiftId('');
-      setReason('');
-
-      await fetchHistoryLeaves();
-
-      setActiveTab('history');
-
-      showNotification("Gửi đơn nghỉ phép thành công!", "success");
-
+        // Refresh lịch sử và chuyển tab
+        await fetchHistoryLeaves();
+        setActiveTab('history');
+      } 
     } catch (err) {
-      console.log("Lỗi gửi đơn:", err);
-      showNotification("Lỗi kết nối đến server", "error");
+      console.error("Lỗi gửi đơn:", err);
+      const msg = err.response?.data?.message || err.message || "Gửi đơn thất bại.";
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleSelectFocus = (e) => {
+    if (!leaveDate) {
+      e.target.blur();
+      toast.warning("Vui lòng chọn ngày trước!");
+    }
+  };
+
   const renderStatus = (status) => {
     switch (status) {
-      case 'Đang chờ': return <span className="status-label pending"><Loader size={12}/> Chờ duyệt</span>;
-      case 'Chấp nhận': return <span className="status-label approved"><CheckCircle size={12}/> Đã duyệt</span>;
+      case 'Đang chờ': return <span className="status-label pending"><Loader size={12} className="animate-spin"/> Chờ duyệt</span>;
+      case 'Chấp nhận': 
+      case 'Đã duyệt': return <span className="status-label approved"><CheckCircle size={12}/> Đã duyệt</span>;
       default: return <span className="status-label rejected"><XCircle size={12}/> Từ chối</span>;
     }
   };
@@ -192,26 +152,11 @@ const LeaveRequestPage = () => {
 
   return (
     <div className="leave-container relative">
-      
-      {/* --- TOAST NOTIFICATION --- */}
-      {notification.show && (
-        <div className={`fixed top-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg animate-slide-in
-          ${notification.type === 'warning' ? 'bg-orange-50 border-l-4 border-orange-500 text-orange-800' : 
-            notification.type === 'success' ? 'bg-green-50 border-l-4 border-green-500 text-green-800' : 
-            'bg-red-50 border-l-4 border-red-500 text-red-800'} 
-        `}>
-          {notification.type === 'warning' ? <AlertTriangle size={20}/> : 
-           notification.type === 'success' ? <CheckCircle size={20}/> : <XCircle size={20}/>}
-          <span className="font-medium text-sm">{notification.message}</span>
-          <button onClick={() => setNotification({...notification, show: false})} className="ml-2 opacity-50 hover:opacity-100">
-            <X size={16}/>
-          </button>
-        </div>
-      )}
+      <ToastContainer position="top-right" autoClose={3000} />
 
       <div className="page-header">
         <h1 className="page-title"><FileText size={28} className="text-blue-700"/> Đơn nghỉ phép</h1>
-        <p className="page-subtitle">Tạo và quản lý đơn xin nghỉ phép</p>
+        <p className="page-subtitle">Tạo và quản lý đơn xin nghỉ phép cá nhân</p>
       </div>
 
       <div className="tabs-with-filter">
@@ -232,7 +177,7 @@ const LeaveRequestPage = () => {
 
         {activeTab === 'create' && (
           <div className="leave-date-filter">
-            <label className="leave-date-label">Chọn ngày xin nghỉ phép</label>
+            <label className="leave-date-label">Chọn ngày muốn nghỉ</label>
             <div className="leave-date-picker">
               <input
                 type="date"
@@ -252,26 +197,29 @@ const LeaveRequestPage = () => {
         <div className="create-card">
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label className="form-label">Chọn chuyến tàu</label>
+              <label className="form-label">Chọn ca làm việc cần nghỉ</label>
               <select 
                 className="form-select"
                 value={selectedShiftId}
                 onChange={(e) => setSelectedShiftId(e.target.value)}
                 onFocus={handleSelectFocus}
-                required
+                disabled={!leaveDate || availableShifts.length === 0}
               >
-                <option value="">-- Chọn chuyến tàu --</option>
+                <option value="">
+                    {!leaveDate ? "-- Vui lòng chọn ngày trước --" : 
+                     availableShifts.length === 0 ? "-- Không có ca làm việc --" : "-- Chọn chuyến tàu --"}
+                </option>
                 {availableShifts.map(shift => (
                   <option key={shift.MaPhanCong} value={shift.MaPhanCong}>
-                    {shift.MaChuyen} ({convertDateToDisplay(shift.NgayKhoiHanh)}) - {shift.TenTuyen}
+                    {shift.MaChuyenTau} | {shift.GioDi.substring(0,5)} - {shift.GioDen.substring(0,5)} | {shift.TenTuyen}
                   </option>
                 ))}
               </select>
 
               {selectedShiftDetails && (
-                <div className="selected-shift-preview">
-                  <div className="flex items-center gap-4 text-sm text-slate-600 mb-2">
-                    <span className="font-bold flex items-center gap-1"><Train size={16}/> {selectedShiftDetails.MaChuyenTau}</span>
+                <div className="selected-shift-preview bg-blue-50 p-3 rounded-md mt-2 border border-blue-100">
+                  <div className="flex items-center gap-4 text-sm text-slate-700 mb-1">
+                    <span className="font-bold flex items-center gap-1 text-blue-700"><Train size={16}/> {selectedShiftDetails.MaChuyenTau}</span>
                     <span className="flex items-center gap-1"><Clock size={16}/> {selectedShiftDetails.GioDi} - {selectedShiftDetails.GioDen}</span>
                   </div>
                   <div className="text-sm text-slate-500 flex items-center gap-1">
@@ -285,15 +233,19 @@ const LeaveRequestPage = () => {
               <label className="form-label">Lý do nghỉ phép <span className="text-red-500">*</span></label>
               <textarea 
                 className="form-textarea"
-                placeholder="Nhập lý do xin nghỉ phép (tối thiểu 10 ký tự)..."
+                placeholder="Nhập lý do chi tiết (VD: Bị ốm, việc gia đình...)"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 required
-                minLength={10}
+                minLength={5}
               />
             </div>
 
-            <button type="submit" className="btn-submit" disabled={isSubmitting}>
+            <button 
+                type="submit" 
+                className={`btn-submit ${isSubmitting || !selectedShiftId ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                disabled={isSubmitting || !selectedShiftId}
+            >
               {isSubmitting ? "Đang gửi..." : "Gửi đơn"}
             </button>
           </form>
@@ -301,35 +253,41 @@ const LeaveRequestPage = () => {
       ) : (
         // HISTORY TAB
         <div className="history-list">
-          {historyList.length > 0 ? (
+          {loading && historyList.length === 0 ? (
+             <div className="text-center py-5">Đang tải...</div>
+          ) : historyList.length > 0 ? (
             historyList.map(item => (
               <div key={item.MaDon} className="history-card">
                 <div className="card-top">
                   <div className="flex flex-col">
-                    <div className="train-badge">
-                      <Train size={16}/> {item.MaChuyenTau}
+                    <div className="train-badge bg-slate-100 text-slate-700">
+                      <Train size={16}/> {item.MaChuyenTau || 'N/A'}
                     </div>
-                    <span className="route-text mt-2">{item.TenTuyen}</span>
+                    {/* Backend trả về TenTuyen ở chỗ nào đó, nếu không có thì ẩn */}
+                    {item.TenTuyen && <span className="route-text mt-2">{item.TenTuyen}</span>}
                   </div>
                   {renderStatus(item.TrangThai)}
                 </div>
                 
-                <div className="time-text">
-                  <Clock size={14}/> {item.GioDi} - {item.GioDen} • {convertDateToDisplay(item.NgayKhoiHanh)}
+                <div className="time-text mt-2 text-slate-500 text-sm flex items-center gap-2">
+                  <Clock size={14}/> 
+                  <span>Ngày khởi hành: <b>{convertDateToDisplay(item.NgayKhoiHanh)}</b></span>
                 </div>
 
-                <div className="reason-box">
-                  <span className="font-semibold text-slate-700">Lý do: </span> 
+                <div className="reason-box mt-3 bg-slate-50 p-2 rounded text-sm text-slate-700">
+                  <span className="font-semibold">Lý do: </span> 
                   {item.LyDo}
                 </div>
 
-                <div className="date-created">
-                  Ngày tạo: {convertDateToDisplay(item.NgayTao)}
+                <div className="date-created text-xs text-slate-400 mt-2 text-right">
+                  Ngày tạo đơn: {convertDateToDisplay(item.NgayTao)}
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center py-10 text-slate-400 italic">Chưa có lịch sử đơn nghỉ phép.</div>
+            <div className="text-center py-10 text-slate-400 italic bg-white rounded-lg border border-dashed">
+                Bạn chưa tạo đơn nghỉ phép nào.
+            </div>
           )}
         </div>
       )}
