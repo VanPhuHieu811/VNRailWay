@@ -1,112 +1,185 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, MapPin, Calendar, CreditCard, UserCircle } from 'lucide-react';
-import { NHAN_VIEN_DB } from '../../services/db_mock';
-import '../../styles/pages/employee/EmployeeProfilePage.css';
+import { useNavigate } from 'react-router-dom';
+import { 
+  User, Phone, MapPin, Calendar, CreditCard, 
+  UserCircle, Loader, Mail, Shield 
+} from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { getMyProfileService } from '../../services/staffApi'; 
 
 const EmployeeProfilePage = () => {
   const [employee, setEmployee] = useState(null);
+  const [account, setAccount] = useState(null); 
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    // 1. Lấy thông tin user đăng nhập
-    const storedUser = JSON.parse(localStorage.getItem('employee'));
-    
-    if (storedUser) {
-      // 2. Tìm chi tiết trong Mock DB
-      const details = NHAN_VIEN_DB.find(e => e.maNhanVien === storedUser.maNhanVien);
-      // Ưu tiên dữ liệu chi tiết từ bảng Nhân Viên, nếu không có thì dùng tạm từ LocalStorage
-      setEmployee(details || storedUser);
-    } else {
-      // Fallback test
-      setEmployee(NHAN_VIEN_DB[2]); 
-    }
+    fetchProfile();
   }, []);
 
-  if (!employee) return <div className="p-10 text-center">Đang tải thông tin...</div>;
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      const res = await getMyProfileService();
 
-  // Format ngày sinh
+      if (res && res.success) {
+        setEmployee(res.data.nhanVien);
+        setAccount(res.data.account);
+      } else {
+        toast.error("Không thể tải thông tin nhân viên.");
+      }
+    } catch (error) {
+      console.error("Lỗi tải profile:", error);
+      if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+         toast.error("Phiên đăng nhập hết hạn.");
+         navigate('/login');
+      } else {
+         toast.error("Lỗi kết nối server.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return "---";
     const date = new Date(dateString);
     return date.toLocaleDateString('vi-VN');
   };
 
-  // Map loại nhân viên sang tiếng Việt cho đẹp
-  const getRoleName = (role) => {
-    switch(role) {
-        case 'MANAGER': return 'Quản lý';
-        case 'SALES': return 'Nhân viên Bán vé';
-        case 'CREW': return 'Nhân viên Tàu';
-        default: return role;
-    }
+  const getRoleName = (roleCode) => {
+    if (!roleCode) return 'Nhân viên';
+    const role = roleCode.toUpperCase();
+    if (role.includes('QUANLY') || role === 'MANAGER') return 'Quản Lý';
+    if (role.includes('BANVE') || role === 'SALES') return 'NV Bán vé';
+    if (role.includes('TAU') || role === 'CREW') return 'Lái Tàu';
+    return roleCode;
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-slate-50 text-slate-500">
+        <Loader className="animate-spin mb-3 text-blue-600" size={40} />
+        <p className="font-medium">Đang tải hồ sơ nhân viên...</p>
+      </div>
+    );
   }
 
+  if (!employee) return <div className="p-10 text-center text-red-500">Không tìm thấy thông tin nhân viên.</div>;
+
   return (
-    <div className="profile-container">
-      {/* HEADER: Avatar & Tên */}
-      <div className="profile-header-card">
-        <div className="avatar-large">
-          {employee.hoTen ? employee.hoTen.charAt(0) : 'U'}
-        </div>
-        <div className="profile-basic-info">
-          <h2>{employee.hoTen}</h2>
-          <div className="flex items-center gap-3 mt-1">
-            <span className="role-badge">{getRoleName(employee.loaiNhanVien)}</span>
-            <span className="text-slate-400 text-sm">|</span>
-            <span className="text-slate-500 text-sm font-medium">MNV: {employee.maNhanVien}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* BODY: Thông tin chi tiết (Dựa đúng theo Schema DB) */}
-      <div className="detail-card">
-        <h3 className="card-title">
-          <User size={20} className="text-blue-600"/> Thông tin cá nhân
-        </h3>
+    <div className="min-h-screen bg-slate-50 flex justify-center p-5 font-sans">
+      <ToastContainer position="top-right" autoClose={2000} />
+      
+      <div className="w-full max-w-4xl">
         
-        <div className="info-grid">
+        {/* HEADER CARD */}
+        <div className="bg-white rounded-2xl p-8 flex flex-col md:flex-row items-center gap-6 mb-6 shadow-sm border border-slate-200">
+          {/* Avatar */}
+          <div className="relative">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center text-4xl font-bold shadow-lg border-4 border-white">
+              {employee.hoTen ? employee.hoTen.charAt(0).toUpperCase() : 'N'}
+            </div>
+          </div>
           
-          {/* Cột 1 */}
-          <div className="info-column space-y-6">
-            <div className="info-item">
-              <label><Calendar size={14} className="inline mr-1"/> Ngày sinh</label>
-              <p>{formatDate(employee.ngaySinh)}</p>
-            </div>
-
-            <div className="info-item">
-              <label><UserCircle size={14} className="inline mr-1"/> Giới tính</label>
-              <p>{employee.gioTinh || "---"}</p>
-            </div>
-
-            <div className="info-item">
-              <label><CreditCard size={14} className="inline mr-1"/> Số CCCD / CMND</label>
-              <p>{employee.cccd}</p>
+          {/* Info Header */}
+          <div className="text-center md:text-left">
+            <h2 className="text-2xl font-extrabold text-slate-800 mb-2">{employee.hoTen}</h2>
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+              <span className="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wide">
+                {getRoleName(employee.loaiNhanVien)}
+              </span>
+              <span className="text-slate-300 hidden md:inline">|</span>
+              <span className="text-slate-500 text-sm flex items-center gap-1.5">
+                <Shield size={14}/> MNV: {employee.maNV}
+              </span>
             </div>
           </div>
+        </div>
 
-          {/* Cột 2 */}
-          <div className="info-column space-y-6">
-            <div className="info-item">
-              <label><Phone size={14} className="inline mr-1"/> Số điện thoại</label>
-              <p>{employee.soDienThoai || employee.sdt}</p>
+        {/* DETAIL CARD */}
+        <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-200">
+          <div className="text-lg font-bold text-slate-700 mb-8 flex items-center gap-2 border-b border-slate-100 pb-4">
+            <User size={20} className="text-blue-600"/>
+            Thông tin cá nhân
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-16 gap-y-8">
+            
+            {/* ITEM 1 */}
+            <div className="flex flex-col">
+              <label className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <Calendar size={14} className="mr-1.5"/> Ngày sinh
+              </label>
+              <div className="text-base font-semibold text-slate-800 pb-2 border-b border-slate-100 min-h-[32px]">
+                {formatDate(employee.ngaySinh)}
+              </div>
             </div>
 
-            <div className="info-item">
-              <label><MapPin size={14} className="inline mr-1"/> Địa chỉ</label>
-              <p>{employee.diaChi}</p>
+            {/* ITEM 2 */}
+            <div className="flex flex-col">
+              <label className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <Mail size={14} className="mr-1.5"/> Email Hệ thống
+              </label>
+              <div className="text-base font-semibold text-slate-800 pb-2 border-b border-slate-100 min-h-[32px]">
+                {account?.email || "---"}
+              </div>
             </div>
+
+            {/* ITEM 3 */}
+            <div className="flex flex-col">
+              <label className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <UserCircle size={14} className="mr-1.5"/> Giới tính
+              </label>
+              <div className="text-base font-semibold text-slate-800 pb-2 border-b border-slate-100 min-h-[32px]">
+                {employee.gioiTinh || "---"}
+              </div>
+            </div>
+
+            {/* ITEM 4 */}
+            <div className="flex flex-col">
+              <label className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <Phone size={14} className="mr-1.5"/> Số điện thoại
+              </label>
+              <div className="text-base font-semibold text-slate-800 pb-2 border-b border-slate-100 min-h-[32px]">
+                {employee.soDienThoai || "---"}
+              </div>
+            </div>
+
+            {/* ITEM 5 */}
+            <div className="flex flex-col">
+              <label className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <CreditCard size={14} className="mr-1.5"/> Số CCCD / CMND
+              </label>
+              <div className="text-base font-semibold text-slate-800 pb-2 border-b border-slate-100 min-h-[32px]">
+                {employee.cccd}
+              </div>
+            </div>
+
+            {/* ITEM 6 */}
+            <div className="flex flex-col">
+              <label className="flex items-center text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                <MapPin size={14} className="mr-1.5"/> Địa chỉ
+              </label>
+              <div className="text-base font-semibold text-slate-800 pb-2 border-b border-slate-100 min-h-[32px]">
+                {employee.diaChi || "---"}
+              </div>
+            </div>
+
           </div>
 
+          {/* Action Buttons */}
+          <div className="mt-10 pt-6 border-t border-slate-100 flex justify-end gap-3">
+            <button 
+              className="px-5 py-2.5 rounded-lg font-semibold text-sm bg-blue-600 text-white border border-blue-600 hover:bg-blue-700 transition-colors shadow-sm"
+              onClick={() => toast.info("Liên hệ quản lý để cập nhật")}
+            >
+              Cập nhật thông tin
+            </button>
+          </div>
         </div>
 
-        {/* Nút thao tác (Optional) */}
-        <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end gap-4">
-            <button className="px-4 py-2 border border-slate-300 rounded-lg text-slate-600 font-semibold hover:bg-slate-50" onClick={() => alert("Chức năng đổi mật khẩu")}>
-                Đổi mật khẩu
-            </button>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700" onClick={() => alert("Chức năng cập nhật thông tin")}>
-                Cập nhật thông tin
-            </button>
-        </div>
       </div>
     </div>
   );

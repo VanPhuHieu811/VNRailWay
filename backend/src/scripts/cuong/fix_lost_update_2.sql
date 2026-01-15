@@ -12,8 +12,8 @@ begin
   
   -- check xem don nghi phep co ton tai va o trang thai dang cho duyet khong
   if not exists (
-    select *
-    from DON_NGHI_PHEP dnp 
+    select 1
+    from DON_NGHI_PHEP dnp with (updlock, holdlock)
     where dnp.MaDon = @MaDonNghiPhep AND dnp.TrangThai = N'Đang chờ'
   )
   begin 
@@ -22,18 +22,18 @@ begin
     return;
   end
   
-  -- check xem nhan vien gui don co ton tai va dang hoat dong khong
-  if not exists (
-    select 1
-    from TAI_KHOAN tk
-    join NHAN_VIEN nv on tk.MaNV = nv.MaNV
-    where tk.MaNV = @MaNhanVienGuiDon AND tk.TrangThai = 1
-  )
-  begin 
-    print N'[T2] Nhân viên gửi đơn không tồn tại hoặc không hoạt động.';
-    rollback transaction;
-    return;
-  end
+  -- -- check xem nhan vien gui don co ton tai va dang hoat dong khong
+  -- if not exists (
+  --   select 1
+  --   from TAI_KHOAN tk
+  --   join NHAN_VIEN nv on tk.MaNV = nv.MaNV
+  --   where tk.MaNV = @MaNhanVienGuiDon AND tk.TrangThai = 1
+  -- )
+  -- begin 
+  --   print N'[T2] Nhân viên gửi đơn không tồn tại hoặc không hoạt động.';
+  --   rollback transaction;
+  --   return;
+  -- end
   
   waitfor delay '00:00:10';
 

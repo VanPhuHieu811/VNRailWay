@@ -3,57 +3,136 @@ import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { LogIn } from 'lucide-react'; 
-import { loginUser } from '../services/authService';
-import '../styles/pages/LoginPage.css'; 
+import { LogIn } from 'lucide-react';
+
+// Đảm bảo import đúng tên file service bạn đã tạo
+import { loginUser, getCurrentUserInfo } from '../services/authApi'; 
+import { getMyProfileService } from '../services/staffApi';
+import '../styles/pages/LoginPage.css';
 
 const LoginPage = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // --- HÀM ĐIỀU HƯỚNG ---
-  const handleRoleRedirect = (role) => {
-    // Chuẩn hóa role về chữ hoa để so sánh
-    const upperRole = role?.toUpperCase();
+  // --- HÀM 1: CHUYỂN ĐỔI ROLE (QUAN TRỌNG) ---
+  // Nhận vào Role từ bảng Tài Khoản VÀ Chức danh từ bảng Nhân Viên
+  const mapRoleToAppCode = (dbRole, jobTitle = '') => {
+    
+    // 1. Ưu tiên kiểm tra chức danh cụ thể (Job Title)
+    // Nếu là Lái tàu, Tiếp viên, Trưởng tàu... -> Gán là CREW
+    const lowerJob = jobTitle ? jobTitle.toLowerCase() : '';
+    if (lowerJob.includes('lái tàu') || 
+        lowerJob.includes('tiếp viên') || 
+        lowerJob.includes('trưởng tàu') || 
+        lowerJob.includes('kỹ thuật')) {
+        return 'CREW';
+    }
 
-    if (upperRole === 'CUSTOMER') {
-      navigate('/customer/dashboard');
-    } 
-    // Tất cả các role nhân viên đều đưa về cổng chung '/employee'
-    // App.jsx sẽ lo việc phân luồng chi tiết (Crew -> Lịch, Sales -> Vé...)
-    else if (['MANAGER', 'SALES', 'CREW'].includes(upperRole)) {
-      navigate('/employee'); 
-    } 
-    else {  
-      console.warn("Role không xác định:", role);
-      navigate('/');
+    // 2. Nếu không có chức danh đặc biệt, kiểm tra Role trong DB
+    if (!dbRole) return 'CUSTOMER';
+    const normalizedRole = dbRole.trim(); 
+
+    switch (normalizedRole) {
+      case 'Khách hàng': return 'CUSTOMER';
+      case 'Quản lý':    return 'MANAGER';
+      case 'Bán vé':     return 'SALES';
+      case 'Nhân viên':  return 'CREW'; 
+      default:           return 'CUSTOMER';
+    }
+  };
+
+  // --- HÀM 2: ĐIỀU HƯỚNG ---
+  const handleRoleRedirect = (appRole) => {
+    console.log("Redirecting for App Role:", appRole);
+
+    switch (appRole) {
+      case 'CUSTOMER':
+        navigate('/customer/dashboard');
+        break;
+      case 'MANAGER':
+        navigate('/employee'); 
+        break;
+      case 'SALES':
+        navigate('/employee'); 
+        break;
+      case 'CREW':
+        navigate('/employee'); 
+        break;
+      default:
+        navigate('/');
     }
   };
 
   const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      const response = await loginUser(data);
-      
-      // 1. Lưu thông tin chung
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data));
+      const loginResponse = await loginUser(data);
+      const { token, user: accountInfo } = loginResponse.data;
 
-      // 2. QUAN TRỌNG: Lưu key 'employee' nếu không phải khách hàng
-      // Để EmployeeLayout và App.jsx có thể đọc được role
-      if (response.data.role !== 'CUSTOMER') {
-         localStorage.setItem('employee', JSON.stringify(response.data));
+      if (!token) throw new Error("Không nhận được token xác thực.");
+      
+      localStorage.setItem('token', token);
+
+      let fullUserData = {};
+      let dbRoleRaw = accountInfo.VaiTro; 
+      let finalAppRole = '';
+
+      if (accountInfo.MaNV) {
+        try {
+          const staffRes = await getMyProfileService();
+          
+          const staffData = staffRes.data.nhanVien; 
+          
+          finalAppRole = mapRoleToAppCode(dbRoleRaw, staffData.loaiNhanVien);
+
+          fullUserData = {
+            ...accountInfo,
+            ...staffData,
+            role: finalAppRole,
+            originalRole: dbRoleRaw, 
+            fullName: staffData.hoTen 
+          };
+
+          localStorage.setItem('employee', JSON.stringify(fullUserData));
+
+        } catch (err) {
+          console.error("Lỗi lấy thông tin nhân viên:", err);
+          throw new Error("Tài khoản nhân viên chưa được cấu hình hồ sơ.");
+        }
+
+      } else {
+        try {
+          const userRes = await getCurrentUserInfo();
+          const customerData = userRes.data.khachHang || {};
+          
+          finalAppRole = 'CUSTOMER';
+
+          fullUserData = {
+            ...accountInfo,
+            ...customerData,
+            role: finalAppRole,
+            fullName: customerData.hoTen || accountInfo.TenTaiKhoan
+          };
+
+        } catch (err) {
+          finalAppRole = 'CUSTOMER';
+          fullUserData = { ...accountInfo, role: finalAppRole, fullName: accountInfo.TenTaiKhoan };
+        }
       }
 
-      toast.success(`Chào mừng ${response.data.fullName}!`);
+      localStorage.setItem('user', JSON.stringify(fullUserData));
+
+      toast.success(`Xin chào, ${fullUserData.fullName}!`);
       
       setTimeout(() => {
-        handleRoleRedirect(response.data.role);
+        handleRoleRedirect(finalAppRole);
       }, 1000);
 
     } catch (error) {
-      toast.error(error.message);
+      console.error("Login Error:", error);
+      const msg = error.response?.data?.message || error.message || "Đăng nhập thất bại";
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -97,7 +176,6 @@ const LoginPage = () => {
         </form>
         
         <div className="login-footer">
-           <p className="text-xs text-gray-400 mb-2">Test: sales/123, crew/123, admin/123</p>
            Chưa có tài khoản? <Link to="/register" className="link-highlight">Đăng ký ngay</Link>
         </div>
       </div>

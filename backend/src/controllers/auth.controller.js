@@ -2,16 +2,16 @@ import { authLoginService } from '../services/auth.service.js';
 
 export const authLogin = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
 
-    if (!email || !password) {
+    if (!username || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required',
+        message: 'Username and password are required',
       });
     }
 
-    const result = await authLoginService(email, password);
+    const result = await authLoginService(username, password);
 
     if (result && result.user) {
       return res.status(200).json({
