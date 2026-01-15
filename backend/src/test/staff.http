@@ -1,4 +1,4 @@
-@baseUrl = http://localhost:5001/api/v1
+@baseUrl = http://localhost:3000/api/v1
 
 ### Login Request
 # @name loginRequest
@@ -6,7 +6,7 @@ POST {{baseUrl}}/auth/login
 Content-Type: application/json
 
 {
-  "email": "admin@vnrailway.vn",
+  "username": "admin",
   "password": "admin123"
 }
 
