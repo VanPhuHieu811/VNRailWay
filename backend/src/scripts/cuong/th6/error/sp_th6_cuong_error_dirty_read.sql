@@ -1,11 +1,8 @@
-USE VNRAILWAY
-GO
-
 -- tinh huong:
 -- nhan vien quan ly cap nhat lai gia ve toa 
 -- khach hang xem gia ve ghe trong luc nhan vien quan ly dang cap nhat 
 -- Transaction 1: Nhan vien cap nhat gia (WRITER)
-create or alter procedure sp_th6_cuong_writer
+create or alter procedure sp_th6_error_dirty_read
   @MaGiaToa VARCHAR(10),
   @GiaMoi DECIMAL(10,2)
 as
@@ -35,6 +32,6 @@ begin
 end
 go 
 
-exec sp_th6_cuong_writer
+exec sp_th6_error_dirty_read
 @MaGiaToa = 'GTO01',
 @GiaMoi = 150000;
