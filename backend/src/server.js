@@ -8,6 +8,10 @@ import trainRoutes from './routes/train.route.js';
 
 import { errorHandler } from './middlewares/errorHandler.middleware.js';
 import staffRoutes from './routes/staff.route.js';
+import adminRoutes from './routes/admin.route.js';
+import customerRoutes from './routes/customer.route.js';
+import masterRoutes from './routes/master.route.js';
+
 import { getPool } from './config/sqlserver.config.js';
 
 import reportRoutes from './routes/report.route.js'; 
@@ -19,6 +23,9 @@ app.use('/api/v1/auth', authRoutes);
 // User
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/staff', staffRoutes);
+app.use('/api/v1/admin', adminRoutes);      
+app.use('/api/v1/schedules', customerRoutes);
+app.use('/api/v1/master', masterRoutes);
 
 // Train, route, trip
 app.use('/api/v1/trips', tripRoutes);
