@@ -1,0 +1,33 @@
+@baseUrl = http://localhost:3000/api/v1
+@resource = promotions
+
+### Login Request (Get Token)
+# @name loginRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### Save token to variable
+@authToken = {{loginRequest.response.body.$.data.token}}
+
+
+### Create a New Promotion (Happy Path)
+# @name createPromoRequest
+POST {{baseUrl}}/{{resource}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "loaiUuDai": "Giảm giá vé",
+  "moTa": "Giảm 20% cho khách hàng thân thiết",
+  "doiTuong": "Thân thiết",
+  "phanTram": 20,
+  "ngayBatDau": "2026-01-20",
+  "ngayKetThuc": "2026-02-20",
+  "trangThai": "Đang áp dụng"
+}
+

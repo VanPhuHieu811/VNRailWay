@@ -62,11 +62,11 @@ GO
 -- =============================================
 -- 3. UU_DAI_GIA
 -- =============================================
-INSERT INTO UU_DAI_GIA (MaUuDai, LoaiUuDai, MoTa, DoiTuong, PhanTram) VALUES
-('UD01', N'Sinh viên', N'Giảm giá cho sinh viên có thẻ', N'Sinh viên', 10),
-('UD02', N'Người cao tuổi', N'Giảm giá cho người trên 60 tuổi', N'Người cao tuổi', 15),
-('UD03', N'Trẻ em', N'Giảm giá cho trẻ em dưới 10 tuổi', N'Trẻ em', 50),
-('UD04', N'Thương binh', N'Giảm giá cho thương binh', N'Thương binh', 20);
+INSERT INTO UU_DAI_GIA (MaUuDai, LoaiUuDai, MoTa, DoiTuong, PhanTram, NgayBatDau, NgayKetThuc, TrangThai) VALUES
+('UD01', N'Sinh viên', N'Giảm giá cho sinh viên có thẻ', N'Sinh viên', 10, '2023-01-01', NULL, N'Đang áp dụng'),
+('UD02', N'Người cao tuổi', N'Giảm giá cho người trên 60 tuổi', N'Người cao tuổi', 15, '2023-01-01', NULL, N'Đang áp dụng'),
+('UD03', N'Trẻ em', N'Giảm giá cho trẻ em dưới 10 tuổi', N'Trẻ em', 50, '2023-01-01', NULL, N'Tạm ngưng'),
+('UD04', N'Thương binh', N'Giảm giá cho thương binh (Chương trình cũ)', N'Thương binh', 20, '2020-01-01', '2024-12-31', N'Hết hạn');
 GO
 
 -- =============================================
