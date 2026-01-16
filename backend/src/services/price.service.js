@@ -7,6 +7,7 @@ export const getAllTrainCarriagePrices = async () => {
     from GIA_THEO_LOAI_TOA
   `
   const result = await pool.request().query(query);
+  // const result = await pool.request().execute('YOUR_STORED_PROCEDURE_NAME');
   return result.recordset;
 }
 
@@ -28,7 +29,7 @@ export const updateTrainCarriagePriceById = async (id, price) => {
   const request = pool.request()
     .input('MaGiaToa', id)
     .input('GiaMoi', price);
-  const result = await request.execute('sp_updateTrainCarriagePrice');
+  const result = await request.execute('sp_th6_cuong_writer');
   return result.rowsAffected[0] > 0 ? { MaGiaToa: id, GiaTien: price } : null;
 }
 
