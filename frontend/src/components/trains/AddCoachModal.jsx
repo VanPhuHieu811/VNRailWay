@@ -1,106 +1,114 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../common/Modal';
-import '../../styles/pages/TrainManagementPage.css'; // Import CSS
+import '../../styles/pages/TrainManagementPage.css';
 
-// Cấu hình các loại toa và sức chứa mặc định
-const COACH_CONFIG = {
-    'Ngồi mềm điều hòa': { capacity: 64, amenities: ['Điều hòa', 'Ổ cắm điện'] },
-    'Giường nằm khoang 6': { capacity: 42, amenities: ['Điều hòa', 'Gối chăn', 'Đèn đọc sách'] },
-    'Giường nằm khoang 4': { capacity: 28, amenities: ['Điều hòa', 'WiFi', 'Gối chăn VIP', 'Đèn đọc sách'] },
-    'Giường nằm khoang 2 (VIP)': { capacity: 14, amenities: ['Điều hòa', 'WiFi', 'TV', 'Tủ lạnh', 'Suất ăn'] },
-};
-
-const COACH_TYPES = Object.keys(COACH_CONFIG);
-
-const AddCoachModal = ({ isOpen, onClose, onSave, targetTrainId, currentCoachesCount }) => {
-  // State form chỉ cần Loại toa, các thông tin khác tự động
-  const [coachType, setCoachType] = useState(COACH_TYPES[0]);
+const AddCoachModal = ({ isOpen, isEdit, initialData, onClose, onSave, targetTrainId, currentCoachesCount }) => {
+  // Default state
   const [formData, setFormData] = useState({
-    seatNum: '', 
-    type: COACH_TYPES[0], 
-    capacity: COACH_CONFIG[COACH_TYPES[0]].capacity, 
-    amenities: COACH_CONFIG[COACH_TYPES[0]].amenities
+    loaiToa: 'Ghế', 
+    soGhe: 40       
   });
 
-  // Khi mở modal, tự động tính số thứ tự toa tiếp theo
+  // Reset or Fill form when modal opens
   useEffect(() => {
     if (isOpen) {
-        const nextSeatNum = currentCoachesCount + 1;
-        const defaultType = COACH_TYPES[0];
-        setCoachType(defaultType);
+      if (isEdit && initialData) {
+        // --- EDIT MODE: Fill data ---
         setFormData({
-            seatNum: nextSeatNum,
-            type: defaultType,
-            capacity: COACH_CONFIG[defaultType].capacity,
-            amenities: COACH_CONFIG[defaultType].amenities
+            loaiToa: initialData.type,   // Map from your frontend 'type'
+            soGhe: initialData.capacity  // Map from your frontend 'capacity'
         });
+      } else {
+        // --- ADD MODE: Reset defaults ---
+        setFormData({
+            loaiToa: 'Ghế',
+            soGhe: 40
+        });
+      }
     }
-  }, [isOpen, currentCoachesCount]);
+  }, [isOpen, isEdit, initialData]);
 
-  // Khi thay đổi loại toa -> Tự động update sức chứa & tiện nghi
-  const handleTypeChange = (e) => {
-    const newType = e.target.value;
-    setCoachType(newType);
-    setFormData(prev => ({
-        ...prev,
-        type: newType,
-        capacity: COACH_CONFIG[newType].capacity,
-        amenities: COACH_CONFIG[newType].amenities
-    }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSave = () => {
-    // Save dữ liệu đã tự động tính toán
-    onSave(targetTrainId, { 
-        ...formData, 
-        id: `c_${new Date().getTime()}` 
-    });
+    const seats = parseInt(formData.soGhe, 10);
+
+    // Validations...
+    if (isNaN(seats)) { alert("Vui lòng nhập số hợp lệ!"); return; }
+    if (seats <= 20) { alert("Số lượng chỗ ngồi phải lớn hơn 20!"); return; }
+    if (seats > 1100) { alert("Số lượng chỗ ngồi quá lớn (tối đa 1100)!"); return; }
+
+    // Pass data back
+    // If editing, we pass the Coach ID too
+    const dataToSubmit = { 
+        id: isEdit ? initialData.id : undefined,
+        loaiToa: formData.loaiToa,
+        soGhe: seats
+    };
+    
+    onSave(targetTrainId, dataToSubmit);
   };
 
   const modalActions = (
     <>
       <button onClick={onClose} className="modal-btn-cancel">Hủy</button>
-      <button onClick={handleSave} className="modal-btn-save">Thêm mới</button>
+      <button onClick={handleSave} className="modal-btn-save">
+        {isEdit ? 'Cập nhật' : 'Thêm mới'}
+      </button>
     </>
   );
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Thêm toa tàu mới cho ${targetTrainId}`} actions={modalActions}>
-      <p className="form-description">Chọn loại toa để thêm vào đoàn tàu</p>
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      // Change title based on mode
+      title={isEdit ? `Cập nhật Toa ${initialData?.carriageNumber}` : `Thêm toa tàu mới cho ${targetTrainId}`} 
+      actions={modalActions}
+    >
+      <p className="form-description">{isEdit ? "Chỉnh sửa thông tin toa tàu" : "Nhập thông tin toa tàu mới"}</p>
       <div className="form-stack">
         
-        {/* Số toa tự động (Readonly) */}
+        {/* Show Coach Number */}
         <div className="form-group">
           <label>Số toa (Tự động)</label>
-          <div className="bg-gray-100 p-2 rounded border border-gray-300 font-bold text-gray-600">
-            Toa số {formData.seatNum}
+          <div className="bg-gray-100 p-2.5 rounded border border-gray-300 font-bold text-gray-600">
+            {/* If Edit, show current number. If Add, show next number */}
+            Toa số {isEdit ? initialData?.carriageNumber : (currentCoachesCount + 1)}
           </div>
         </div>
 
-        {/* Chọn loại toa */}
-        <div className="form-group">
-          <label>Loại toa <span className="text-red-500">*</span></label>
-          <select name="type" value={coachType} onChange={handleTypeChange} className="form-select">
-            {COACH_TYPES.map(type => <option key={type} value={type}>{type}</option>)}
-          </select>
-        </div>
+        <div className="grid grid-cols-2 gap-4">
+            <div className="form-group">
+                <label>Loại toa <span className="text-red-500">*</span></label>
+                <select 
+                    name="loaiToa" 
+                    value={formData.loaiToa} 
+                    onChange={handleChange} 
+                    className="form-select"
+                >
+                    <option value="Ghế">Ghế ngồi</option>
+                    <option value="Giường">Giường nằm</option>
+                </select>
+            </div>
 
-        {/* Thông tin tự động hiển thị (Readonly để review) */}
-        <div className="grid grid-cols-2 gap-4 bg-blue-50 p-3 rounded-lg border border-blue-100">
-            <div>
-                <span className="text-xs text-blue-500 font-bold uppercase block mb-1">Sức chứa</span>
-                <span className="text-sm font-bold text-gray-800">{formData.capacity} chỗ</span>
-            </div>
-            <div>
-                <span className="text-xs text-blue-500 font-bold uppercase block mb-1">Tiện nghi có sẵn</span>
-                <div className="flex flex-wrap gap-1">
-                    {formData.amenities.map(am => (
-                        <span key={am} className="text-[10px] bg-white text-gray-600 px-1 rounded border border-gray-200">{am}</span>
-                    ))}
-                </div>
+            <div className="form-group">
+                <label>Số lượng chỗ <span className="text-red-500">*</span></label>
+                <input 
+                    type="number" 
+                    name="soGhe" 
+                    value={formData.soGhe} 
+                    onChange={handleChange}
+                    min="21"
+                    max="1100" 
+                    className="form-input"
+                    placeholder="VD: 40"
+                />
             </div>
         </div>
-        
       </div>
     </Modal>
   );
