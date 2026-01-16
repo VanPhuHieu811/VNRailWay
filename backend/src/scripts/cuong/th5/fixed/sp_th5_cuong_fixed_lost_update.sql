@@ -1,6 +1,5 @@
 create or alter PROCEDURE sp_th5_cuong_fix_lost_update
   @MaDonNghiPhep VARCHAR(10),
-  @MaNhanVienGuiDon VARCHAR(10),
   @MaQuanLyDuyetDon VARCHAR(10),
   @MaNhanVienThayThe VARCHAR(10)
 as
@@ -15,8 +14,8 @@ begin
       and TrangThai = N'Đang chờ'
   )
   begin
-    print N'[T1] Đơn không tồn tại hoặc đã được xử lý.';
     rollback transaction;
+    throw 50001, N'Đơn nghỉ phép không tồn tại hoặc đã được xử lý bởi người khác.', 1;
     return;
   end
 
@@ -29,8 +28,6 @@ begin
     TrangThai = N'Chấp nhận'
   where MaDon = @MaDonNghiPhep;
 
-  waitfor delay '00:00:05';
-
   commit;
   print N'[T1] Duyệt đơn thành công - Nhân viên thay thế: ' + @MaNhanVienThayThe;
 end
@@ -39,14 +36,12 @@ GO
 -- trans 1:
 exec sp_th5_cuong_fix_lost_update
 @MaDonNghiPhep = 'DNP005',
-@MaNhanVienGuiDon = 'NV007',
 @MaQuanLyDuyetDon = 'NV001',
 @MaNhanVienThayThe = 'NV004';
 
 -- trans 2:
 exec sp_th5_cuong_fix_lost_update
 @MaDonNghiPhep = 'DNP005',
-@MaNhanVienGuiDon = 'NV007',
 @MaQuanLyDuyetDon = 'NV001',
 @MaNhanVienThayThe = 'NV008';
 
