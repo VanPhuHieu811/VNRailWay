@@ -19,7 +19,7 @@ import masterRoutes from './routes/master.route.js';
 
 import { getPool } from './config/sqlserver.config.js';
 
-import reportRoutes from './routes/report.route.js'; 
+import reportRoutes from './routes/report.route.js';
 const PORT = process.env.PORT || 3000;
 
 // Authorization
