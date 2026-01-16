@@ -1,4 +1,5 @@
 import axiosClient from '../api/client';
+import client from '../api/client';
 const BASE_URL = '/api/v1/trains';
 
 // 1. Lấy lịch trình (có lọc trạng thái)
