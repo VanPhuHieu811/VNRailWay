@@ -1,0 +1,256 @@
+/* --- LAYOUT CHUNG --- */
+.seat-layout-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .seat-layout-container {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+/* --- CỘT TRÁI: SƠ ĐỒ GHẾ --- */
+.seat-map-card {
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  padding: 24px;
+  min-height: 500px;
+}
+
+/* Thanh cuộn toa tàu */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* --- HEADER TOA TÀU --- */
+.carriage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.carriage-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.carriage-type-badge {
+  font-size: 12px;
+  background-color: #f1f5f9;
+  color: #64748b;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-weight: 500;
+}
+
+/* --- LƯỚI GHẾ (GRID) --- */
+.seat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* Mặc định 4 ghế/hàng */
+  gap: 16px;
+  justify-items: center;
+  margin-bottom: 40px;
+}
+
+@media (min-width: 640px) {
+  .seat-grid {
+    grid-template-columns: repeat(6, 1fr); /* Tablet 6 ghế */
+  }
+}
+
+@media (min-width: 1024px) {
+  .seat-grid {
+    grid-template-columns: repeat(8, 1fr); /* Desktop 8 ghế */
+  }
+}
+
+/* --- STYLE TỪNG GHẾ --- */
+.seat-item {
+  width: 48px;
+  height: 56px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  border: 2px solid #cbd5e1;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+/* Phần đệm ngồi (giả lập hình cái ghế) */
+.seat-item::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: -2px;
+  right: -2px;
+  height: 8px;
+  background-color: #e2e8f0;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+/* Hover */
+.seat-item:hover:not(.booked):not(.cursor-not-allowed) {
+  border-color: #60a5fa;
+  color: #2563eb;
+  transform: translateY(-2px);
+}
+
+/* Trạng thái: Đang chọn */
+.seat-item.selected {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+  transform: translateY(-4px);
+  z-index: 1;
+}
+.seat-item.selected::after {
+  background-color: #1d4ed8; /* Đệm ghế đậm hơn */
+}
+
+/* Trạng thái: Đã đặt (Booked) */
+.seat-item.booked {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #cbd5e1;
+  cursor: not-allowed;
+}
+.seat-item.booked::after {
+  background-color: #e2e8f0;
+}
+
+/* Trạng thái: Vô hiệu hóa (khi đổi vé đã đủ số lượng) */
+.seat-item.cursor-not-allowed {
+  opacity: 0.5;
+}
+
+/* --- CHÚ THÍCH (LEGEND) --- */
+.seat-legend {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px dashed #e2e8f0;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.legend-box {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid #cbd5e1;
+}
+
+/* --- CỘT PHẢI: SIDEBAR --- */
+.booking-sidebar {
+  width: 100%;
+  position: sticky;
+  top: 24px;
+  height: fit-content;
+}
+
+@media (min-width: 1024px) {
+  .booking-sidebar {
+    width: 350px;
+    flex-shrink: 0;
+  }
+}
+
+.sidebar-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+/* Danh sách ghế đã chọn trong sidebar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.selected-seat-tag {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Nút Tiếp tục */
+.btn-continue {
+  width: 100%;
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: 8px;
+  margin-top: 20px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.btn-continue:hover:not(:disabled) {
+  background-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 8px -1px rgba(37, 99, 235, 0.3);
+}
+
+.btn-continue:disabled {
+  background-color: #cbd5e1;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* Tổng tiền */
+.total-section {
+  background-color: #f8fafc;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 16px;
+  border: 1px solid #e2e8f0;
+}

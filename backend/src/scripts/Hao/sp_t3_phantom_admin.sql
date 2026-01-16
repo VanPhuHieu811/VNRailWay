@@ -61,3 +61,11 @@ commit transaction;
 END
 
 select *from CHUYEN_TAU
+select * from KHACH_HANG
+select * from DAT_VE
+select *from VE_TAU
+select * from HOA_DON
+select* from DANH_SACH_GA
+
+
+select * from VI_TRI_TREN_TOA
