@@ -1,6 +1,6 @@
 ﻿--SP4: API4 DUYET DON NGHI PHEP (TRANH CHAP)
 GO
-CREATE OR ALTER PROCEDURE sp_DuyetDonNghiPhep
+CREATE or alter PROCEDURE sp_DuyetDonNghiPhep
     @MaDon VARCHAR(10),
     @MaNVQuanLy VARCHAR(10),
     @TrangThaiMoi NVARCHAR(20), 
@@ -23,11 +23,11 @@ BEGIN
         END
 
         -- 2. Cập nhật trạng thái đơn nghỉ phép
-        UPDATE DON_NGHI_PHEP
+        /*UPDATE DON_NGHI_PHEP
         SET TrangThai = @TrangThaiMoi,
             NVDuyetDon = @MaNVQuanLy,
             NVThayThe = @MaNVThayThe
-        WHERE MaDon = @MaDon;
+        WHERE MaDon = @MaDon;*/
 
         -- 3. Xử lý nghiệp vụ khi Chấp nhận
         IF @TrangThaiMoi = N'Chấp nhận'
@@ -56,7 +56,7 @@ BEGIN
         END
 
         COMMIT TRANSACTION;
-        PRINT N'Duyệt đơn và điều phối nhân sự thành công.';
+        PRINT N'Điều phối nhân sự thành công.';
     END TRY
     BEGIN CATCH
         -- Nếu SP 7 báo lỗi vai trò, nó sẽ nhảy vào đây để Rollback

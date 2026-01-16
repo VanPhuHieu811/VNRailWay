@@ -18,6 +18,7 @@ router.get('/:id', getRouteById);
 router.post('/', authenticationMiddleware, authorizeAdmin, createRoute);
 router.put('/:id', authenticationMiddleware, authorizeAdmin, updateRoute);
 
+
 // 2. Manage Stations in Route (DANH_SACH_GA)
 router.post('/:id/stations', authenticationMiddleware, authorizeAdmin, addStationToRoute);
 router.delete('/:id/stations/:stationId', authenticationMiddleware, authorizeAdmin, removeStationFromRoute);

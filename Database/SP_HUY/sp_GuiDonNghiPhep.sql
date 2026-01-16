@@ -12,8 +12,8 @@ BEGIN
 
     BEGIN TRY
         BEGIN TRANSACTION;
-		SELECT @Num = ISNULL(MAX(CAST(SUBSTRING(MaDon,3,10) AS INT)),0) + 1 FROM DON_NGHI_PHEP;
-		SET @NewID = 'MD' + RIGHT('000' + CAST(@Num AS VARCHAR(3)),3);
+		SELECT @Num = ISNULL(MAX(CAST(SUBSTRING(MaDon,4,10) AS INT)),0) + 1 FROM DON_NGHI_PHEP;
+		SET @NewID = 'DNP' + RIGHT('000' + CAST(@Num AS VARCHAR(3)),3);
 
         -- 1. Kiểm tra mã phân công có tồn tại và thuộc về nhân viên gửi đơn không
         IF NOT EXISTS (SELECT 1 FROM PHAN_CONG_CHUYEN_TAU WHERE MaPhanCong = @MaPhanCong AND MaNV = @MaNVGui)
