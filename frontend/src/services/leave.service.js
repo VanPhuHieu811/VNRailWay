@@ -23,12 +23,23 @@ export const getAvailableStaff = async (maChuyenTau, loaiNV) => {
     return response.data.data || response.data;
 };
 
-// Duyệt đơn nghỉ phép (chấp nhận)
-export const approveLeaveRequest = async (maDon, maNVThayThe) => {
+// duyet don nghi phep - lost update
+export const approveLeaveRequestLost = async (maDon, maNVThayThe) => {
     const response = await axios.patch(`${API_URL}/leave-requests/approve`, 
         { 
             maDon, 
-            trangThaiMoi: 'Chấp nhận', 
+            maNVThayThe 
+        }, 
+        getAuthHeader()
+    );
+    return response.data;
+};
+
+// duyet don nghi phep - fix lost update
+export const approveLeaveRequestFixed = async (maDon, maNVThayThe) => {
+    const response = await axios.patch(`${API_URL}/leave-requests/approve/fix-lost-update`, 
+        { 
+            maDon, 
             maNVThayThe 
         }, 
         getAuthHeader()

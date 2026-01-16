@@ -14,7 +14,8 @@ import {
     getAvailableStaffList,
     postCalculateSalary,
     getMyLeaveHistory,
-    getAllLeaveRequests
+    getAllLeaveRequests,
+    fixLostUpdateApprove
 } from '../controllers/staff.controller.js';
 
 const router = express.Router();
@@ -33,6 +34,7 @@ router.post('/calculate-salary', authenticationMiddleware, postCalculateSalary);
 router.get('/me/leave-history', authenticationMiddleware, getMyLeaveHistory);
 
 router.get('/leave-requests', authenticationMiddleware, getAllLeaveRequests);
+router.patch('/leave-requests/approve/fix-lost-update', authenticationMiddleware, fixLostUpdateApprove); // SP04
 
 export default router;
 

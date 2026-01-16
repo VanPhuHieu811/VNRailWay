@@ -14,8 +14,8 @@ begin
     where dnp.MaDon = @MaDonNghiPhep and dnp.TrangThai = N'Đang chờ'
   )
   begin 
-    print N'Đơn nghỉ phép không tồn tại hoặc không ở trạng thái đang chờ duyệt.';
-    rollback transaction
+    rollback transaction;
+    throw 50001, N'Đơn nghỉ phép không tồn tại hoặc đã được xử lý bởi người khác.', 1;
     return;
   end
 

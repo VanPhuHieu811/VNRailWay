@@ -2,25 +2,26 @@ import React, { useState, useEffect } from 'react';
 import {
   Clock, CheckCircle, XCircle, AlertCircle,
   Search, Bell, X, User, Calendar, MapPin,
-  FileText, Filter
+  FileText, Filter, Loader2
 } from 'lucide-react';
-import { getLeaveRequests, approveLeaveRequest, rejectLeaveRequest, getAvailableStaff } from '../../services/leave.service';
+import { getLeaveRequests, approveLeaveRequestLost, approveLeaveRequestFixed, rejectLeaveRequest, getAvailableStaff } from '../../services/leave.service';
 
 const LeaveRequestManagement = () => {
   // --- STATE MANAGEMENT ---
   const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'history'
 
   // Trạng thái cho các Modal
-  const [replacementModal, setReplacementModal] = useState({ open: false, request: null });
+  const [replacementModal, setReplacementModal] = useState({ open: false, request: null, mode: 'lost' }); // mode: 'lost' | 'fixed'
   const [rejectModal, setRejectModal] = useState({ open: false, request: null });
 
   // State dữ liệu nhập liệu trong Modal
   const [selectedReplacement, setSelectedReplacement] = useState(''); // Stores ID
   const [rejectReason, setRejectReason] = useState('');
 
-  // Danh sách nhân viên rảnh (Load từ API)
   const [availableStaffList, setAvailableStaffList] = useState([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
+  const [loadingApprove, setLoadingApprove] = useState(false);
+  const [loadingReject, setLoadingReject] = useState(false);
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -84,8 +85,10 @@ const LeaveRequestManagement = () => {
       return;
     }
 
+    setLoadingApprove(true);
     try {
-      await approveLeaveRequest(replacementModal.request.id, selectedReplacement);
+      const approveFn = replacementModal.mode === 'fixed' ? approveLeaveRequestFixed : approveLeaveRequestLost;
+      await approveFn(replacementModal.request.id, selectedReplacement);
 
       // Update UI: Remove from list if in 'pending' tab, or update status
       setRequests(requests.filter(req => req.id !== replacementModal.request.id));
@@ -93,10 +96,12 @@ const LeaveRequestManagement = () => {
       alert("Đã duyệt đơn thành công!");
 
       // Reset & Close Modal
-      setReplacementModal({ open: false, request: null });
+      setReplacementModal({ open: false, request: null, mode: 'lost' });
       setSelectedReplacement('');
     } catch (err) {
       alert("Lỗi khi duyệt đơn: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoadingApprove(false);
     }
   };
 
@@ -107,6 +112,7 @@ const LeaveRequestManagement = () => {
       return;
     }
 
+    setLoadingReject(true);
     try {
       await rejectLeaveRequest(rejectModal.request.id, rejectReason);
 
@@ -120,6 +126,8 @@ const LeaveRequestManagement = () => {
       setRejectReason('');
     } catch (err) {
       alert("Lỗi khi từ chối đơn: " + (err.response?.data?.message || err.message));
+    } finally {
+      setLoadingReject(false);
     }
   };
 
@@ -205,11 +213,11 @@ const LeaveRequestManagement = () => {
                       <p className="text-sm text-gray-500 mb-2">{req.role} - Mã NV: {req.employeeId}</p>
 
                       {/* Details Grid */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                      <div className="flex flex-col gap-2 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
                         <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-blue-400" /> Tàu: <b>{req.trainCode} - {req.carriage}</b></span>
                         <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-blue-400" /> Ngày: <b>{new Date(req.date).toLocaleDateString('vi-VN')}</b></span>
                         <span className="flex items-center gap-2"><Clock className="w-4 h-4 text-blue-400" /> Ca: <b>{req.shift}</b></span>
-                        <div className="col-span-full mt-2 pt-2 border-t border-gray-200">
+                        <div className="mt-2 pt-2 border-t border-gray-200">
                           <span className="font-semibold">Lý do:</span> {req.reason}
                         </div>
                       </div>
@@ -225,18 +233,32 @@ const LeaveRequestManagement = () => {
 
                   {/* Actions Buttons (Only for Pending) */}
                   {activeTab === 'pending' && (
-                    <div className="flex gap-3 w-full md:w-auto mt-2 md:mt-0 shrink-0">
+                    <div className="flex flex-col gap-2 shrink-0">
+                      <button
+                        onClick={() => setReplacementModal({ open: true, request: req, mode: 'lost' })}
+                        className="px-3 py-2 bg-orange-500 text-white rounded-lg
+                                  hover:bg-orange-600 transition-colors
+                                  flex items-center gap-2 shadow-sm text-sm whitespace-nowrap"
+                      >
+                        <User className="w-4 h-4" /> Duyệt (Lost Update)
+                      </button>
+
+                      <button
+                        onClick={() => setReplacementModal({ open: true, request: req, mode: 'fixed' })}
+                        className="px-3 py-2 bg-blue-600 text-white rounded-lg
+                                  hover:bg-blue-700 transition-colors
+                                  flex items-center gap-2 shadow-sm text-sm whitespace-nowrap"
+                      >
+                        <User className="w-4 h-4" /> Duyệt (Fixed)
+                      </button>
+
                       <button
                         onClick={() => setRejectModal({ open: true, request: req })}
-                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors flex items-center justify-center gap-2"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-gray-700
+                                  hover:bg-red-50 hover:text-red-600 hover:border-red-200
+                                  transition-colors flex items-center gap-2 text-sm whitespace-nowrap"
                       >
                         <X className="w-4 h-4" /> Từ chối
-                      </button>
-                      <button
-                        onClick={() => setReplacementModal({ open: true, request: req })}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
-                      >
-                        <User className="w-4 h-4" /> Duyệt & Chọn người thay
                       </button>
                     </div>
                   )}
@@ -255,8 +277,9 @@ const LeaveRequestManagement = () => {
               <div>
                 <h3 className="text-lg font-bold text-gray-800">Chọn nhân viên thay ca</h3>
                 <p className="text-sm text-gray-500">Thay thế cho {replacementModal.request?.employeeName}</p>
+                <p className="text-xs text-blue-600 mt-1">Chế độ duyệt: {replacementModal.mode === 'fixed' ? 'Fix lost update' : 'Mô phỏng lost update'}</p>
               </div>
-              <button onClick={() => setReplacementModal({ open: false, request: null })} className="text-gray-400 hover:text-gray-600"><X className="w-6 h-6" /></button>
+              <button onClick={() => setReplacementModal({ open: false, request: null, mode: 'lost' })} className="text-gray-400 hover:text-gray-600"><X className="w-6 h-6" /></button>
             </div>
 
             <div className="p-6">
@@ -307,18 +330,28 @@ const LeaveRequestManagement = () => {
 
             <div className="p-5 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
               <button
-                onClick={() => setReplacementModal({ open: false, request: null })}
+                onClick={() => setReplacementModal({ open: false, request: null, mode: 'lost' })}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-white"
+                disabled={loadingApprove}
               >
                 Hủy
               </button>
               <button
                 onClick={handleApprove}
-                disabled={!selectedReplacement}
+                disabled={!selectedReplacement || loadingApprove}
                 className={`px-4 py-2 text-white rounded-lg flex items-center gap-2 
-                   ${!selectedReplacement ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
+                   ${!selectedReplacement || loadingApprove ? 'bg-gray-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
               >
-                <CheckCircle className="w-4 h-4" /> Xác nhận Duyệt
+                {loadingApprove ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4" /> Xác nhận Duyệt
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -352,14 +385,27 @@ const LeaveRequestManagement = () => {
               <button
                 onClick={() => setRejectModal({ open: false, request: null })}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-white"
+                disabled={loadingReject}
               >
                 Hủy bỏ
               </button>
               <button
                 onClick={handleReject}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+                disabled={loadingReject}
+                className={`px-4 py-2 text-white rounded-lg flex items-center gap-2 ${
+                  loadingReject ? 'bg-red-400 cursor-not-allowed' : 'bg-red-600 hover:bg-red-700'
+                }`}
               >
-                <XCircle className="w-4 h-4" /> Xác nhận từ chối
+                {loadingReject ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-4 h-4" /> Xác nhận từ chối
+                  </>
+                )}
               </button>
             </div>
           </div>

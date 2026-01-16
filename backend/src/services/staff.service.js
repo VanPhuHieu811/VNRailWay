@@ -294,10 +294,24 @@ export const approveLeaveRequest = async (approveData) => {
     .input('MaQuanLyDuyetDon', sql.VarChar, maNVQuanLy)
     .input('MaNhanVienThayThe', sql.VarChar, maNVThayThe || null) 
     .execute('sp_th5_cuong_error_lost_update'); // error lost update
+    // .execute('sp_th5_cuong_fix_lost_update'); // fixed error lost update
     // .execute('sp_DuyetDonNghiPhep');
     
   return result;
 };
+
+export const fixLostUpdateApprove = async (approveData) => {
+  const { maDon, maNVQuanLy, maNVThayThe } = approveData;
+  const pool = await getPool();
+  
+  const result = await pool.request()
+    .input('MaDonNghiPhep', sql.VarChar, maDon)
+    .input('MaQuanLyDuyetDon', sql.VarChar, maNVQuanLy)
+    .input('MaNhanVienThayThe', sql.VarChar, maNVThayThe || null) 
+    .execute('sp_th5_cuong_fix_lost_update'); // fixed error lost update
+    
+  return result;
+}
 
 //SP05
 // src/services/staffService.js
@@ -390,7 +404,7 @@ export const getLeaveRequestsService = async (status) => {
     } catch (error) {
         throw error;
     }
-};
+}
 
 const mapStatus = (status) => {
     switch (status) {

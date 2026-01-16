@@ -119,19 +119,6 @@ export const getAllStaff = async (req, res) => {
 
 import * as staffService from '../services/staff.service.js';
 
-// export const getMySchedule = async (req, res) => {
-//   try {
-//     // Tạm lấy từ Header 'x-staff-id' để bạn test rảnh tay
-//     const maNV = req.headers['x-staff-id']; 
-//     if (!maNV) return res.status(400).json({ message: 'Thiếu định danh nhân viên' });
-
-//     const data = await staffService.getScheduleFromDB(maNV);
-//     res.status(200).json({ success: true, data });
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-
 export const getMySchedule = async (req, res) => {
   try {
     const maNV = req.user?.maNV; 
@@ -220,40 +207,6 @@ export const postAssignment = async (req, res) => {
   }
 };
 
-// Thêm vào src/controllers/staffController.js
-export const patchApproveLeave = async (req, res) => {
-  try {
-    const maNVQuanLy = req.user?.maNV;
-    const { maDon, maNVThayThe } = req.body;
-
-    if (!maNVQuanLy) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Không xác định được thông tin người duyệt.' 
-      });
-    }
-
-    if (!maDon) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Thiếu thông tin mã đơn.' 
-      });
-    }
-
-    await staffService.approveLeaveRequest({ 
-      maDon, 
-      maNVQuanLy,  
-      maNVThayThe 
-    });
-
-    res.status(200).json({ 
-      success: true, 
-      message: `Xử lý đơn ${maDon} thành công.` 
-    });
-  } catch (error) {
-    res.status(400).json({ success: false, message: error.message });
-  }
-};
 
 // src/controllers/staffController.js
 export const getAvailableStaffList = async (req, res) => {
@@ -336,3 +289,71 @@ export const getAllLeaveRequests = async (req, res) => {
     res.status(500).json({ message: 'Lỗi server khi lấy danh sách đơn nghỉ phép' });
   }
 };
+
+export const patchApproveLeave = async (req, res) => {
+  try {
+    const maNVQuanLy = req.user?.maNV;
+    const { maDon, maNVThayThe } = req.body;
+
+    if (!maNVQuanLy) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Không xác định được thông tin người duyệt.' 
+      });
+    }
+
+    if (!maDon) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Thiếu thông tin mã đơn.' 
+      });
+    }
+
+    await staffService.approveLeaveRequest({ 
+      maDon, 
+      maNVQuanLy,  
+      maNVThayThe 
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: `Xử lý đơn ${maDon} thành công.` 
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+export const fixLostUpdateApprove = async (req, res) => {
+  try {
+    const maNVQuanLy = req.user?.maNV;
+    const { maDon, maNVThayThe } = req.body;
+
+    if (!maNVQuanLy) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Không xác định được thông tin người duyệt.' 
+      });
+    }
+
+    if (!maDon) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Thiếu thông tin mã đơn.' 
+      });
+    }
+
+    await staffService.fixLostUpdateApprove({ 
+      maDon, 
+      maNVQuanLy,  
+      maNVThayThe 
+    });
+
+    res.status(200).json({ 
+      success: true, 
+      message: `Xử lý đơn ${maDon} thành công.` 
+    });
+  } catch (error) {
+    res.status(400).json({ success: false, message: error.message });
+  }
+}
