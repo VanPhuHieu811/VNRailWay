@@ -34,6 +34,7 @@ import SalesExchangeSearchPage from './pages/saler/exchange/SalesExchangeSearchP
 import SalesExchangeSeatSelectionPage from './pages/saler/exchange/SalesExchangeSeatSelectionPage';
 import SalesExchangeConfirmPage from './pages/saler/exchange/SalesExchangeConfirmPage';
 import SalesExchangeSuccessPage from './pages/saler/exchange/SalesExchangeSuccessPage';
+import TicketExchangePage from './pages/saler/exchange/TicketExchangePage';
 
 // --- EMPLOYEE PAGES ---
 import EmployeeLayout from './components/layout/EmployeeLayout';
@@ -42,7 +43,6 @@ import EmployeeSchedulePage from './pages/employee/EmployeeSchedulePage';
 import LeaveRequestPage from './pages/employee/LeaveRequestPage';
 import EmployeeProfilePage from './pages/employee/EmployeeProfilePage';
 import CustomerLookupPage from './pages/saler/CustomerLookupPage';
-import TicketExchangePage from './pages/employee/TicketExchangePage';
 
 //  IMPORT TRANG QUẢN LÝ TÀU MỚI
 import TrainManagementPage from './pages/manager/TrainManagementPage'; 
