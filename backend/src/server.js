@@ -5,11 +5,13 @@ import userRoutes from './routes/user.route.js';
 import tripRoutes from './routes/trip.route.js';
 import routeRoutes from './routes/route.route.js';
 import trainRoutes from './routes/train.route.js';
+import priceRoutes from './routes/price.route.js';
 
 import { errorHandler } from './middlewares/errorHandler.middleware.js';
 import staffRoutes from './routes/staff.route.js';
 import { getPool } from './config/sqlserver.config.js';
 
+import reportRoutes from './routes/report.route.js'; 
 const PORT = process.env.PORT || 3000;
 
 // Authorization
@@ -24,6 +26,10 @@ app.use('/api/v1/trips', tripRoutes);
 app.use('/api/v1/routes', routeRoutes);
 app.use('/api/v1/trains', trainRoutes);
 
+// price
+app.use('/api/v1/prices', priceRoutes);
+
+app.use('/api/v1/reports', reportRoutes);
 // Global error handler
 app.use(errorHandler);
 

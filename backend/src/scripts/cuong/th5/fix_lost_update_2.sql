@@ -1,5 +1,5 @@
 -- Stored Procedure cho Quản lý 2 (Manager 2)
-create or alter procedure sp_th5_cuong_T2
+create or alter procedure sp_th5_cuong_T2_fix
   @MaDonNghiPhep VARCHAR(10),
   @MaNhanVienGuiDon VARCHAR(10),
   @MaQuanLyDuyetDon VARCHAR(10),
@@ -51,7 +51,7 @@ begin
 end
 GO
 
-EXEC sp_th5_cuong_T2
+EXEC sp_th5_cuong_T2_fix
 @MaDonNghiPhep = 'DNP005',
 @MaNhanVienGuiDon = 'NV007',
 @MaQuanLyDuyetDon = 'NV001',
