@@ -5,6 +5,7 @@ import userRoutes from './routes/user.route.js';
 import tripRoutes from './routes/trip.route.js';
 import routeRoutes from './routes/route.route.js';
 import trainRoutes from './routes/train.route.js';
+import priceRoutes from './routes/price.route.js';
 
 import { errorHandler } from './middlewares/errorHandler.middleware.js';
 import staffRoutes from './routes/staff.route.js';
@@ -23,6 +24,9 @@ app.use('/api/v1/staff', staffRoutes);
 app.use('/api/v1/trips', tripRoutes);
 app.use('/api/v1/routes', routeRoutes);
 app.use('/api/v1/trains', trainRoutes);
+
+// price
+app.use('/api/v1/prices', priceRoutes);
 
 // Global error handler
 app.use(errorHandler);
