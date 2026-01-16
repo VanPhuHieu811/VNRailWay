@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { 
   Train, Calendar, Clock, MapPin, Users, 
   Plus, Check, X, ArrowRight, User, 
-  Filter, Briefcase, Save, AlertCircle, Circle
+  Filter, Briefcase, Save, AlertCircle, Circle, Loader
 } from 'lucide-react';
+
+// --- IMPORT API SERVICES ---
+import { 
+    getTrainScheduleApi, 
+    getTripTimelineApi, 
+    updateTripTimeApi, 
+    getUnassignedTripsApi, 
+    getTripAssignmentsApi,
+    assignStaffApi,
+    getAvailableStaffApi,
+    createScheduleApi,
+    getAllRoutesApi,
+    getAllTrainsApi,
+    getStationsByRouteApi
+} from '../../services/trainApi'; 
 
 // Icon nhỏ dùng cho trạng thái
 const CheckCircle2 = ({className}) => (
@@ -11,118 +28,117 @@ const CheckCircle2 = ({className}) => (
 );
 
 const TrainScheduling = () => {
-  // --- 1. DỮ LIỆU MẪU & STATE ---
+  // --- 1. STATE QUẢN LÝ ---
   
-  // State quản lý Modal
+  // State Modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false); // Modal Timeline (Cũ)
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false); // Modal Phân công (Mới)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
-  // State quản lý Tab chính
-  const [activeMainTab, setActiveMainTab] = useState('schedule'); // 'schedule' | 'unassigned'
-
-  // State quản lý Filter và Selection
+  // State Tab & Filter
+  const [activeMainTab, setActiveMainTab] = useState('schedule'); 
   const [filterStatus, setFilterStatus] = useState('all'); 
-  const [selectedTrip, setSelectedTrip] = useState(null); // Dùng cho Modal Timeline
-  const [selectedAssignTrip, setSelectedAssignTrip] = useState(null); // Dùng cho Modal Phân công
+  
+  // State Dữ liệu chính
+  const [trips, setTrips] = useState([]); 
+  const [unassignedTripsList, setUnassignedTripsList] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Danh sách Ga
-  const stations = ["Hà Nội", "Phủ Lý", "Nam Định", "Ninh Bình", "Thanh Hóa", "Vinh", "Huế", "Đà Nẵng", "Nha Trang", "Sài Gòn", "Hải Phòng"];
+  // State Dữ liệu Danh mục (Lấy từ API)
+  const [routesList, setRoutesList] = useState([]); 
+  const [trainsList, setTrainsList] = useState([]); 
+  const [availableStations, setAvailableStations] = useState([]);
+  
+  // State Chi tiết
+  const [selectedTrip, setSelectedTrip] = useState(null);
+  const [selectedAssignTrip, setSelectedAssignTrip] = useState(null);
 
-  // Danh sách Đoàn tàu
-  const trainFleet = [
-    { code: "SE1 (Thống Nhất)", carriages: 6 },
-    { code: "SE7 (Thống Nhất)", carriages: 8 },
-    { code: "LP1 (Lạng Sơn)", carriages: 4 },
-  ];
-
-  // Danh sách Nhân sự
-  const drivers = [
-    { id: 'D1', name: 'Nguyễn Văn An', status: 'available' },
-    { id: 'D2', name: 'Trần Văn Bình', status: 'available' },
-    { id: 'D3', name: 'Lê Văn Cường', status: 'leave' },
-    { id: 'D4', name: 'Phạm Văn Dũng', status: 'busy' },
-  ];
-  const managers = [
-    { id: 'M1', name: 'Nguyễn Thị Hương', status: 'available' },
-    { id: 'M2', name: 'Trần Thị Lan', status: 'available' },
-    { id: 'M3', name: 'Lê Thị Mai', status: 'busy' },
-    { id: 'M4', name: 'Ngô Thị Thảo', status: 'available' },
-  ];
-  const staffList = [
-    { id: 'S1', name: 'Nguyễn Văn Hải', status: 'available' },
-    { id: 'S2', name: 'Trần Văn Hùng', status: 'available' },
-    { id: 'S3', name: 'Lê Văn Khoa', status: 'available' },
-    { id: 'S4', name: 'Vũ Văn Nam', status: 'available' },
-    { id: 'S5', name: 'Phạm Văn Long', status: 'leave' },
-    { id: 'S6', name: 'Hoàng Văn Minh', status: 'busy' },
-    { id: 'S7', name: 'Đỗ Văn Tú', status: 'available' },
-    { id: 'S8', name: 'Bùi Thị Dung', status: 'available' },
-    { id: 'S9', name: 'Phan Văn Kiên', status: 'available' },
-    { id: 'S10', name: 'Lý Văn Phúc', status: 'available' },
-    { id: 'S11', name: 'Nguyễn Thị Hoa', status: 'available' },
-    { id: 'S12', name: 'Đặng Văn Lâm', status: 'available' },
-  ];
-
-  // Dữ liệu chuyến tàu (Kèm Timeline chi tiết)
-  const [trips, setTrips] = useState([
-    {
-      id: "TRIP01",
-      route: "Hà Nội - Sài Gòn",
-      departureStation: "Hà Nội",
-      arrivalStation: "Sài Gòn",
-      trainCode: "SE7 (Thống Nhất)",
-      date: "2024-05-20",
-      time: "06:00 - 05:30 (+1)",
-      driver: "Phạm Văn Dũng",
-      manager: "Lê Thị Mai",
-      carriages: { 1: "Nguyễn Văn Hải", 2: "Trần Văn Hùng" },
-      status: "running",
-      // Dữ liệu Timeline chi tiết
-      timeline: [
-        { station: "Hà Nội", type: 'departure', expTime: "06:00", actTime: "06:05", status: "passed" },
-        { station: "Phủ Lý", type: 'stop', expArr: "07:15", actArr: "07:20", expDep: "07:20", actDep: "07:25", status: "passed" },
-        { station: "Nam Định", type: 'stop', expArr: "08:00", actArr: "08:10", expDep: "08:15", actDep: "", status: "current" },
-        { station: "Ninh Bình", type: 'stop', expArr: "09:00", actArr: "", expDep: "09:10", actDep: "", status: "waiting" },
-        { station: "Thanh Hóa", type: 'stop', expArr: "10:30", actArr: "", expDep: "10:45", actDep: "", status: "waiting" },
-      ]
-    },
-    {
-      id: "TRIP04",
-      route: "Sài Gòn - Nha Trang",
-      departureStation: "Sài Gòn",
-      arrivalStation: "Nha Trang",
-      trainCode: "SE7 (Thống Nhất)",
-      date: "2024-06-01",
-      time: "20:30",
-      driver: null, // Chưa phân công
-      manager: null, // Chưa phân công
-      carriages: {}, // Chưa phân công
-      status: "scheduled",
-      timeline: []
-    }
-  ]);
-
-  // State Form Tạo mới (Rút gọn)
-  const [formData, setFormData] = useState({
-    route: '', trainCode: '', departureStation: '', arrivalStation: '', 
-    date: '', time: ''
-  });
-
-  // State tạm thời cho Modal Phân công
+  // State Form Phân công
   const [assignmentState, setAssignmentState] = useState({
     driverId: '',
     managerId: '',
-    carriageStaffs: {}
+    carriageStaffs: {} 
+  });
+  
+  // [NEW] State Loading riêng cho từng nút phân công (để hiển thị xoay vòng)
+  // Cấu trúc: { 'driver': true, 'carriage-1': false, ... }
+  const [assigningLoading, setAssigningLoading] = useState({});
+
+  const [availableDrivers, setAvailableDrivers] = useState([]);
+  const [availableManagers, setAvailableManagers] = useState([]);
+  const [availableStaffs, setAvailableStaffs] = useState([]);
+
+  // State Form Tạo mới
+  const [formData, setFormData] = useState({
+    maTuyenTau: '', maDoanTau: '', gaXuatPhat: '', gaKetThuc: '', 
+    ngayKhoiHanh: '', gioKhoiHanh: ''
   });
 
-  // --- 2. LOGIC XỬ LÝ (HANDLERS) ---
+  // --- 2. EFFECTS: LOAD DỮ LIỆU ---
 
-  // A. LOGIC TIMELINE (KHÔI PHỤC LẠI)
-  const handleOpenDetail = (trip) => {
-    // Deep copy để edit không ảnh hưởng ngay list gốc khi đang nhập
-    setSelectedTrip(JSON.parse(JSON.stringify(trip))); 
-    setIsDetailModalOpen(true);
+  useEffect(() => {
+    if (activeMainTab === 'schedule') fetchSchedule();
+  }, [activeMainTab, filterStatus]);
+
+  useEffect(() => {
+    if (activeMainTab === 'unassigned') fetchUnassigned();
+  }, [activeMainTab]);
+
+  useEffect(() => {
+    if (isCreateModalOpen) {
+        fetchMasterData();
+    }
+  }, [isCreateModalOpen]);
+
+  const fetchSchedule = async () => {
+    try {
+        setLoading(true);
+        const res = await getTrainScheduleApi(filterStatus);
+        if (res && res.success) setTrips(res.data);
+    } catch (error) {
+        // toast.error("Lỗi tải lịch trình");
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const fetchUnassigned = async () => {
+    try {
+        setLoading(true);
+        const res = await getUnassignedTripsApi();
+        if (res && res.success) setUnassignedTripsList(res.data);
+    } catch (error) {
+        toast.error("Lỗi tải danh sách chưa phân công.");
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  const fetchMasterData = async () => {
+      try {
+          const [resRoutes, resTrains] = await Promise.all([
+              getAllRoutesApi(),
+              getAllTrainsApi()
+          ]);
+          if(resRoutes.success) setRoutesList(resRoutes.data);
+          if(resTrains.success) setTrainsList(resTrains.data);
+      } catch (error) {
+          console.error("Lỗi tải danh mục:", error);
+          toast.error("Không thể tải danh sách Tuyến/Tàu.");
+      }
+  };
+
+  // --- 3. LOGIC MODAL TIMELINE ---
+  const handleOpenDetail = async (trip) => {
+    try {
+        const res = await getTripTimelineApi(trip.id);
+        if (res && res.success) {
+            setSelectedTrip({ ...trip, timeline: res.data });
+            setIsDetailModalOpen(true);
+        }
+    } catch (error) {
+        toast.error("Không thể lấy chi tiết hành trình.");
+    }
   };
 
   const handleTimelineUpdate = (index, field, value) => {
@@ -132,72 +148,200 @@ const TrainScheduling = () => {
     setSelectedTrip({ ...selectedTrip, timeline: updatedTimeline });
   };
 
-  const handleSaveTimeline = () => {
-    setTrips(trips.map(t => t.id === selectedTrip.id ? selectedTrip : t));
-    setIsDetailModalOpen(false);
+  const handleSaveTimeline = async () => {
+    if (!selectedTrip) return;
+    try {
+        const promises = selectedTrip.timeline.map(point => {
+            if (point.actArr || point.actDep) {
+                return updateTripTimeApi(selectedTrip.id, {
+                    stationId: point.stationId,
+                    actArr: point.actArr, 
+                    actDep: point.actDep
+                });
+            }
+            return null;
+        });
+        await Promise.all(promises);
+        toast.success("Cập nhật hành trình thành công!");
+        setIsDetailModalOpen(false);
+        fetchSchedule(); 
+    } catch (error) {
+        toast.error("Lỗi khi lưu hành trình.");
+    }
   };
 
-  // B. LOGIC TẠO MỚI (ĐƠN GIẢN HÓA)
-  const handleCreateSubmit = () => {
-    if (!formData.route || !formData.trainCode) { alert("Vui lòng nhập đủ thông tin!"); return; }
+  // --- 4. LOGIC MODAL PHÂN CÔNG ---
+  const handleOpenAssignModal = async (trip) => {
+    setSelectedAssignTrip(trip); 
+    setAssignmentState({ driverId: '', managerId: '', carriageStaffs: {} });
+    setAssigningLoading({}); // Reset loading state
+    setIsAssignModalOpen(true);
     
-    // Mock timeline đơn giản
-    const mockTimeline = [
-       { station: formData.departureStation, type: 'departure', expTime: formData.time, actTime: "", status: "waiting" },
-       { station: formData.arrivalStation, type: 'arrival', expTime: "Unknown", actTime: "", status: "waiting" }
-    ];
+    try {
+        const currentAssignRes = await getTripAssignmentsApi(trip.id);
+        
+        const currentData = currentAssignRes.success ? currentAssignRes.data : {};
 
-    const newTrip = {
-      id: `TRIP${trips.length + 1}`.padStart(6, '0'),
-      ...formData,
-      driver: null, manager: null, carriages: {},
-      status: "scheduled",
-      timeline: mockTimeline
+        setSelectedAssignTrip(prev => ({ 
+            ...prev, 
+            assignedDriverName: currentData.driver, 
+            assignedDriverId: currentData.driverId,
+            assignedManagerName: currentData.manager,
+            assignedManagerId: currentData.managerId,
+            assignedCarriages: currentData.carriages || {} 
+        }));
+
+        const [resDrivers, resManagers, resStaffs] = await Promise.all([
+            getAvailableStaffApi(trip.id, 'Nhân viên phụ trách lái'),
+            getAvailableStaffApi(trip.id, 'Nhân viên trưởng'),
+            getAvailableStaffApi(trip.id, 'Nhân viên phụ trách toa') 
+        ]);
+
+        if (resDrivers.success) setAvailableDrivers(resDrivers.data);
+        if (resManagers.success) setAvailableManagers(resManagers.data);
+        if (resStaffs.success) setAvailableStaffs(resStaffs.data);
+
+    } catch (error) {
+        console.error(error);
+        toast.error("Lỗi tải thông tin phân công.");
+    }
+  };
+    const formatDisplay = (isoStr) => {
+        if (!isoStr) return '--:--';
+        const d = new Date(isoStr);
+        return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')} ${d.getDate()}/${d.getMonth()+1}`;
     };
 
-    setTrips([newTrip, ...trips]);
-    setIsCreateModalOpen(false);
-    setFormData({ route: '', trainCode: '', departureStation: '', arrivalStation: '', date: '', time: '' });
+    const formatInput = (isoStr) => {
+        if (!isoStr) return "";
+        const d = new Date(isoStr);
+        const tzOffset = d.getTimezoneOffset() * 60000;
+        return (new Date(d - tzOffset)).toISOString().slice(0, 16);
+    };
+
+  const handleRouteChange = async (e) => {
+      const routeId = e.target.value;
+      setFormData({
+          ...formData,
+          maTuyenTau: routeId,
+          gaXuatPhat: '', 
+          gaKetThuc: ''
+      });
+
+      if (routeId) {
+          try {
+              const res = await getStationsByRouteApi(routeId);
+              if (res && res.success) {
+                  setAvailableStations(res.data); 
+              }
+          } catch (error) {
+              console.error("Lỗi tải ga:", error);
+              toast.error("Không thể tải danh sách ga của tuyến này.");
+              setAvailableStations([]);
+          }
+      } else {
+          setAvailableStations([]); 
+      }
   };
 
-  // C. LOGIC PHÂN CÔNG (MỚI)
-  const handleOpenAssignModal = (trip) => {
-    setSelectedAssignTrip(trip);
-    setAssignmentState({
-      driverId: '', managerId: '', carriageStaffs: { ...trip.carriages }
-    });
-    setIsAssignModalOpen(true);
-  };
-
-  const confirmAssignment = (type, index = null) => {
+  // --- [UPDATED] LOGIC PHÂN CÔNG VỚI LOADING ---
+  const confirmAssignment = async (type, index = null) => {
     if (!selectedAssignTrip) return;
-    let updatedTrip = { ...selectedAssignTrip };
-    
+
+    // Xác định key để hiển thị loading cho đúng nút
+    const loadingKey = type === 'carriage' ? `carriage-${index}` : type;
+
+    let payload = {
+        maChuyenTau: selectedAssignTrip.id,
+        maNV: '',
+        vaiTro: '',
+        maToa: null
+    };
+
     if (type === 'driver') {
-      const person = drivers.find(d => d.id === assignmentState.driverId);
-      if (person) updatedTrip.driver = person.name;
+        if (!assignmentState.driverId) return toast.warning("Vui lòng chọn lái tàu.");
+        payload.maNV = assignmentState.driverId;
+        payload.vaiTro = "Nhân viên phụ trách lái"; 
     } else if (type === 'manager') {
-      const person = managers.find(m => m.id === assignmentState.managerId);
-      if (person) updatedTrip.manager = person.name;
+        if (!assignmentState.managerId) return toast.warning("Vui lòng chọn trưởng tàu.");
+        payload.maNV = assignmentState.managerId;
+        payload.vaiTro = "Nhân viên trưởng"; 
     } else if (type === 'carriage') {
-      const staffId = assignmentState.carriageStaffs[index];
-      const person = staffList.find(s => s.id === staffId);
-      if (person) updatedTrip.carriages = { ...updatedTrip.carriages, [index]: person.name };
+        const staffId = assignmentState.carriageStaffs[index];
+        if (!staffId) return toast.warning("Vui lòng chọn nhân viên cho toa này.");
+        payload.maNV = staffId;
+        payload.vaiTro = "Nhân viên phụ trách toa";
+        
+        const carriageInfo = selectedAssignTrip.assignedCarriages[index];
+        if (carriageInfo && carriageInfo.coachId) {
+            payload.maToa = carriageInfo.coachId; 
+        } else {
+            payload.maToa = index.toString(); 
+        }
     }
 
-    setTrips(trips.map(t => t.id === selectedAssignTrip.id ? updatedTrip : t));
-    setSelectedAssignTrip(updatedTrip);
+    try {
+        // Bật loading cho key tương ứng
+        setAssigningLoading(prev => ({ ...prev, [loadingKey]: true }));
+
+        const res = await assignStaffApi(payload);
+        if (res && res.success) {
+            toast.success("Phân công thành công!");
+            // Tải lại dữ liệu phân công để cập nhật UI
+            handleOpenAssignModal(selectedAssignTrip);
+            // Cập nhật lại list bên ngoài
+            fetchUnassigned();
+        } else {
+            // Hiển thị lỗi từ server trả về nếu success = false
+            toast.error(res.message || "Phân công thất bại. Vui lòng thử lại.");
+        }
+    } catch (error) {
+        // Hiển thị lỗi Exception (Mạng, Server 500...)
+        console.error("Lỗi phân công:", error);
+        toast.error(error.response?.data?.message || "Lỗi server khi phân công.");
+    } finally {
+        // Tắt loading bất kể thành công hay thất bại
+        setAssigningLoading(prev => ({ ...prev, [loadingKey]: false }));
+    }
   };
 
-  // D. LOGIC FILTER
-  const scheduleTrips = trips.filter(trip => filterStatus === 'all' ? true : trip.status === filterStatus);
-  const unassignedTrips = trips.filter(trip => trip.status === 'scheduled' && (!trip.driver || !trip.manager));
-  const getCarriageCount = (code) => {
-    const train = trainFleet.find(t => t.code === code);
-    return train ? train.carriages : 0;
+  // --- 5. LOGIC TẠO MỚI ---
+  const handleCreateSubmit = async () => {
+    if (!formData.maTuyenTau || !formData.maDoanTau || !formData.ngayKhoiHanh) {
+        return toast.warning("Vui lòng nhập đủ thông tin.");
+    }
+
+    try {
+        const fullDate = `${formData.ngayKhoiHanh}T${formData.gioKhoiHanh || '00:00'}:00`;
+        const payload = {
+            maTuyenTau: formData.maTuyenTau,
+            maDoanTau: formData.maDoanTau,
+            gaXuatPhat: formData.gaXuatPhat,
+            gaKetThuc: formData.gaKetThuc,
+            ngayKhoiHanh: fullDate
+        };
+
+        const res = await createScheduleApi(payload);
+        if (res.success) {
+            toast.success("Tạo chuyến tàu thành công!");
+            setIsCreateModalOpen(false);
+            setFormData({ maTuyenTau: '', maDoanTau: '', gaXuatPhat: '', gaKetThuc: '', ngayKhoiHanh: '', gioKhoiHanh: '' });
+            fetchSchedule(); 
+        }
+    } catch (error) {
+        console.error(error);
+        toast.error(error.response?.data?.message || "Lỗi tạo chuyến tàu.");
+    }
   };
 
-  // --- 3. RENDER GIAO DIỆN ---
+  const getCarriageCount = (trainCode) => {
+    if (!trainCode) return 8; 
+    const train = trainsList.find(t => t.TenTau === trainCode || t.MaDoanTau === trainCode);
+    if (trainCode.includes('LP')) return 4;
+    return 8; 
+  };
+
+  // --- 7. RENDER GIAO DIỆN ---
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans">
       
@@ -228,16 +372,16 @@ const TrainScheduling = () => {
           className={`pb-3 px-2 text-sm font-bold flex items-center gap-2 border-b-2 transition-colors relative ${activeMainTab === 'unassigned' ? 'border-orange-500 text-orange-600' : 'border-transparent text-gray-500 hover:text-gray-700'}`}
         >
           <Briefcase className="w-4 h-4" /> Chuyến chưa phân công
-          {unassignedTrips.length > 0 && <span className="ml-1 bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full">{unassignedTrips.length}</span>}
+          {unassignedTripsList.length > 0 && <span className="ml-1 bg-orange-100 text-orange-600 text-xs px-2 py-0.5 rounded-full">{unassignedTripsList.length}</span>}
         </button>
       </div>
 
-      {/* --- TAB 1: LỊCH TRÌNH (BẤM VÀO SẼ RA TIMELINE) --- */}
+      {/* --- TAB 1: LỊCH TRÌNH --- */}
       {activeMainTab === 'schedule' && (
         <div className="animate-in fade-in duration-300">
           <div className="flex justify-end mb-4">
             <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-              {[{ id: 'all', label: 'Tất cả' }, { id: 'running', label: 'Đang chạy' }, { id: 'scheduled', label: 'Sắp chạy' }, { id: 'completed', label: 'Hoàn thành' }].map(tab => (
+              {[{ id: 'all', label: 'Tất cả' }, { id: 'Đang chạy', label: 'Đang chạy' }, { id: 'Chuẩn bị', label: 'Chuẩn bị' }, { id: 'Hoàn thành', label: 'Hoàn thành' }].map(tab => (
                 <button
                   key={tab.id} onClick={() => setFilterStatus(tab.id)}
                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filterStatus === tab.id ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}
@@ -248,56 +392,68 @@ const TrainScheduling = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
-            {scheduleTrips.map((trip) => (
-              <div 
-                key={trip.id} 
-                onClick={() => handleOpenDetail(trip)} // KHÔI PHỤC: Bấm vào mở Detail Modal
-                className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-              >
-                <div className="flex items-start gap-4 mb-4 md:mb-0 w-full md:w-auto">
-                  <div className={`p-3 rounded-lg shrink-0 ${trip.status === 'running' ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
-                    <Train className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-800">{trip.route}</h3>
-                    <div className="text-gray-500 text-sm flex flex-col gap-1 mt-1">
-                      <span className="flex items-center gap-1 font-medium">{trip.departureStation} <ArrowRight className="w-3 h-3" /> {trip.arrivalStation}</span>
-                      <span className="flex items-center gap-1">{trip.trainCode} • {trip.time}</span>
+          {loading ? (
+             <div className="flex justify-center py-10"><Loader className="animate-spin text-blue-600"/></div>
+          ) : (
+            <div className="space-y-4">
+                {trips.length === 0 && <div className="text-center text-gray-500 py-10">Không tìm thấy chuyến tàu nào.</div>}
+                {trips.map((trip) => (
+                <div 
+                    key={trip.id} 
+                    onClick={() => handleOpenDetail(trip)}
+                    className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+                >
+                    <div className="flex items-start gap-4 mb-4 md:mb-0 w-full md:w-auto">
+                    <div className={`p-3 rounded-lg shrink-0 ${trip.status === 'Đang chạy' ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
+                        <Train className="w-8 h-8" />
                     </div>
-                  </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-800">{trip.route}</h3>
+                        <div className="text-gray-500 text-sm flex flex-col gap-1 mt-1">
+                            <span className="flex items-center gap-1 font-medium">{trip.departureStation} <ArrowRight className="w-3 h-3" /> {trip.arrivalStation}</span>
+                            <div className="flex items-center gap-2 mt-1">
+                                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">
+                                    {trip.id} 
+                                </span>
+                                <span className="text-gray-500 text-xs">
+                                    • {trip.trainCode} • {trip.time}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div className="flex items-center gap-8 w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-8">
+                    <div>
+                        <div className="text-xs text-gray-400 mb-1">Lái tàu</div>
+                        <div className={`text-sm font-medium ${trip.driver ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.driver || "Chưa có"}</div>
+                    </div>
+                    <div>
+                        <div className="text-xs text-gray-400 mb-1">Trưởng tàu</div>
+                        <div className={`text-sm font-medium ${trip.manager ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.manager || "Chưa có"}</div>
+                    </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-8 w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-8">
-                   <div>
-                      <div className="text-xs text-gray-400 mb-1">Lái tàu</div>
-                      <div className={`text-sm font-medium ${trip.driver ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.driver || "Chưa có"}</div>
-                   </div>
-                   <div>
-                      <div className="text-xs text-gray-400 mb-1">Trưởng tàu</div>
-                      <div className={`text-sm font-medium ${trip.manager ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.manager || "Chưa có"}</div>
-                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
+                ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* --- TAB 2: CHƯA PHÂN CÔNG (BẤM VÀO SẼ RA ASSIGNMENT) --- */}
+      {/* --- TAB 2: UNASSIGNED --- */}
       {activeMainTab === 'unassigned' && (
         <div className="animate-in fade-in duration-300">
-           {/* ... (Logic hiển thị list unassigned giữ nguyên) ... */}
            <div className="grid grid-cols-1 gap-4">
-            {unassignedTrips.length === 0 ? (
+            {loading ? <div className="flex justify-center py-10"><Loader className="animate-spin text-orange-600"/></div> : 
+            unassignedTripsList.length === 0 ? (
               <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-300 text-gray-400">
                 <Check className="w-10 h-10 mx-auto mb-2 opacity-50" />
                 <p>Tất cả các chuyến đã được phân công đầy đủ nhân sự!</p>
               </div>
             ) : (
-              unassignedTrips.map(trip => (
+              unassignedTripsList.map(trip => (
                 <div 
                   key={trip.id}
-                  onClick={() => handleOpenAssignModal(trip)} // Bấm vào mở Assign Modal
+                  onClick={() => handleOpenAssignModal(trip)} 
                   className="bg-white rounded-xl border border-orange-200 p-6 shadow-sm hover:shadow-md hover:border-orange-300 transition-all cursor-pointer relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-bl-lg">Cần phân công</div>
@@ -306,6 +462,12 @@ const TrainScheduling = () => {
                     <div className="flex-1">
                       <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">{trip.route} <span className="text-sm font-normal text-gray-500">({trip.trainCode})</span></h3>
                       <p className="text-sm text-gray-500 mt-1 flex gap-4"><span className="flex items-center gap-1"><Calendar className="w-3 h-3"/> {trip.date}</span> <span className="flex items-center gap-1"><Clock className="w-3 h-3"/> {trip.time}</span></p>
+                      
+                      <div className="mt-2 flex gap-2 text-xs">
+                         <span className={`px-2 py-0.5 rounded ${trip.HasDriver ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>Lái: {trip.HasDriver ? 'OK' : 'Thiếu'}</span>
+                         <span className={`px-2 py-0.5 rounded ${trip.HasManager ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>Trưởng: {trip.HasManager ? 'OK' : 'Thiếu'}</span>
+                         <span className={`px-2 py-0.5 rounded ${trip.AssignedCarriages >= trip.TotalCarriages ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>Toa: {trip.AssignedCarriages}/{trip.TotalCarriages}</span>
+                      </div>
                     </div>
                     <button className="hidden md:block px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-sm font-medium rounded-lg">Phân công ngay</button>
                   </div>
@@ -332,40 +494,66 @@ const TrainScheduling = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                  <div className="col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tuyến đường</label>
-                    <select className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, route: e.target.value})}>
-                       <option value="">-- Chọn tuyến --</option>
-                       <option value="Hà Nội - Sài Gòn">Hà Nội - Sài Gòn</option>
-                       <option value="Đà Nẵng - Huế">Đà Nẵng - Huế</option>
-                       <option value="Hà Nội - Hải Phòng">Hà Nội - Hải Phòng</option>
-                    </select>
+                 <label className="block text-sm font-medium text-gray-700 mb-1">Tuyến đường</label>
+                 <select 
+                    className="w-full border p-2.5 rounded-lg" 
+                    onChange={handleRouteChange}
+                    value={formData.maTuyenTau}
+                 >
+                    <option value="">-- Chọn tuyến --</option>
+                    {routesList.map(r => (
+                        <option key={r.MaTuyenTau} value={r.MaTuyenTau}>{r.TenTuyen} ({r.MaTuyenTau})</option>
+                    ))}
+                 </select>
                  </div>
                  <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Đoàn tàu</label>
-                    <select className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, trainCode: e.target.value})}>
+                    <select className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, maDoanTau: e.target.value})}>
                        <option value="">-- Chọn tàu --</option>
-                       {trainFleet.map(t => <option key={t.code} value={t.code}>{t.code}</option>)}
+                       {trainsList.map(t => (
+                           <option key={t.MaDoanTau} value={t.MaDoanTau}>{t.TenTau} ({t.MaDoanTau}) - {t.LoaiTau}</option>
+                       ))}
                     </select>
                  </div>
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ga đi</label>
-                    <select className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, departureStation: e.target.value})}>
-                       <option value="">Chọn...</option>{stations.map(s => <option key={s} value={s}>{s}</option>)}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ga Xuất Phát</label>
+                    <select 
+                        className="w-full border p-2.5 rounded-lg" 
+                        onChange={(e) => setFormData({...formData, gaXuatPhat: e.target.value})}
+                        value={formData.gaXuatPhat}
+                        disabled={!formData.maTuyenTau}
+                    >
+                        <option value="">-- Chọn ga --</option>
+                        {availableStations.map(s => (
+                            <option key={s.MaGaTau} value={s.MaGaTau}>
+                                {s.TenGa}
+                            </option>
+                        ))}
                     </select>
                  </div>
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ga đến</label>
-                    <select className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, arrivalStation: e.target.value})}>
-                       <option value="">Chọn...</option>{stations.map(s => <option key={s} value={s}>{s}</option>)}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Ga Kết Thúc</label>
+                    <select 
+                        className="w-full border p-2.5 rounded-lg" 
+                        onChange={(e) => setFormData({...formData, gaKetThuc: e.target.value})}
+                        value={formData.gaKetThuc}
+                        disabled={!formData.maTuyenTau}
+                    >
+                        <option value="">-- Chọn ga --</option>
+                        {availableStations.map(s => (
+                            <option key={s.MaGaTau} value={s.MaGaTau}>
+                                {s.TenGa}
+                            </option>
+                        ))}
                     </select>
                  </div>
                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Ngày đi</label>
-                    <input type="date" className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, date: e.target.value})} />
+                    <input type="date" className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, ngayKhoiHanh: e.target.value})} />
                  </div>
                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Giờ đi</label>
-                    <input type="time" className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, time: e.target.value})} />
+                    <input type="time" className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, gioKhoiHanh: e.target.value})} />
                  </div>
               </div>
             </div>
@@ -377,8 +565,8 @@ const TrainScheduling = () => {
           </div>
         </div>
       )}
-
-      {/* --- MODAL 2: CHI TIẾT TIMELINE (KHÔI PHỤC) --- */}
+      
+      {/* MODAL 2: CHI TIẾT TIMELINE */}
       {isDetailModalOpen && selectedTrip && (
          <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -388,13 +576,12 @@ const TrainScheduling = () => {
                      <h2 className="text-xl font-bold text-gray-800">{selectedTrip.route}</h2>
                      <p className="text-sm text-gray-500 flex items-center gap-2">
                         {selectedTrip.trainCode} • {selectedTrip.date} 
-                        {selectedTrip.status === 'running' && <span className="text-green-600 font-bold bg-green-50 px-2 rounded-full">Đang chạy</span>}
                      </p>
                   </div>
                   <button onClick={() => setIsDetailModalOpen(false)}><X className="w-6 h-6 text-gray-400 hover:text-gray-600" /></button>
                </div>
                
-               {/* Body: Timeline List */}
+               {/* Body */}
                <div className="flex-1 overflow-y-auto p-6 bg-white">
                   <h3 className="font-bold text-gray-800 mb-6">Chi tiết hành trình thực tế</h3>
                   <div className="relative pl-4 space-y-0">
@@ -415,35 +602,38 @@ const TrainScheduling = () => {
                                        <h4 className="font-bold text-gray-800 text-lg">{point.station}</h4>
                                        {isPassed && <span className="text-xs font-bold text-white bg-green-500 px-2 py-1 rounded-full">Đã qua</span>}
                                        {isCurrent && <span className="text-xs font-bold text-white bg-orange-500 px-2 py-1 rounded-full animate-pulse">Đang ở đây</span>}
-                                       {point.status === 'waiting' && <span className="text-xs font-bold text-gray-500 bg-gray-200 px-2 py-1 rounded-full">Chờ</span>}
                                     </div>
                                     <div className="grid grid-cols-2 gap-4 text-sm">
-                                       {point.type !== 'departure' && (
-                                          <div>
-                                             <div className="text-gray-500 text-xs mb-1">Giờ đến (Dự kiến / Thực tế)</div>
-                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium text-gray-700">{point.expArr || point.expTime}</span>
+                                        <div>
+                                            <div className="text-gray-500 text-xs mb-1 font-semibold">Giờ đến (Dự kiến / Thực tế)</div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded text-xs whitespace-nowrap">
+                                                    {formatDisplay(point.expArr)}
+                                                </span>
                                                 <span className="text-gray-400">→</span>
-                                                <input type="time" className="border border-gray-300 rounded px-2 py-0.5 text-orange-600 font-bold focus:outline-none focus:border-orange-500 bg-white w-28"
-                                                   value={point.actArr || point.actTime || ""}
-                                                   onChange={(e) => point.type === 'arrival' ? handleTimelineUpdate(index, 'actTime', e.target.value) : handleTimelineUpdate(index, 'actArr', e.target.value)}
+                                                <input 
+                                                    type="datetime-local" 
+                                                    className="border border-gray-300 rounded px-2 py-1 text-xs text-blue-600 font-bold focus:outline-none focus:border-blue-500 bg-white w-44" 
+                                                    value={formatInput(point.actArr)}
+                                                    onChange={(e) => handleTimelineUpdate(index, 'actArr', e.target.value)}
                                                 />
-                                             </div>
-                                          </div>
-                                       )}
-                                       {point.type !== 'arrival' && (
-                                          <div>
-                                             <div className="text-gray-500 text-xs mb-1">Giờ đi (Dự kiến / Thực tế)</div>
-                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium text-gray-700">{point.expDep || point.expTime}</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-gray-500 text-xs mb-1 font-semibold">Giờ đi (Dự kiến / Thực tế)</div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-gray-700 bg-gray-100 px-2 py-1 rounded text-xs whitespace-nowrap">
+                                                    {formatDisplay(point.expDep)}
+                                                </span>
                                                 <span className="text-gray-400">→</span>
-                                                <input type="time" className="border border-gray-300 rounded px-2 py-0.5 text-orange-600 font-bold focus:outline-none focus:border-orange-500 bg-white w-28"
-                                                   value={point.actDep || point.actTime || ""}
-                                                   onChange={(e) => point.type === 'departure' ? handleTimelineUpdate(index, 'actTime', e.target.value) : handleTimelineUpdate(index, 'actDep', e.target.value)}
+                                                <input 
+                                                    type="datetime-local" 
+                                                    className="border border-gray-300 rounded px-2 py-1 text-xs text-orange-600 font-bold focus:outline-none focus:border-orange-500 bg-white w-44" 
+                                                    value={formatInput(point.actDep)} 
+                                                    onChange={(e) => handleTimelineUpdate(index, 'actDep', e.target.value)}
                                                 />
-                                             </div>
-                                          </div>
-                                       )}
+                                            </div>
+                                        </div>
                                     </div>
                                  </div>
                               </div>
@@ -455,7 +645,6 @@ const TrainScheduling = () => {
                   </div>
                </div>
                
-               {/* Footer */}
                <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
                   <button onClick={() => setIsDetailModalOpen(false)} className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-white">Đóng</button>
                   <button onClick={handleSaveTimeline} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2">
@@ -466,7 +655,7 @@ const TrainScheduling = () => {
          </div>
       )}
 
-      {/* --- MODAL 3: PHÂN CÔNG (NEW) --- */}
+      {/* --- MODAL 3: PHÂN CÔNG (ĐÃ CẬP NHẬT UI LOADING) --- */}
       {isAssignModalOpen && selectedAssignTrip && (
         <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 shadow-2xl">
@@ -477,56 +666,178 @@ const TrainScheduling = () => {
             </div>
             {/* Body Modal */}
             <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-gray-50/50">
-               {/* Mục 1: Lái tàu & Trưởng tàu */}
-               <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2"><User className="w-5 h-5 text-blue-600" /> Vị trí chủ chốt</h3>
-                  <div className="space-y-4">
-                     <div className="flex items-center justify-between gap-4">
-                        <div className="w-1/3"><label className="font-medium text-sm text-gray-700">Lái tàu</label>{selectedAssignTrip.driver && <div className="text-xs text-green-600 font-bold flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Đã chốt: {selectedAssignTrip.driver}</div>}</div>
-                        <div className="flex-1 flex gap-2">
-                           <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" value={assignmentState.driverId} onChange={(e) => setAssignmentState({...assignmentState, driverId: e.target.value})}>
-                              <option value="">-- Chọn lái tàu --</option>{drivers.map(d => <option key={d.id} value={d.id} disabled={d.status !== 'available'}>{d.name} {d.status !== 'available' ? '(Bận)' : ''}</option>)}
-                           </select>
-                           <button onClick={() => confirmAssignment('driver')} className="bg-blue-600 hover:bg-blue-700 text-white px-3 rounded-lg flex items-center justify-center"><Check className="w-5 h-5" /></button>
+                
+                {/* 1. Lái tàu & Trưởng tàu */}
+                <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                        <User className="w-5 h-5 text-blue-600" /> Vị trí chủ chốt
+                    </h3>
+                    <div className="space-y-4">
+                        
+                        {/* LÁI TÀU */}
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="w-1/3">
+                                <label className="font-medium text-sm text-gray-700">Lái tàu</label>
+                            </div>
+                            <div className="flex-1">
+                                {selectedAssignTrip.assignedDriverId ? (
+                                    <div className="flex items-center justify-between bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded-lg">
+                                        <span className="font-medium text-sm">
+                                            {selectedAssignTrip.assignedDriverName} 
+                                            <span className="text-green-600 font-normal ml-1">({selectedAssignTrip.assignedDriverId})</span>
+                                        </span>
+                                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <select 
+                                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 transition-colors"
+                                            value={assignmentState.driverId} 
+                                            onChange={(e) => setAssignmentState({...assignmentState, driverId: e.target.value})}
+                                            disabled={assigningLoading['driver']} // Disable khi đang load
+                                        >
+                                            <option value="">-- Chọn lái tàu --</option>
+                                            {availableDrivers.map(d => (
+                                                <option key={d.MaNV} value={d.MaNV}>{d.HoTen} ({d.MaNV})</option>
+                                            ))}
+                                        </select>
+                                        <button 
+                                            onClick={() => confirmAssignment('driver')} 
+                                            className={`px-3 rounded-lg flex items-center justify-center transition-colors shadow-sm ${assigningLoading['driver'] ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                                            title="Lưu phân công"
+                                            disabled={assigningLoading['driver']} // Disable khi đang load
+                                        >
+                                            {assigningLoading['driver'] ? (
+                                                <Loader className="w-5 h-5 animate-spin text-white" />
+                                            ) : (
+                                                <Check className="w-5 h-5" />
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                     </div>
-                     <div className="flex items-center justify-between gap-4">
-                        <div className="w-1/3"><label className="font-medium text-sm text-gray-700">Trưởng tàu</label>{selectedAssignTrip.manager && <div className="text-xs text-green-600 font-bold flex items-center gap-1"><CheckCircle2 className="w-3 h-3"/> Đã chốt: {selectedAssignTrip.manager}</div>}</div>
-                        <div className="flex-1 flex gap-2">
-                           <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" value={assignmentState.managerId} onChange={(e) => setAssignmentState({...assignmentState, managerId: e.target.value})}>
-                              <option value="">-- Chọn trưởng tàu --</option>{managers.map(m => <option key={m.id} value={m.id} disabled={m.status !== 'available'}>{m.name} {m.status !== 'available' ? '(Bận)' : ''}</option>)}
-                           </select>
-                           <button onClick={() => confirmAssignment('manager')} className="bg-blue-600 hover:bg-blue-700 text-white px-3 rounded-lg flex items-center justify-center"><Check className="w-5 h-5" /></button>
+
+                        {/* TRƯỞNG TÀU */}
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="w-1/3">
+                                <label className="font-medium text-sm text-gray-700">Trưởng tàu</label>
+                            </div>
+                            <div className="flex-1">
+                                {selectedAssignTrip.assignedManagerId ? (
+                                    <div className="flex items-center justify-between bg-green-50 border border-green-200 text-green-800 px-4 py-2 rounded-lg">
+                                        <span className="font-medium text-sm">
+                                            {selectedAssignTrip.assignedManagerName} 
+                                            <span className="text-green-600 font-normal ml-1">({selectedAssignTrip.assignedManagerId})</span>
+                                        </span>
+                                        <CheckCircle2 className="w-5 h-5 text-green-600" />
+                                    </div>
+                                ) : (
+                                    <div className="flex gap-2">
+                                        <select 
+                                            className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 transition-colors"
+                                            value={assignmentState.managerId} 
+                                            onChange={(e) => setAssignmentState({...assignmentState, managerId: e.target.value})}
+                                            disabled={assigningLoading['manager']} // Disable khi đang load
+                                        >
+                                            <option value="">-- Chọn trưởng tàu --</option>
+                                            {availableManagers.map(m => (
+                                                <option key={m.MaNV} value={m.MaNV}>{m.HoTen} ({m.MaNV})</option>
+                                            ))}
+                                        </select>
+                                        <button 
+                                            onClick={() => confirmAssignment('manager')} 
+                                            className={`px-3 rounded-lg flex items-center justify-center transition-colors shadow-sm ${assigningLoading['manager'] ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                                            disabled={assigningLoading['manager']} // Disable khi đang load
+                                        >
+                                             {assigningLoading['manager'] ? (
+                                                <Loader className="w-5 h-5 animate-spin text-white" />
+                                            ) : (
+                                                <Check className="w-5 h-5" />
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                     </div>
-                  </div>
-               </div>
-               {/* Mục 2: Phụ trách từng toa */}
-               <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2"><Users className="w-5 h-5 text-orange-600" /> Phụ trách toa xe</h3>
-                  <div className="space-y-3">
-                     {Array.from({ length: getCarriageCount(selectedAssignTrip.trainCode) }).map((_, idx) => {
-                        const carriageNum = idx + 1;
-                        const currentStaffName = selectedAssignTrip.carriages ? selectedAssignTrip.carriages[carriageNum] : null;
-                        return (
-                           <div key={carriageNum} className="flex items-center justify-between gap-4 py-2 border-b border-gray-50 last:border-0">
-                              <div className="w-1/3 flex flex-col"><span className="font-medium text-sm text-gray-700">Toa số {carriageNum}</span>{currentStaffName ? <span className="text-xs text-green-600 font-bold">✓ {currentStaffName}</span> : <span className="text-xs text-gray-400">Chưa phân công</span>}</div>
-                              <div className="flex-1 flex gap-2">
-                                 <select className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none" value={assignmentState.carriageStaffs[carriageNum] || ''} onChange={(e) => setAssignmentState({...assignmentState, carriageStaffs: { ...assignmentState.carriageStaffs, [carriageNum]: e.target.value }})}>
-                                    <option value="">-- Chọn nhân viên --</option>{staffList.map(s => <option key={s.id} value={s.id} disabled={s.status !== 'available'}>{s.name}</option>)}
-                                 </select>
-                                 <button onClick={() => confirmAssignment('carriage', carriageNum)} className={`px-3 rounded-lg flex items-center justify-center ${currentStaffName ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500 hover:bg-blue-600 hover:text-white'}`}><Check className="w-5 h-5" /></button>
-                              </div>
-                           </div>
-                        );
-                     })}
-                  </div>
-               </div>
+                    </div>
+                </div>
+
+                {/* 2. Phụ trách toa */}
+                <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+                    <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2">
+                        <Users className="w-5 h-5 text-orange-600" /> Phụ trách toa xe
+                    </h3>
+                    
+                    {/* Render danh sách toa xe */}
+                    <div className="space-y-3">
+                        {selectedAssignTrip.assignedCarriages && Object.keys(selectedAssignTrip.assignedCarriages).length > 0 ? (
+                            Object.entries(selectedAssignTrip.assignedCarriages).map(([carriageNum, assignedData]) => {
+                                const isAssigned = assignedData && assignedData.staffId; 
+                                const staffName = assignedData ? assignedData.staffName : '';
+                                
+                                // Key loading động cho từng toa
+                                const loadingKey = `carriage-${carriageNum}`;
+                                const isLoading = assigningLoading[loadingKey];
+
+                                return (
+                                    <div key={carriageNum} className="flex items-center justify-between gap-4 py-3 border-b border-gray-50 last:border-0 hover:bg-gray-50 px-2 rounded-lg transition-colors">
+                                        <div className="w-1/3 flex items-center gap-3">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${isAssigned ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}`}>
+                                                {carriageNum}
+                                            </div>
+                                            <span className="font-medium text-sm text-gray-700">Toa số {carriageNum}</span>
+                                        </div>
+                                        
+                                        <div className="flex-1">
+                                            {isAssigned ? (
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="font-bold text-gray-800">{staffName}</span>
+                                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full flex items-center gap-1">
+                                                        <CheckCircle2 className="w-3 h-3"/> Đã gán
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="flex gap-2">
+                                                    <select 
+                                                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-orange-500 transition-colors"
+                                                        value={assignmentState.carriageStaffs[carriageNum] || ''} 
+                                                        onChange={(e) => setAssignmentState({...assignmentState, carriageStaffs: { ...assignmentState.carriageStaffs, [carriageNum]: e.target.value }})}
+                                                        disabled={isLoading}
+                                                    >
+                                                        <option value="">-- Chọn nhân viên --</option>
+                                                        {availableStaffs.map(s => (
+                                                            <option key={s.MaNV} value={s.MaNV}>{s.HoTen} ({s.MaNV})</option>
+                                                        ))}
+                                                    </select>
+                                                    <button 
+                                                        onClick={() => confirmAssignment('carriage', carriageNum)} 
+                                                        className={`px-3 rounded-lg flex items-center justify-center transition-colors shadow-sm ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-orange-500 hover:bg-orange-600 text-white'}`}
+                                                        disabled={isLoading}
+                                                    >
+                                                        {isLoading ? (
+                                                            <Loader className="w-5 h-5 animate-spin text-white" />
+                                                        ) : (
+                                                            <Check className="w-5 h-5" />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="text-center text-gray-400 py-4 italic">Không có dữ liệu toa xe</div>
+                        )}
+                    </div>
+                </div>
             </div>
             <div className="p-4 bg-gray-50 border-t flex justify-end"><button onClick={() => setIsAssignModalOpen(false)} className="px-6 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg font-medium text-gray-700">Đóng</button></div>
           </div>
         </div>
       )}
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

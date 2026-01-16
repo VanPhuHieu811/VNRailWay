@@ -60,7 +60,6 @@ const filteredTrains = trainsList.filter(train => {
       if (!isBackground) {
         setLoading(true);
       }
-
       const response = await getAllTrainsService();
       // Handle different API response structures safely
       const rawList = response.data?.data || response.data || [];
@@ -121,7 +120,6 @@ const filteredTrains = trainsList.filter(train => {
   const toggleExpand = async (id) => {
     const isExpanding = expandedTrainId !== id;
     setExpandedTrainId(isExpanding ? id : null);
-
 
     if (isExpanding) {
       const trainIndex = trainsList.findIndex(t => t.id === id);
