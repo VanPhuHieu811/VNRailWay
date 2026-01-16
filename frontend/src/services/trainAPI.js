@@ -1,5 +1,4 @@
-import client from '../api/client';
-
+import axiosClient from '../api/client';
 const BASE_URL = '/api/v1/trains';
 
 // --- Train Endpoints ---
