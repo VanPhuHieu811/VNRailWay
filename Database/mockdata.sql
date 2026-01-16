@@ -356,7 +356,7 @@ INSERT INTO DON_NGHI_PHEP (MaDon, MaPhanCong, NgayGui, LyDo, NVGuiDon, NVDuyetDo
 ('DNP002', 'PC007', '2025-12-27 09:00', N'Việc gia đình', 'NV011', 'NV001', 'NV008', N'Chấp nhận'),
 ('DNP003', 'PC008', '2025-12-28 10:00', N'Khám sức khỏe định kỳ', 'NV006', NULL, NULL, N'Đang chờ'),
 ('DNP004', 'PC010', '2025-12-28 14:00', N'Con ốm', 'NV012', 'NV001', NULL, N'Từ chối'),
-('DNP005', 'PC006', '2025-12-27 08:00', N'Đau nước ngoài', 'NV007', NULL, NULL, N'Đang chờ');
+('DNP005', 'PC006', '2025-12-27 08:00', N'Đau ruột thừa', 'NV007', NULL, NULL, N'Đang chờ');
 GO
 
 -- =============================================
