@@ -24,7 +24,7 @@ BEGIN
         SELECT @LoaiNV = LoaiNhanVien FROM NHAN_VIEN WHERE MaNV = @MaNV;
 
         IF (@VaiTro LIKE N'%lái%' AND @LoaiNV <> N'Lái tàu')
-           OR (@VaiTro LIKE N'%trưởng%' AND @LoaiNV NOT IN (N'Toa tàu', N'Quản lý'))                               ---- CÓ THỂ BỎ
+           OR (@VaiTro LIKE N'%trưởng%' AND @LoaiNV NOT IN (N'Toa tàu', N'Lái tàu'))                               ---- CÓ THỂ BỎ
            OR (@VaiTro LIKE N'%toa%' AND @LoaiNV <> N'Toa tàu')
         BEGIN
             RAISERROR(N'Lỗi: Loại nhân viên không phù hợp với vai trò được phân công.', 16, 1);
@@ -34,7 +34,7 @@ BEGIN
         DECLARE @Num INT;
         SELECT @Num = ISNULL(MAX(CAST(SUBSTRING(MaPhanCong,3,10) AS INT)),0) + 1 
         FROM PHAN_CONG_CHUYEN_TAU;
-        DECLARE @MaPC VARCHAR(10) = 'PC' + RIGHT('0' + CAST(@Num AS VARCHAR(2)), 2);
+        DECLARE @MaPC VARCHAR(10) = 'PC' + RIGHT('00' + CAST(@Num AS VARCHAR(3)), 3);
         
         INSERT INTO PHAN_CONG_CHUYEN_TAU (MaPhanCong, MaNV, MaChuyenTau, VaiTro, MaToa, TrangThai)
         VALUES (@MaPC, @MaNV, @MaChuyenTau, @VaiTro, @MaToa, N'Nhận việc');
@@ -53,11 +53,3 @@ BEGIN
     END CATCH
 END;
 GO
-
-EXEC sp_PhanCongNhanSu
-    @MaNV = 'NV005', 
-    @MaChuyenTau = 'CT006', 
-    @VaiTro = N'Nhân viên phụ trách lái';
-
-DELETE FROM PHAN_CONG_CHUYEN_TAU 
-    WHERE MaNV = 'NV005' AND MaChuyenTau = 'CT006'

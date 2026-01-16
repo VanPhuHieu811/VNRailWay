@@ -250,7 +250,7 @@ export const patchApproveLeave = async (req, res) => {
 // src/controllers/staffController.js
 export const getAvailableStaffList = async (req, res) => {
   try {
-    const { maChuyenTau, loaiNV } = req.body;
+    const { maChuyenTau, loaiNV } = req.query;
 
     if (!maChuyenTau || !loaiNV) {
       return res.status(400).json({ 

@@ -1,5 +1,16 @@
-import { createTrainService, createCarriageService, getTrainService, getTrainIdService, getCarriagesService, updateTrainService, updateCarriageService } from '../services/train.service.js';
 import { AppError } from '../utils/AppError.js';
+import { createTrainService,
+     createCarriageService, 
+     getTrainService, 
+     getTrainIdService, 
+     getCarriagesService, 
+     updateTrainService, 
+     updateCarriageService,
+     getTrainScheduleService,
+     getTripTimelineService,
+     updateTripTimeService,
+     getUnassignedTripsService,
+     getTripAssignmentsService } from '../services/train.service.js';
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Train 
@@ -102,5 +113,61 @@ export const updateCarriage = async (req, res, next) => {
         return res.status(200).json({ success: true, message: 'Update carriage successfully'});
     } catch (error) {
         next(error);
+    }
+};
+
+// 1. Lấy danh sách chuyến tàu
+export const getTrainSchedule = async (req, res) => {
+    try {
+        const { status } = req.query; // ?status=all/running/scheduled
+        const data = await getTrainScheduleService(status);
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 2. Lấy Timeline
+export const getTripTimeline = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const data = await getTripTimelineService(id);
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 3. Cập nhật giờ thực tế
+export const updateTripTime = async (req, res) => {
+    try {
+        const { id } = req.params; // TripId
+        const { stationId, actArr, actDep } = req.body;
+        
+        await updateTripTimeService(id, stationId, actArr, actDep);
+        res.status(200).json({ success: true, message: 'Cập nhật thành công' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 4. Lấy chuyến chưa phân công
+export const getUnassignedTrips = async (req, res) => {
+    try {
+        const data = await getUnassignedTripsService();
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+// 5. Lấy chi tiết phân công
+export const getTripAssignments = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const data = await getTripAssignmentsService(id);
+        res.status(200).json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
     }
 };
