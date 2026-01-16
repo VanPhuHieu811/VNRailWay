@@ -11,7 +11,7 @@ Content-Type: application/json
 
 {
   "username": "admin",
-  "password": "123"
+  "password": "admin123"
 }
 
 ### Save Token to Variable
@@ -24,9 +24,11 @@ Content-Type: application/json
 
 ### Get All Routes
 GET {{baseUrl}}/routes
+Authorization: Bearer {{authToken}}
 
 ### Get Route Details (Replace TT01 with a real ID)
 GET {{baseUrl}}/routes/TT01
+Authorization: Bearer {{authToken}}
 
 
 # ==========================================

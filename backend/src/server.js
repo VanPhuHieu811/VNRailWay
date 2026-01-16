@@ -1,11 +1,15 @@
 import app from './app.js';
 import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
-// New! train-related
+
+// train route
 import tripRoutes from './routes/trip.route.js';
 import routeRoutes from './routes/route.route.js';
 import trainRoutes from './routes/train.route.js';
 import priceRoutes from './routes/price.route.js';
+
+// promotion route
+import promotionRoutes from './routes/promotion.route.js';
 
 import { errorHandler } from './middlewares/errorHandler.middleware.js';
 import staffRoutes from './routes/staff.route.js';
@@ -35,6 +39,7 @@ app.use('/api/v1/trains', trainRoutes);
 
 // price
 app.use('/api/v1/prices', priceRoutes);
+app.use('/api/v1/promotions', promotionRoutes);
 
 app.use('/api/v1/reports', reportRoutes);
 // Global error handler

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, TrainFront, Edit, Users, Wifi, Wind, ChevronDown, ChevronUp, Calendar, Loader } from 'lucide-react';
-// import { MOCK_TRAINS } from '../../services/db_mock'; // REMOVED
+import { Plus, TrainFront, Edit, Users, Wifi, Wind, ChevronDown, ChevronUp, Calendar, Loader, Search, Filter } from 'lucide-react';
+// 1. IMPORT TOAST LIBRARY
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import AddTrainModal from '../../components/trains/AddTrainModal';
 import AddCoachModal from '../../components/trains/AddCoachModal';
 import '../../styles/pages/TrainManagementPage.css';
 
-// Import the new services
 import {
   getAllTrainsService,
   createTrainService,
@@ -13,17 +15,18 @@ import {
   getTrainCarriagesService,
   createCarriageService,
   updateCarriageService
-} from '../../services/trainApi';
+} from '../../services/trainAPI';
 
 const TrainManagementPage = () => {
   const [trainsList, setTrainsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // State quản lý Modal Tàu
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+
   const [trainModal, setTrainModal] = useState({ isOpen: false, isEdit: false, data: null });
 
-  // State quản lý Modal Toa
   const [addCoachModalState, setAddCoachModalState] = useState({
     isOpen: false,
     trainId: null,
@@ -31,54 +34,47 @@ const TrainManagementPage = () => {
     data: null
   });
 
-  // State quản lý việc mở rộng/thu gọn danh sách toa (Accordion)
   const [expandedTrainId, setExpandedTrainId] = useState(null);
 
-  // --- INITIAL DATA FETCH ---
-  // fetching with 'isBackground' prevents the scroll-to-top issue
+  const filteredTrains = trainsList.filter(train => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      (train.trainName?.toLowerCase() || '').includes(term) ||
+      (train.id?.toLowerCase() || '').includes(term);
+
+    const matchesStatus = filterStatus === 'all' || train.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
+
   const fetchTrains = async (isBackground = false) => {
     try {
-      // Only show the big spinner if it's a fresh load (not an update)
       if (!isBackground) {
         setLoading(true);
       }
-      
       const response = await getAllTrainsService();
-      // Handle different API response structures safely
       const rawList = response.data?.data || response.data || [];
 
-      // 1. Format the new data from server
       const newTrainData = rawList.map(t => ({
-        id: t.MaDoanTau, 
+        id: t.MaDoanTau,
         trainName: t.TenTau,
         company: t.HangSanXuat || "Đường sắt VN",
         operationDate: t.NgayVanHanh,
         status: t.TrangThai === 'Hoạt động' ? 'active' : 'maintenance',
         type: t.LoaiTau === 'Hạng sang' ? 'VIP' : 'Normal',
         totalCoaches: t.SoLuongToa || 0,
-        coaches: [] // Initially empty from server
+        coaches: []
       }));
 
-      // 2. THE SAFER FIX: Merge with existing state
-      // We use a callback to ensure we are looking at the absolute latest state
       setTrainsList(prevList => {
-        // If we have no previous data, just return the new data
         if (!prevList || prevList.length === 0) return newTrainData;
-
-        // Otherwise, map through new data and try to find matching old data
         return newTrainData.map(newTrain => {
           const oldTrain = prevList.find(old => old.id === newTrain.id);
-          
           if (oldTrain) {
-            // Found a match! Keep the server updates, but PRESERVE the local coaches
-            return { 
-              ...newTrain, 
-              coaches: oldTrain.coaches, // Keep existing coaches
-              // If the server says coach count changed, we might want to trust the server, 
-              // but for now, this prevents the "Loading..." UI glitch.
-            }; 
+            return {
+              ...newTrain,
+              coaches: oldTrain.coaches,
+            };
           }
-          // No match (new train), return as is
           return newTrain;
         });
       });
@@ -86,6 +82,8 @@ const TrainManagementPage = () => {
     } catch (err) {
       console.error("Error fetching trains:", err);
       setError("Không thể tải danh sách tàu.");
+      // Optional: Toast for load error
+      // toast.error("Lỗi tải dữ liệu tàu"); 
     } finally {
       if (!isBackground) {
         setLoading(false);
@@ -97,36 +95,23 @@ const TrainManagementPage = () => {
     fetchTrains();
   }, []);
 
-  // --- LOGIC TÀU ---
-
-  // Updated: Lazy load carriages when expanding
   const toggleExpand = async (id) => {
     const isExpanding = expandedTrainId !== id;
     setExpandedTrainId(isExpanding ? id : null);
 
-    
     if (isExpanding) {
       const trainIndex = trainsList.findIndex(t => t.id === id);
-
-      // Only fetch if coaches array is empty
       if (trainIndex !== -1 && trainsList[trainIndex].coaches.length === 0) {
         try {
           const res = await getTrainCarriagesService(id);
-
-          // Handle response structure { success: true, data: [...] }
           const rawCarriages = res.data?.data || res.data || [];
-
-          // --- MAPPING LOGIC STARTS HERE ---
           const formattedCarriages = rawCarriages.map(c => ({
-            id: c.MaToaTau,            // Unique ID
-            carriageNumber: c.STT,     // Maps to "Toa 1"
-            type: c.LoaiToa,           // Maps to "Ghế" or "Giường"
-            capacity: c.SLViTri,       // Maps to "40 chỗ"
-
-            // Optional: Create a longer description based on type if needed
+            id: c.MaToaTau,
+            carriageNumber: c.STT,
+            type: c.LoaiToa,
+            capacity: c.SLViTri,
             description: c.LoaiToa === 'Giường' ? 'Giường nằm' : 'Ghế ngồi mềm'
           }));
-          // ---------------------------------
 
           setTrainsList(prev => {
             const newList = [...prev];
@@ -135,6 +120,7 @@ const TrainManagementPage = () => {
           });
         } catch (err) {
           console.error("Failed to load carriages:", err);
+          toast.error("Không thể tải danh sách toa tàu.");
         }
       }
     }
@@ -149,35 +135,38 @@ const TrainManagementPage = () => {
     setTrainModal({ isOpen: true, isEdit: true, data: train });
   };
 
-const handleSaveTrain = async (trainData) => {
+  // ------------------------------------------------------------
+  // 2. MODIFIED HANDLE SAVE TRAIN (Success/Error Toasts)
+  // ------------------------------------------------------------
+  const handleSaveTrain = async (trainData) => {
     try {
       if (trainModal.isEdit) {
         // Update logic
         await updateTrainService(trainData.id, trainData);
+        // SUCCESS TOAST FOR EDIT
+        toast.success(`Cập nhật tàu ${trainData.id} thành công!`);
       } else {
         // Create logic
         await createTrainService(trainData);
+        // SUCCESS TOAST FOR CREATE
+        toast.success("Thêm đoàn tàu mới thành công!");
       }
-      
-      // ✅ Call fetch with true. 
-      // Because of the new logic in Step 1, this will update the Train Name/Status
-      // WITHOUT wiping out your open coaches list.
-      await fetchTrains(true); 
 
+      await fetchTrains(true);
       setTrainModal({ ...trainModal, isOpen: false });
-      
+
     } catch (err) {
       console.error(err);
-      alert("Lỗi: " + (err.response?.data?.message || err.message));
+      // ERROR TOAST
+      const errMsg = err.response?.data?.message || err.message || "Có lỗi xảy ra";
+      toast.error("Thất bại: " + errMsg);
     }
   };
 
-  // --- LOGIC TOA ---
   const openAddCoachModal = (trainId) => {
     setAddCoachModalState({ isOpen: true, trainId: trainId });
   };
 
-  // 1. Function to Open Modal in Edit Mode
   const handleEditCoach = (trainId, coach) => {
     setAddCoachModalState({
       isOpen: true,
@@ -187,7 +176,9 @@ const handleSaveTrain = async (trainData) => {
     });
   };
 
-  // 2. Updated Save Handler
+  // ------------------------------------------------------------
+  // 3. MODIFIED HANDLE SAVE COACH (Success/Error Toasts)
+  // ------------------------------------------------------------
   const handleSaveCoach = async (trainId, coachData) => {
     try {
       if (addCoachModalState.isEdit) {
@@ -196,9 +187,10 @@ const handleSaveTrain = async (trainData) => {
           loaiToa: coachData.loaiToa,
           slViTri: coachData.soGhe
         };
-
-        // Call API with Carriage ID
         await updateCarriageService(coachData.id, payload);
+
+        // SUCCESS TOAST FOR EDIT COACH
+        toast.success(`Cập nhật toa số ${coachData.stt || ''} thành công!`);
       } else {
         // --- CREATE NEW CARRIAGE ---
         const payload = {
@@ -207,13 +199,14 @@ const handleSaveTrain = async (trainData) => {
           slViTri: coachData.soGhe
         };
         await createCarriageService(payload);
+
+        // SUCCESS TOAST FOR ADD COACH
+        toast.success("Thêm toa tàu mới thành công!");
       }
 
-      // --- REFRESH DATA (Common for both) ---
-      // Clear coaches to force visual refresh
+      // --- REFRESH DATA ---
       setTrainsList(prev => prev.map(t => t.id === trainId ? { ...t, coaches: [] } : t));
 
-      // Fetch fresh data
       const res = await getTrainCarriagesService(trainId);
       const rawCarriages = res.data?.data || res.data || [];
 
@@ -236,20 +229,13 @@ const handleSaveTrain = async (trainData) => {
         return t;
       }));
 
-      // Close Modal
       setAddCoachModalState({ isOpen: false, trainId: null, isEdit: false, data: null });
 
     } catch (err) {
       console.error(err);
-      alert("Lỗi: " + (err.response?.data?.message || err.message));
-    }
-  };
-
-  const renderAmenityIcon = (amenity) => {
-    switch (amenity) {
-      case 'Điều hòa': return <Wind size={14} className="mr-1 inline" />;
-      case 'WiFi': return <Wifi size={14} className="mr-1 inline" />;
-      default: return null;
+      // ERROR TOAST
+      const errMsg = err.response?.data?.message || err.message || "Có lỗi xảy ra";
+      toast.error("Thao tác thất bại: " + errMsg);
     }
   };
 
@@ -258,23 +244,71 @@ const handleSaveTrain = async (trainData) => {
 
   return (
     <div className="train-mgmt-container">
+      {/* UPDATE: Changed position to "top-right" */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={true}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+
       {/* Header */}
-      <div className="page-header">
+      <div className="page-header flex justify-between items-end mb-6">
         <div>
           <h1 className="page-title">Quản lý đoàn tàu</h1>
           <p className="page-subtitle">Thêm, sửa, xóa đoàn tàu và toa tàu</p>
         </div>
-        <button onClick={handleOpenAddTrain} className="btn-primary-add">
-          <Plus size={20} /> Thêm đoàn tàu
-        </button>
+
+        <div className="flex items-center gap-3">
+          {/* Search Bar */}
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition" size={18} />
+            <input
+              type="text"
+              placeholder="Tìm kiếm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border border-gray-200 rounded-full text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition shadow-sm"
+            />
+          </div>
+
+          {/* Filter */}
+          <div className="relative">
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="pl-9 pr-8 py-2 border border-gray-200 rounded-full text-sm appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition shadow-sm cursor-pointer hover:bg-gray-50"
+            >
+              <option value="all">Tất cả trạng thái</option>
+              <option value="active">Hoạt động</option>
+              <option value="maintenance">Bảo trì</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+          </div>
+
+          {/* Add Button */}
+          <button onClick={handleOpenAddTrain} className="btn-primary-add flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+            <Plus size={20} /> Thêm đoàn tàu
+          </button>
+        </div>
       </div>
 
-      {/* Danh sách tàu */}
+      {/* Train List */}
       <div className="train-list-container">
-        {trainsList.map(train => (
+        {filteredTrains.length === 0 ? (
+          <div className="text-center py-10 text-gray-500 bg-white rounded-lg border border-gray-100">
+            <p>Không tìm thấy kết quả nào phù hợp.</p>
+          </div>
+        ) : (filteredTrains.map(train => (
           <div key={train.id} className={`train-card ${expandedTrainId === train.id ? 'expanded' : ''}`}>
 
-            {/* Header Tàu (Click để mở rộng) */}
             <div className="train-card-header cursor-pointer hover:bg-gray-50 transition" onClick={() => toggleExpand(train.id)}>
               <div className="train-info-group flex-1">
                 <div className={`train-icon-box ${train.status === 'active' ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-500'}`}>
@@ -304,7 +338,6 @@ const handleSaveTrain = async (trainData) => {
               </div>
             </div>
 
-            {/* Danh sách Toa (Chỉ hiện khi Expanded) */}
             {expandedTrainId === train.id && (
               <div className="coach-area border-t border-gray-100 animate-slideDown">
                 <div className="coach-area-header flex justify-between items-center mb-4 px-4 pt-4">
@@ -321,14 +354,13 @@ const handleSaveTrain = async (trainData) => {
                     </p>
                   ) : (
                     train.coaches.map(coach => (
-                      <div 
-                        key={coach.id} 
-                        // 1. ADDED 'relative' (keeps button inside) and 'group' (for hover effect)
+                      <div
+                        key={coach.id}
                         className="coach-card-item bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col h-32 justify-between relative group"
                       >
                         <button
                           onClick={(e) => {
-                            e.stopPropagation(); // Prevents clicking the card background
+                            e.stopPropagation();
                             handleEditCoach(train.id, coach);
                           }}
                           className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition opacity-0 group-hover:opacity-100 z-10"
@@ -337,8 +369,6 @@ const handleSaveTrain = async (trainData) => {
                           <Edit size={14} />
                         </button>
 
-                        {/* TOP ROW: Toa Name + Badge */}
-                        {/* 2. ADDED 'pr-6' to prevent text overlap with button */}
                         <div className="flex justify-between items-start pr-6">
                           <div>
                             <h4 className="font-bold text-gray-800 text-base">Toa {coach.carriageNumber}</h4>
@@ -353,7 +383,6 @@ const handleSaveTrain = async (trainData) => {
                           </span>
                         </div>
 
-                        {/* BOTTOM ROW: Capacity */}
                         <div className="flex items-center gap-2 text-sm text-gray-600 pt-2 border-t border-dashed border-gray-100 mt-2">
                           <Users size={16} className="text-gray-400" />
                           <span className="font-medium">{coach.capacity} chỗ</span>
@@ -365,7 +394,7 @@ const handleSaveTrain = async (trainData) => {
               </div>
             )}
           </div>
-        ))}
+        )))}
       </div>
 
       <AddTrainModal

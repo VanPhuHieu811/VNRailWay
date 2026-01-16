@@ -42,8 +42,13 @@ CREATE TABLE UU_DAI_GIA (
     MoTa NVARCHAR(255),
     DoiTuong NVARCHAR(50),
     PhanTram INT,
+    NgayBatDau DATETIME,
+    NgayKetThuc DATETIME,
+    TrangThai NVARCHAR(20),
     CONSTRAINT PK_UU_DAI_GIA PRIMARY KEY (MaUuDai),
-    CONSTRAINT CK_UU_DAI_GIA_PhanTram CHECK (PhanTram >= 0 AND PhanTram <= 100)
+    CONSTRAINT CK_UU_DAI_GIA_PhanTram CHECK (PhanTram >= 0 AND PhanTram <= 100),
+    CONSTRAINT CK_UU_DAI_GIA_ThoiGian CHECK (NgayKetThuc IS NULL OR NgayBatDau <= NgayKetThuc),
+    CONSTRAINT CK_UU_DAI_GIA_TrangThai CHECK (TrangThai IN (N'Đang áp dụng', N'Hết hạn', N'Tạm ngưng'))
 );
 
 -- 4. Bảng TUYEN_TAU
