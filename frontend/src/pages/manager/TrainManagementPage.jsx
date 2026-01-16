@@ -13,7 +13,7 @@ import {
   getTrainCarriagesService,
   createCarriageService,
   updateCarriageService
-} from '../../services/trainAPI';
+} from '../../services/trainApi';
 
 const TrainManagementPage = () => {
   const [trainsList, setTrainsList] = useState([]);
@@ -315,53 +315,53 @@ const handleSaveTrain = async (trainData) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-4 pb-4">
-  {(!train.coaches || train.coaches.length === 0) ? (
-    <p className="text-sm text-gray-400 italic col-span-full text-center py-4">
-      {train.totalCoaches > 0 ? "Đang tải dữ liệu..." : "Chưa có toa nào."}
-    </p>
-  ) : (
-    train.coaches.map(coach => (
-      <div 
-        key={coach.id} 
-        // 1. ADDED 'relative' (keeps button inside) and 'group' (for hover effect)
-        className="coach-card-item bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col h-32 justify-between relative group"
-      >
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // Prevents clicking the card background
-            handleEditCoach(train.id, coach);
-          }}
-          className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition opacity-0 group-hover:opacity-100 z-10"
-          title="Chỉnh sửa toa"
-        >
-          <Edit size={14} />
-        </button>
+                  {(!train.coaches || train.coaches.length === 0) ? (
+                    <p className="text-sm text-gray-400 italic col-span-full text-center py-4">
+                      {train.totalCoaches > 0 ? "Đang tải dữ liệu..." : "Chưa có toa nào."}
+                    </p>
+                  ) : (
+                    train.coaches.map(coach => (
+                      <div 
+                        key={coach.id} 
+                        // 1. ADDED 'relative' (keeps button inside) and 'group' (for hover effect)
+                        className="coach-card-item bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col h-32 justify-between relative group"
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevents clicking the card background
+                            handleEditCoach(train.id, coach);
+                          }}
+                          className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition opacity-0 group-hover:opacity-100 z-10"
+                          title="Chỉnh sửa toa"
+                        >
+                          <Edit size={14} />
+                        </button>
 
-        {/* TOP ROW: Toa Name + Badge */}
-        {/* 2. ADDED 'pr-6' to prevent text overlap with button */}
-        <div className="flex justify-between items-start pr-6">
-          <div>
-            <h4 className="font-bold text-gray-800 text-base">Toa {coach.carriageNumber}</h4>
-            <p className="text-xs text-gray-500 mt-1">{coach.description || coach.type}</p>
-          </div>
+                        {/* TOP ROW: Toa Name + Badge */}
+                        {/* 2. ADDED 'pr-6' to prevent text overlap with button */}
+                        <div className="flex justify-between items-start pr-6">
+                          <div>
+                            <h4 className="font-bold text-gray-800 text-base">Toa {coach.carriageNumber}</h4>
+                            <p className="text-xs text-gray-500 mt-1">{coach.description || coach.type}</p>
+                          </div>
 
-          <span className={`text-xs px-2 py-1 rounded border ${coach.type === 'Giường'
-            ? 'bg-purple-50 text-purple-700 border-purple-100'
-            : 'bg-gray-100 text-gray-600 border-gray-200'
-            }`}>
-            {coach.type}
-          </span>
-        </div>
+                          <span className={`text-xs px-2 py-1 rounded border ${coach.type === 'Giường'
+                            ? 'bg-purple-50 text-purple-700 border-purple-100'
+                            : 'bg-gray-100 text-gray-600 border-gray-200'
+                            }`}>
+                            {coach.type}
+                          </span>
+                        </div>
 
-        {/* BOTTOM ROW: Capacity */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 pt-2 border-t border-dashed border-gray-100 mt-2">
-          <Users size={16} className="text-gray-400" />
-          <span className="font-medium">{coach.capacity} chỗ</span>
-        </div>
-      </div>
-    ))
-  )}
-</div>
+                        {/* BOTTOM ROW: Capacity */}
+                        <div className="flex items-center gap-2 text-sm text-gray-600 pt-2 border-t border-dashed border-gray-100 mt-2">
+                          <Users size={16} className="text-gray-400" />
+                          <span className="font-medium">{coach.capacity} chỗ</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </div>
