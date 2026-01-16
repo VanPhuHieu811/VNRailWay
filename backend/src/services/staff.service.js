@@ -286,16 +286,15 @@ export const assignStaffToTrain = async (assignmentData) => {
 //SP 04
 // Thêm vào src/services/staffService.js
 export const approveLeaveRequest = async (approveData) => {
-  const { maDon, maNVQuanLy, trangThaiMoi, maNVThayThe } = approveData;
+  const { maDon, maNVQuanLy, maNVThayThe } = approveData;
   const pool = await getPool();
   
   const result = await pool.request()
-    .input('MaDon', sql.VarChar, maDon)
-    .input('MaNVQuanLy', sql.VarChar, maNVQuanLy)
-    .input('TrangThaiMoi', sql.NVarChar, trangThaiMoi)
-    // Nếu từ chối thì maNVThayThe có thể để null
-    .input('MaNVThayThe', sql.VarChar, maNVThayThe || null) 
-    .execute('sp_DuyetDonNghiPhep');
+    .input('MaDonNghiPhep', sql.VarChar, maDon)
+    .input('MaQuanLyDuyetDon', sql.VarChar, maNVQuanLy)
+    .input('MaNhanVienThayThe', sql.VarChar, maNVThayThe || null) 
+    .execute('sp_th5_cuong_error_lost_update'); // error lost update
+    // .execute('sp_DuyetDonNghiPhep');
     
   return result;
 };
@@ -333,4 +332,71 @@ export const getLeaveHistory = async (maNV) => {
     .input('MaNV', sql.VarChar, maNV)
     .execute('sp_LayLichSuDonNghiPhep');
   return result.recordset;
+};
+
+export const getLeaveRequestsService = async (status) => {
+    try {
+        const pool = await getPool();
+        let query = `
+          SELECT 
+            d.MaDon,
+            d.MaPhanCong,
+            d.NgayGui,
+            d.LyDo,
+            d.TrangThai,
+            d.NVGuiDon AS MaNV,
+            nv.HoTen AS TenNV,
+            nv.LoaiNhanVien AS ChucVu,
+            pc.MaToa,
+            pc.MaChuyenTau,
+            pc.VaiTro AS VaiTroTrongCa,
+            ct.GaXuatPhat,
+            ct.GaKetThuc,
+            tc.DuKienXuatPhat,
+            rep.HoTen AS NguoiThayThe
+          FROM DON_NGHI_PHEP d
+          JOIN NHAN_VIEN nv ON d.NVGuiDon = nv.MaNV
+          JOIN PHAN_CONG_CHUYEN_TAU pc ON d.MaPhanCong = pc.MaPhanCong
+          JOIN CHUYEN_TAU ct ON pc.MaChuyenTau = ct.MaChuyenTau
+          LEFT JOIN THOI_GIAN_CHUYEN_TAU tc ON ct.MaChuyenTau = tc.MaChuyenTau AND ct.GaXuatPhat = tc.MaGaTau
+          LEFT JOIN NHAN_VIEN rep ON d.NVThayThe = rep.MaNV
+        `;
+
+        if (status === 'pending') {
+            query += ` WHERE d.TrangThai = N'Đang chờ' `;
+        } else if (status === 'history') {
+            query += ` WHERE d.TrangThai IN (N'Chấp nhận', N'Từ chối') `;
+        }
+
+        query += ` ORDER BY d.NgayGui DESC`;
+
+        const result = await pool.request().query(query);
+
+        return result.recordset.map(item => ({
+            id: item.MaDon,
+            employeeId: item.MaNV,
+            employeeName: item.TenNV,
+            role: item.ChucVu,
+            tripCode: item.MaChuyenTau,
+            carriage: item.MaToa,
+            date: item.DuKienXuatPhat,
+            shift: item.VaiTroTrongCa,
+            reason: item.LyDo,
+            sentAt: item.NgayGui,
+            status: mapStatus(item.TrangThai),
+            originalStatus: item.TrangThai,
+            replacement: item.NguoiThayThe
+        }));
+    } catch (error) {
+        throw error;
+    }
+};
+
+const mapStatus = (status) => {
+    switch (status) {
+        case 'Đang chờ': return 'pending';
+        case 'Chấp nhận': return 'approved';
+        case 'Từ chối': return 'rejected';
+        default: return 'pending';
+    }
 };

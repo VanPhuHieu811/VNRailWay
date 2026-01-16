@@ -11,7 +11,7 @@ import { errorHandler } from './middlewares/errorHandler.middleware.js';
 import staffRoutes from './routes/staff.route.js';
 import { getPool } from './config/sqlserver.config.js';
 
-import reportRoutes from './routes/report.route.js'; 
+import reportRoutes from './routes/report.route.js';
 const PORT = process.env.PORT || 3000;
 
 // Authorization

@@ -134,7 +134,9 @@ import * as staffService from '../services/staff.service.js';
 
 export const getMySchedule = async (req, res) => {
   try {
-    const maNV = req.headers['x-staff-id']; 
+    const maNV = req.user?.maNV; 
+    if (!maNV) return res.status(401).json({ success: false, message: 'Không xác định được thông tin nhân viên' });
+    
     // Lấy tuNgay và denNgay từ URL: ?tuNgay=2025-11-24&denNgay=2025-11-30
     const { tuNgay, denNgay } = req.query;
 
@@ -147,7 +149,9 @@ export const getMySchedule = async (req, res) => {
 
 export const getMyPayslips = async (req, res) => {
   try {
-    const maNV = req.headers['x-staff-id']; 
+    const maNV = req.user?.maNV; 
+    if (!maNV) return res.status(401).json({ success: false, message: 'Không xác định được thông tin nhân viên' });
+
     const { thang, nam } = req.query; // Nhận từ các ô chọn trên UI
 
     if (!thang || !nam) {
@@ -169,8 +173,7 @@ export const getMyPayslips = async (req, res) => {
 // Thêm/Cập nhật trong src/controllers/staff.controller.js
 export const postLeaveRequest = async (req, res) => {
   try {
-    // Lấy mã nhân viên từ Header để định danh người dùng (đúng chuẩn /me)
-    const maNV = req.headers['x-staff-id']; 
+    const maNV = req.user?.maNV; 
     const { maPhanCong, lyDo } = req.body;
 
     if (!maNV || !maPhanCong) {
@@ -220,29 +223,34 @@ export const postAssignment = async (req, res) => {
 // Thêm vào src/controllers/staffController.js
 export const patchApproveLeave = async (req, res) => {
   try {
-    const maNVQuanLy = req.headers['x-staff-id']; // Định danh người quản lý duyệt đơn
-    const { maDon, trangThaiMoi, maNVThayThe } = req.body;
+    const maNVQuanLy = req.user?.maNV;
+    const { maDon, maNVThayThe } = req.body;
 
-    if (!maDon || !trangThaiMoi) {
+    if (!maNVQuanLy) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Không xác định được thông tin người duyệt.' 
+      });
+    }
+
+    if (!maDon) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Thiếu thông tin mã đơn hoặc trạng thái duyệt mới.' 
+        message: 'Thiếu thông tin mã đơn.' 
       });
     }
 
     await staffService.approveLeaveRequest({ 
       maDon, 
-      maNVQuanLy, 
-      trangThaiMoi, 
+      maNVQuanLy,  
       maNVThayThe 
     });
 
     res.status(200).json({ 
       success: true, 
-      message: `Xử lý đơn ${maDon} thành công: ${trangThaiMoi}.` 
+      message: `Xử lý đơn ${maDon} thành công.` 
     });
   } catch (error) {
-    // Trả về các lỗi RAISERROR từ SQL (VD: Thiếu người thay thế, sai vai trò...)
     res.status(400).json({ success: false, message: error.message });
   }
 };
@@ -296,7 +304,14 @@ export const postCalculateSalary = async (req, res) => {
 
 export const getMyLeaveHistory = async (req, res) => {
   try {
-    const maNV = req.headers['x-staff-id']; // Lấy ID từ header đăng nhập
+    const maNV = req.user?.maNV;
+    if (!maNV) {
+      return res.status(401).json({ 
+        success: false, 
+        message: 'Không xác định được thông tin nhân viên.' 
+      });
+    }
+
     const history = await staffService.getLeaveHistory(maNV);
 
     res.status(200).json({ 
@@ -306,5 +321,18 @@ export const getMyLeaveHistory = async (req, res) => {
 
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// API cho manager xem tất cả đơn nghỉ phép (dùng lại service từ leave)
+export const getAllLeaveRequests = async (req, res) => {
+  const { status } = req.query; // 'pending', 'history', hoặc undefined (all)
+
+  try {
+    const data = await staffService.getLeaveRequestsService(status);
+    res.status(200).json(data);
+  } catch (error) {
+    console.error('Error fetching leave requests:', error);
+    res.status(500).json({ message: 'Lỗi server khi lấy danh sách đơn nghỉ phép' });
   }
 };

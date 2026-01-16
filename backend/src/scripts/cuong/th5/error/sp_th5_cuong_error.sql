@@ -1,6 +1,5 @@
 create or alter procedure sp_th5_cuong_error_lost_update
   @MaDonNghiPhep varchar(10),
-  @MaNhanVienGuiDon varchar(10),
   @MaQuanLyDuyetDon varchar(10),
   @MaNhanVienThayThe varchar(10)
 as 
@@ -30,8 +29,6 @@ begin
     TrangThai = N'Chấp nhận'
   where MaDon = @MaDonNghiPhep;
 
-  waitfor delay '00:00:05';
-
   commit;
   print N'Đơn nghỉ phép đã được duyệt thành công. Nhân viên thay thế: ' + @MaNhanVienThayThe;
 end
@@ -40,14 +37,12 @@ go
 -- trans 1:
 exec sp_th5_cuong_error_lost_update
 @MaDonNghiPhep = 'DNP005',
-@MaNhanVienGuiDon = 'NV007',
 @MaQuanLyDuyetDon = 'NV001',
 @MaNhanVienThayThe = 'NV004';
 
 -- trans 2:
 exec sp_th5_cuong_error_lost_update
 @MaDonNghiPhep = 'DNP005',
-@MaNhanVienGuiDon = 'NV007',
 @MaQuanLyDuyetDon = 'NV001',
 @MaNhanVienThayThe = 'NV008';
 
