@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, TrainFront, Edit, Users, Wifi, Wind, ChevronDown, ChevronUp, Calendar, Loader } from 'lucide-react';
+import { Plus, TrainFront, Edit, Users, Wifi, Wind, ChevronDown, ChevronUp, Calendar, Loader, Search, Filter } from 'lucide-react';
 // import { MOCK_TRAINS } from '../../services/db_mock'; // REMOVED
 import AddTrainModal from '../../components/trains/AddTrainModal';
 import AddCoachModal from '../../components/trains/AddCoachModal';
@@ -20,6 +20,10 @@ const TrainManagementPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // State tìm kiếm
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+
   // State quản lý Modal Tàu
   const [trainModal, setTrainModal] = useState({ isOpen: false, isEdit: false, data: null });
 
@@ -34,6 +38,20 @@ const TrainManagementPage = () => {
   // State quản lý việc mở rộng/thu gọn danh sách toa (Accordion)
   const [expandedTrainId, setExpandedTrainId] = useState(null);
 
+const filteredTrains = trainsList.filter(train => {
+    // Condition A: Text Search (Name or ID)
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = 
+      (train.trainName?.toLowerCase() || '').includes(term) ||
+      (train.id?.toLowerCase() || '').includes(term);
+
+    // Condition B: Status Filter
+    const matchesStatus = filterStatus === 'all' || train.status === filterStatus;
+
+    // Both must be true
+    return matchesSearch && matchesStatus;
+  });
+
   // --- INITIAL DATA FETCH ---
   // fetching with 'isBackground' prevents the scroll-to-top issue
   const fetchTrains = async (isBackground = false) => {
@@ -42,14 +60,14 @@ const TrainManagementPage = () => {
       if (!isBackground) {
         setLoading(true);
       }
-      
+
       const response = await getAllTrainsService();
       // Handle different API response structures safely
       const rawList = response.data?.data || response.data || [];
 
       // 1. Format the new data from server
       const newTrainData = rawList.map(t => ({
-        id: t.MaDoanTau, 
+        id: t.MaDoanTau,
         trainName: t.TenTau,
         company: t.HangSanXuat || "Đường sắt VN",
         operationDate: t.NgayVanHanh,
@@ -68,15 +86,15 @@ const TrainManagementPage = () => {
         // Otherwise, map through new data and try to find matching old data
         return newTrainData.map(newTrain => {
           const oldTrain = prevList.find(old => old.id === newTrain.id);
-          
+
           if (oldTrain) {
             // Found a match! Keep the server updates, but PRESERVE the local coaches
-            return { 
-              ...newTrain, 
+            return {
+              ...newTrain,
               coaches: oldTrain.coaches, // Keep existing coaches
               // If the server says coach count changed, we might want to trust the server, 
               // but for now, this prevents the "Loading..." UI glitch.
-            }; 
+            };
           }
           // No match (new train), return as is
           return newTrain;
@@ -104,7 +122,7 @@ const TrainManagementPage = () => {
     const isExpanding = expandedTrainId !== id;
     setExpandedTrainId(isExpanding ? id : null);
 
-    
+
     if (isExpanding) {
       const trainIndex = trainsList.findIndex(t => t.id === id);
 
@@ -149,7 +167,7 @@ const TrainManagementPage = () => {
     setTrainModal({ isOpen: true, isEdit: true, data: train });
   };
 
-const handleSaveTrain = async (trainData) => {
+  const handleSaveTrain = async (trainData) => {
     try {
       if (trainModal.isEdit) {
         // Update logic
@@ -158,14 +176,14 @@ const handleSaveTrain = async (trainData) => {
         // Create logic
         await createTrainService(trainData);
       }
-      
+
       // ✅ Call fetch with true. 
       // Because of the new logic in Step 1, this will update the Train Name/Status
       // WITHOUT wiping out your open coaches list.
-      await fetchTrains(true); 
+      await fetchTrains(true);
 
       setTrainModal({ ...trainModal, isOpen: false });
-      
+
     } catch (err) {
       console.error(err);
       alert("Lỗi: " + (err.response?.data?.message || err.message));
@@ -259,19 +277,57 @@ const handleSaveTrain = async (trainData) => {
   return (
     <div className="train-mgmt-container">
       {/* Header */}
-      <div className="page-header">
+      <div className="page-header flex justify-between items-end mb-6">
         <div>
           <h1 className="page-title">Quản lý đoàn tàu</h1>
           <p className="page-subtitle">Thêm, sửa, xóa đoàn tàu và toa tàu</p>
         </div>
-        <button onClick={handleOpenAddTrain} className="btn-primary-add">
-          <Plus size={20} /> Thêm đoàn tàu
-        </button>
+
+{/* Right Side: Search + Filter + Add Button */}
+  <div className="flex items-center gap-3">
+    
+    {/* Search Bar */}
+    <div className="relative group">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition" size={18} />
+      <input 
+        type="text"
+        placeholder="Tìm kiếm..." 
+        value={searchTerm}
+        onChange={(e) => setSearchTerm(e.target.value)}
+        className="pl-10 pr-4 py-2 border border-gray-200 rounded-full text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition shadow-sm"
+      />
+    </div>
+
+    {/* NEW: Status Filter Dropdown */}
+    <div className="relative">
+      <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={16} />
+      <select
+        value={filterStatus}
+        onChange={(e) => setFilterStatus(e.target.value)}
+        className="pl-9 pr-8 py-2 border border-gray-200 rounded-full text-sm appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition shadow-sm cursor-pointer hover:bg-gray-50"
+      >
+        <option value="all">Tất cả trạng thái</option>
+        <option value="active">Hoạt động</option>
+        <option value="maintenance">Bảo trì</option>
+      </select>
+      {/* Custom arrow for appearance-none */}
+      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={14} />
+    </div>
+
+    {/* Add Button */}
+    <button onClick={handleOpenAddTrain} className="btn-primary-add flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+      <Plus size={20} /> Thêm đoàn tàu
+    </button>
+  </div>
       </div>
 
       {/* Danh sách tàu */}
       <div className="train-list-container">
-        {trainsList.map(train => (
+        {filteredTrains.length === 0 ? (
+     <div className="text-center py-10 text-gray-500 bg-white rounded-lg border border-gray-100">
+        <p>Không tìm thấy kết quả nào phù hợp.</p>
+     </div>
+  ) : (filteredTrains.map(train => (
           <div key={train.id} className={`train-card ${expandedTrainId === train.id ? 'expanded' : ''}`}>
 
             {/* Header Tàu (Click để mở rộng) */}
@@ -315,57 +371,57 @@ const handleSaveTrain = async (trainData) => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-4 pb-4">
-  {(!train.coaches || train.coaches.length === 0) ? (
-    <p className="text-sm text-gray-400 italic col-span-full text-center py-4">
-      {train.totalCoaches > 0 ? "Đang tải dữ liệu..." : "Chưa có toa nào."}
-    </p>
-  ) : (
-    train.coaches.map(coach => (
-      <div 
-        key={coach.id} 
-        // 1. ADDED 'relative' (keeps button inside) and 'group' (for hover effect)
-        className="coach-card-item bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col h-32 justify-between relative group"
-      >
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // Prevents clicking the card background
-            handleEditCoach(train.id, coach);
-          }}
-          className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition opacity-0 group-hover:opacity-100 z-10"
-          title="Chỉnh sửa toa"
-        >
-          <Edit size={14} />
-        </button>
+                  {(!train.coaches || train.coaches.length === 0) ? (
+                    <p className="text-sm text-gray-400 italic col-span-full text-center py-4">
+                      {train.totalCoaches > 0 ? "Đang tải dữ liệu..." : "Chưa có toa nào."}
+                    </p>
+                  ) : (
+                    train.coaches.map(coach => (
+                      <div
+                        key={coach.id}
+                        // 1. ADDED 'relative' (keeps button inside) and 'group' (for hover effect)
+                        className="coach-card-item bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md transition flex flex-col h-32 justify-between relative group"
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevents clicking the card background
+                            handleEditCoach(train.id, coach);
+                          }}
+                          className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition opacity-0 group-hover:opacity-100 z-10"
+                          title="Chỉnh sửa toa"
+                        >
+                          <Edit size={14} />
+                        </button>
 
-        {/* TOP ROW: Toa Name + Badge */}
-        {/* 2. ADDED 'pr-6' to prevent text overlap with button */}
-        <div className="flex justify-between items-start pr-6">
-          <div>
-            <h4 className="font-bold text-gray-800 text-base">Toa {coach.carriageNumber}</h4>
-            <p className="text-xs text-gray-500 mt-1">{coach.description || coach.type}</p>
-          </div>
+                        {/* TOP ROW: Toa Name + Badge */}
+                        {/* 2. ADDED 'pr-6' to prevent text overlap with button */}
+                        <div className="flex justify-between items-start pr-6">
+                          <div>
+                            <h4 className="font-bold text-gray-800 text-base">Toa {coach.carriageNumber}</h4>
+                            <p className="text-xs text-gray-500 mt-1">{coach.description || coach.type}</p>
+                          </div>
 
-          <span className={`text-xs px-2 py-1 rounded border ${coach.type === 'Giường'
-            ? 'bg-purple-50 text-purple-700 border-purple-100'
-            : 'bg-gray-100 text-gray-600 border-gray-200'
-            }`}>
-            {coach.type}
-          </span>
-        </div>
+                          <span className={`text-xs px-2 py-1 rounded border ${coach.type === 'Giường'
+                            ? 'bg-purple-50 text-purple-700 border-purple-100'
+                            : 'bg-gray-100 text-gray-600 border-gray-200'
+                            }`}>
+                            {coach.type}
+                          </span>
+                        </div>
 
-        {/* BOTTOM ROW: Capacity */}
-        <div className="flex items-center gap-2 text-sm text-gray-600 pt-2 border-t border-dashed border-gray-100 mt-2">
-          <Users size={16} className="text-gray-400" />
-          <span className="font-medium">{coach.capacity} chỗ</span>
-        </div>
-      </div>
-    ))
-  )}
-</div>
+                        {/* BOTTOM ROW: Capacity */}
+                        <div className="flex items-center gap-2 text-sm text-gray-600 pt-2 border-t border-dashed border-gray-100 mt-2">
+                          <Users size={16} className="text-gray-400" />
+                          <span className="font-medium">{coach.capacity} chỗ</span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             )}
           </div>
-        ))}
+        )))}
       </div>
 
       <AddTrainModal
