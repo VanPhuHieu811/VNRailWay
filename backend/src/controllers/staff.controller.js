@@ -211,7 +211,7 @@ export const postAssignment = async (req, res) => {
 // src/controllers/staffController.js
 export const getAvailableStaffList = async (req, res) => {
   try {
-    const { maChuyenTau, loaiNV } = req.query;
+    const { maChuyenTau, loaiNV } = req.body;
 
     if (!maChuyenTau || !loaiNV) {
       return res.status(400).json({ 
