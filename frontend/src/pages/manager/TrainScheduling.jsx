@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Train, Calendar, Clock, MapPin, Users, 
   Plus, Check, X, ArrowRight, User, 
-  Filter, Briefcase, Save, AlertCircle, Circle
+  Filter, Briefcase, Save, AlertCircle 
 } from 'lucide-react';
+import { scheduleApi } from '../../services/scheduleApi';
 
 // Icon nhỏ dùng cho trạng thái
 const CheckCircle2 = ({className}) => (
@@ -11,32 +12,29 @@ const CheckCircle2 = ({className}) => (
 );
 
 const TrainScheduling = () => {
-  // --- 1. DỮ LIỆU MẪU & STATE ---
+  // --- 1. STATE DỮ LIỆU TỪ API (MASTER DATA) ---
+  const [routesList, setRoutesList] = useState([]); // Danh sách Tuyến
+  const [trainFleet, setTrainFleet] = useState([]); // Danh sách Tàu
+  // [QUAN TRỌNG] Danh sách Ga sẽ thay đổi tùy theo Tuyến được chọn
+  const [stations, setStations] = useState([]);     
   
-  // State quản lý Modal
+  const [isLoading, setIsLoading] = useState(true); // Trạng thái tải danh mục chung
+  const [isLoadingStations, setIsLoadingStations] = useState(false); // Trạng thái tải ga
+
+  // --- 2. STATE UI & MODAL ---
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false); // Modal Timeline (Cũ)
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false); // Modal Phân công (Mới)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
 
-  // State quản lý Tab chính
+  // State quản lý Tab & Filter
   const [activeMainTab, setActiveMainTab] = useState('schedule'); // 'schedule' | 'unassigned'
-
-  // State quản lý Filter và Selection
   const [filterStatus, setFilterStatus] = useState('all'); 
-  const [selectedTrip, setSelectedTrip] = useState(null); // Dùng cho Modal Timeline
+  
+  // State quản lý Selection
+  const [selectedTrip, setSelectedTrip] = useState(null); // Dùng cho Modal Chi tiết
   const [selectedAssignTrip, setSelectedAssignTrip] = useState(null); // Dùng cho Modal Phân công
 
-  // Danh sách Ga
-  const stations = ["Hà Nội", "Phủ Lý", "Nam Định", "Ninh Bình", "Thanh Hóa", "Vinh", "Huế", "Đà Nẵng", "Nha Trang", "Sài Gòn", "Hải Phòng"];
-
-  // Danh sách Đoàn tàu
-  const trainFleet = [
-    { code: "SE1 (Thống Nhất)", carriages: 6 },
-    { code: "SE7 (Thống Nhất)", carriages: 8 },
-    { code: "LP1 (Lạng Sơn)", carriages: 4 },
-  ];
-
-  // Danh sách Nhân sự
+  // --- 3. DỮ LIỆU MẪU NHÂN SỰ (HARDCODE VÌ CHƯA CÓ API) ---
   const drivers = [
     { id: 'D1', name: 'Nguyễn Văn An', status: 'available' },
     { id: 'D2', name: 'Trần Văn Bình', status: 'available' },
@@ -58,13 +56,9 @@ const TrainScheduling = () => {
     { id: 'S6', name: 'Hoàng Văn Minh', status: 'busy' },
     { id: 'S7', name: 'Đỗ Văn Tú', status: 'available' },
     { id: 'S8', name: 'Bùi Thị Dung', status: 'available' },
-    { id: 'S9', name: 'Phan Văn Kiên', status: 'available' },
-    { id: 'S10', name: 'Lý Văn Phúc', status: 'available' },
-    { id: 'S11', name: 'Nguyễn Thị Hoa', status: 'available' },
-    { id: 'S12', name: 'Đặng Văn Lâm', status: 'available' },
   ];
 
-  // Dữ liệu chuyến tàu (Kèm Timeline chi tiết)
+  // --- 4. STATE DỮ LIỆU CHUYẾN TÀU (TRIPS) ---
   const [trips, setTrips] = useState([
     {
       id: "TRIP01",
@@ -72,99 +66,155 @@ const TrainScheduling = () => {
       departureStation: "Hà Nội",
       arrivalStation: "Sài Gòn",
       trainCode: "SE7 (Thống Nhất)",
-      date: "2024-05-20",
-      time: "06:00 - 05:30 (+1)",
+      date: "2026-05-20",
+      time: "06:00",
       driver: "Phạm Văn Dũng",
       manager: "Lê Thị Mai",
       carriages: { 1: "Nguyễn Văn Hải", 2: "Trần Văn Hùng" },
       status: "running",
-      // Dữ liệu Timeline chi tiết
-      timeline: [
-        { station: "Hà Nội", type: 'departure', expTime: "06:00", actTime: "06:05", status: "passed" },
-        { station: "Phủ Lý", type: 'stop', expArr: "07:15", actArr: "07:20", expDep: "07:20", actDep: "07:25", status: "passed" },
-        { station: "Nam Định", type: 'stop', expArr: "08:00", actArr: "08:10", expDep: "08:15", actDep: "", status: "current" },
-        { station: "Ninh Bình", type: 'stop', expArr: "09:00", actArr: "", expDep: "09:10", actDep: "", status: "waiting" },
-        { station: "Thanh Hóa", type: 'stop', expArr: "10:30", actArr: "", expDep: "10:45", actDep: "", status: "waiting" },
-      ]
-    },
-    {
-      id: "TRIP04",
-      route: "Sài Gòn - Nha Trang",
-      departureStation: "Sài Gòn",
-      arrivalStation: "Nha Trang",
-      trainCode: "SE7 (Thống Nhất)",
-      date: "2024-06-01",
-      time: "20:30",
-      driver: null, // Chưa phân công
-      manager: null, // Chưa phân công
-      carriages: {}, // Chưa phân công
-      status: "scheduled",
       timeline: []
     }
   ]);
 
-  // State Form Tạo mới (Rút gọn)
+  // State Form Tạo mới
   const [formData, setFormData] = useState({
     route: '', trainCode: '', departureStation: '', arrivalStation: '', 
     date: '', time: ''
   });
 
-  // State tạm thời cho Modal Phân công
+  // State Form Phân công (Tạm thời)
   const [assignmentState, setAssignmentState] = useState({
     driverId: '',
     managerId: '',
     carriageStaffs: {}
   });
 
-  // --- 2. LOGIC XỬ LÝ (HANDLERS) ---
+  // --- 5. USE EFFECT: LOAD DỮ LIỆU ---
 
-  // A. LOGIC TIMELINE (KHÔI PHỤC LẠI)
+  // A. LOAD DANH MỤC CHUNG (Tuyến, Tàu) KHI MỞ TRANG
+  useEffect(() => {
+    const fetchMasterData = async () => {
+      try {
+        setIsLoading(true);
+        const [routesRes, trainsRes] = await Promise.all([
+           scheduleApi.getRoutes(),
+           scheduleApi.getTrains()
+        ]);
+
+        if(routesRes.success) setRoutesList(routesRes.data);
+        if(trainsRes.success) setTrainFleet(trainsRes.data);
+
+      } catch (error) {
+        console.error("Lỗi tải dữ liệu danh mục:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMasterData();
+  }, []);
+
+  // B. [QUAN TRỌNG] LOAD GA KHI CHỌN TUYẾN
+  useEffect(() => {
+    const fetchStationsByRoute = async () => {
+        // Nếu chưa chọn tuyến hoặc chọn về rỗng -> Reset danh sách ga
+        if (!formData.route) {
+            setStations([]);
+            return;
+        }
+
+        try {
+            setIsLoadingStations(true);
+            // Gọi API lấy ga theo mã tuyến
+            const res = await scheduleApi.getStationsByRoute(formData.route);
+            if (res.success) {
+                setStations(res.data);
+            }
+        } catch (error) {
+            console.error("Lỗi tải ga theo tuyến:", error);
+        } finally {
+            setIsLoadingStations(false);
+        }
+    };
+
+    fetchStationsByRoute();
+  }, [formData.route]); // Chạy lại mỗi khi formData.route thay đổi
+
+
+  // --- 6. LOGIC XỬ LÝ (HANDLERS) ---
+
+  // A. XỬ LÝ TẠO CHUYẾN TÀU (GỌI API CREATE)
+  const handleCreateSubmit = async () => {
+    // 1. Validate dữ liệu
+    if (!formData.route || !formData.trainCode || !formData.departureStation || !formData.arrivalStation || !formData.date || !formData.time) { 
+        alert("Vui lòng nhập đủ thông tin!"); 
+        return; 
+    }
+
+    try {
+        // 2. Chuẩn bị Payload gửi xuống Backend
+        const dateTimeString = `${formData.date} ${formData.time}:00`;
+
+        const payload = {
+            maTuyenTau: formData.route,
+            maDoanTau: formData.trainCode,
+            ngayKhoiHanh: dateTimeString,
+            gaXuatPhat: formData.departureStation,
+            gaKetThuc: formData.arrivalStation
+        };
+
+        // 3. Gọi API
+        const response = await scheduleApi.createSchedule(payload);
+
+        if (response.success) {
+            alert("✅ Thêm chuyến tàu thành công!");
+
+            // 4. Cập nhật UI (Optimistic Update)
+            const routeObj = routesList.find(r => r.MaTuyenTau === formData.route);
+            const trainObj = trainFleet.find(t => t.MaDoanTau === formData.trainCode);
+            const depStationObj = stations.find(s => s.MaGaTau === formData.departureStation);
+            const arrStationObj = stations.find(s => s.MaGaTau === formData.arrivalStation);
+
+            const newTrip = {
+                id: response.data?.MaMoi || `NEW${Date.now()}`,
+                route: routeObj ? routeObj.TenTuyen : formData.route,
+                trainCode: trainObj ? trainObj.TenTau : formData.trainCode,
+                departureStation: depStationObj ? depStationObj.TenGa : formData.departureStation,
+                arrivalStation: arrStationObj ? arrStationObj.TenGa : formData.arrivalStation,
+                date: formData.date,
+                time: formData.time,
+                status: "scheduled",
+                driver: null, 
+                manager: null, 
+                carriages: {},
+                timeline: []
+            };
+
+            setTrips([newTrip, ...trips]); 
+            setIsCreateModalOpen(false);
+            
+            // Reset form
+            setFormData({ route: '', trainCode: '', departureStation: '', arrivalStation: '', date: '', time: '' });
+        }
+    } catch (error) {
+        console.error("Lỗi:", error);
+        alert(`❌ Lỗi: ${error.message || "Không thể thêm chuyến tàu. Kiểm tra lại dữ liệu!"}`);
+    }
+  };
+
+  // B. XỬ LÝ MODAL CHI TIẾT
   const handleOpenDetail = (trip) => {
-    // Deep copy để edit không ảnh hưởng ngay list gốc khi đang nhập
     setSelectedTrip(JSON.parse(JSON.stringify(trip))); 
     setIsDetailModalOpen(true);
   };
 
-  const handleTimelineUpdate = (index, field, value) => {
-    if (!selectedTrip) return;
-    const updatedTimeline = [...selectedTrip.timeline];
-    updatedTimeline[index][field] = value;
-    setSelectedTrip({ ...selectedTrip, timeline: updatedTimeline });
-  };
-
-  const handleSaveTimeline = () => {
-    setTrips(trips.map(t => t.id === selectedTrip.id ? selectedTrip : t));
-    setIsDetailModalOpen(false);
-  };
-
-  // B. LOGIC TẠO MỚI (ĐƠN GIẢN HÓA)
-  const handleCreateSubmit = () => {
-    if (!formData.route || !formData.trainCode) { alert("Vui lòng nhập đủ thông tin!"); return; }
-    
-    // Mock timeline đơn giản
-    const mockTimeline = [
-       { station: formData.departureStation, type: 'departure', expTime: formData.time, actTime: "", status: "waiting" },
-       { station: formData.arrivalStation, type: 'arrival', expTime: "Unknown", actTime: "", status: "waiting" }
-    ];
-
-    const newTrip = {
-      id: `TRIP${trips.length + 1}`.padStart(6, '0'),
-      ...formData,
-      driver: null, manager: null, carriages: {},
-      status: "scheduled",
-      timeline: mockTimeline
-    };
-
-    setTrips([newTrip, ...trips]);
-    setIsCreateModalOpen(false);
-    setFormData({ route: '', trainCode: '', departureStation: '', arrivalStation: '', date: '', time: '' });
-  };
-
-  // C. LOGIC PHÂN CÔNG (MỚI)
+  // C. XỬ LÝ MODAL PHÂN CÔNG
   const handleOpenAssignModal = (trip) => {
     setSelectedAssignTrip(trip);
     setAssignmentState({
-      driverId: '', managerId: '', carriageStaffs: { ...trip.carriages }
+      driverId: '',
+      managerId: '',
+      carriageStaffs: { ...trip.carriages }
     });
     setIsAssignModalOpen(true);
   };
@@ -189,15 +239,15 @@ const TrainScheduling = () => {
     setSelectedAssignTrip(updatedTrip);
   };
 
-  // D. LOGIC FILTER
+  // D. LOGIC FILTER DANH SÁCH
   const scheduleTrips = trips.filter(trip => filterStatus === 'all' ? true : trip.status === filterStatus);
   const unassignedTrips = trips.filter(trip => trip.status === 'scheduled' && (!trip.driver || !trip.manager));
-  const getCarriageCount = (code) => {
-    const train = trainFleet.find(t => t.code === code);
-    return train ? train.carriages : 0;
+  
+  const getCarriageCount = (codeName) => {
+    return 6; // Mock tạm thời
   };
 
-  // --- 3. RENDER GIAO DIỆN ---
+  // --- 7. RENDER GIAO DIỆN ---
   return (
     <div className="min-h-screen bg-gray-50 p-6 font-sans">
       
@@ -232,7 +282,7 @@ const TrainScheduling = () => {
         </button>
       </div>
 
-      {/* --- TAB 1: LỊCH TRÌNH (BẤM VÀO SẼ RA TIMELINE) --- */}
+      {/* --- TAB 1: DANH SÁCH LỊCH TRÌNH --- */}
       {activeMainTab === 'schedule' && (
         <div className="animate-in fade-in duration-300">
           <div className="flex justify-end mb-4">
@@ -249,44 +299,47 @@ const TrainScheduling = () => {
           </div>
 
           <div className="space-y-4">
-            {scheduleTrips.map((trip) => (
-              <div 
-                key={trip.id} 
-                onClick={() => handleOpenDetail(trip)} // KHÔI PHỤC: Bấm vào mở Detail Modal
-                className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-              >
-                <div className="flex items-start gap-4 mb-4 md:mb-0 w-full md:w-auto">
-                  <div className={`p-3 rounded-lg shrink-0 ${trip.status === 'running' ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
-                    <Train className="w-8 h-8" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-800">{trip.route}</h3>
-                    <div className="text-gray-500 text-sm flex flex-col gap-1 mt-1">
-                      <span className="flex items-center gap-1 font-medium">{trip.departureStation} <ArrowRight className="w-3 h-3" /> {trip.arrivalStation}</span>
-                      <span className="flex items-center gap-1">{trip.trainCode} • {trip.time}</span>
+            {scheduleTrips.length === 0 ? (
+                <div className="text-center py-10 text-gray-500 bg-white rounded-xl border border-dashed">Chưa có chuyến tàu nào phù hợp bộ lọc.</div>
+            ) : (
+                scheduleTrips.map((trip) => (
+                <div 
+                    key={trip.id} 
+                    onClick={() => handleOpenDetail(trip)}
+                    className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+                >
+                    <div className="flex items-start gap-4 mb-4 md:mb-0 w-full md:w-auto">
+                    <div className={`p-3 rounded-lg shrink-0 ${trip.status === 'running' ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
+                        <Train className="w-8 h-8" />
                     </div>
-                  </div>
+                    <div>
+                        <h3 className="text-lg font-bold text-gray-800">{trip.route}</h3>
+                        <div className="text-gray-500 text-sm flex flex-col gap-1 mt-1">
+                        <span className="flex items-center gap-1 font-medium">{trip.departureStation} <ArrowRight className="w-3 h-3" /> {trip.arrivalStation}</span>
+                        <span className="flex items-center gap-1">{trip.trainCode} • {trip.time} • {trip.date}</span>
+                        </div>
+                    </div>
+                    </div>
+                    <div className="flex items-center gap-8 w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-8">
+                        <div>
+                        <div className="text-xs text-gray-400 mb-1">Lái tàu</div>
+                        <div className={`text-sm font-medium ${trip.driver ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.driver || "Chưa có"}</div>
+                        </div>
+                        <div>
+                        <div className="text-xs text-gray-400 mb-1">Trưởng tàu</div>
+                        <div className={`text-sm font-medium ${trip.manager ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.manager || "Chưa có"}</div>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-8 w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-8">
-                   <div>
-                      <div className="text-xs text-gray-400 mb-1">Lái tàu</div>
-                      <div className={`text-sm font-medium ${trip.driver ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.driver || "Chưa có"}</div>
-                   </div>
-                   <div>
-                      <div className="text-xs text-gray-400 mb-1">Trưởng tàu</div>
-                      <div className={`text-sm font-medium ${trip.manager ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.manager || "Chưa có"}</div>
-                   </div>
-                </div>
-              </div>
-            ))}
+                ))
+            )}
           </div>
         </div>
       )}
 
-      {/* --- TAB 2: CHƯA PHÂN CÔNG (BẤM VÀO SẼ RA ASSIGNMENT) --- */}
+      {/* --- TAB 2: CHUYẾN CHƯA PHÂN CÔNG --- */}
       {activeMainTab === 'unassigned' && (
         <div className="animate-in fade-in duration-300">
-           {/* ... (Logic hiển thị list unassigned giữ nguyên) ... */}
            <div className="grid grid-cols-1 gap-4">
             {unassignedTrips.length === 0 ? (
               <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-300 text-gray-400">
@@ -297,7 +350,7 @@ const TrainScheduling = () => {
               unassignedTrips.map(trip => (
                 <div 
                   key={trip.id}
-                  onClick={() => handleOpenAssignModal(trip)} // Bấm vào mở Assign Modal
+                  onClick={() => handleOpenAssignModal(trip)} 
                   className="bg-white rounded-xl border border-orange-200 p-6 shadow-sm hover:shadow-md hover:border-orange-300 transition-all cursor-pointer relative overflow-hidden"
                 >
                   <div className="absolute top-0 right-0 bg-orange-100 text-orange-600 text-xs font-bold px-3 py-1 rounded-bl-lg">Cần phân công</div>
@@ -312,7 +365,7 @@ const TrainScheduling = () => {
                 </div>
               ))
             )}
-          </div>
+           </div>
         </div>
       )}
 
@@ -326,46 +379,107 @@ const TrainScheduling = () => {
             </div>
             
             <div className="p-6 space-y-6">
+              {isLoading && <div className="text-center text-blue-600 text-sm animate-pulse">Đang tải dữ liệu danh mục...</div>}
+              
               <div className="bg-blue-50 p-4 rounded-lg flex gap-3 text-blue-800 text-sm">
                  <AlertCircle className="w-5 h-5 shrink-0" />
                  <div>Thông tin nhân sự sẽ được phân công sau tại mục "Chuyến chưa phân công".</div>
               </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                 
+                 {/* SELECT TUYẾN (Thay đổi sẽ load lại Ga) */}
                  <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tuyến đường</label>
-                    <select className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, route: e.target.value})}>
+                    <select 
+                        className="w-full border p-2.5 rounded-lg" 
+                        onChange={(e) => {
+                            setFormData({
+                                ...formData, 
+                                route: e.target.value,
+                                departureStation: '', // Reset ga cũ khi đổi tuyến
+                                arrivalStation: ''
+                            });
+                        }}
+                        value={formData.route}
+                        disabled={isLoading}
+                    >
                        <option value="">-- Chọn tuyến --</option>
-                       <option value="Hà Nội - Sài Gòn">Hà Nội - Sài Gòn</option>
-                       <option value="Đà Nẵng - Huế">Đà Nẵng - Huế</option>
-                       <option value="Hà Nội - Hải Phòng">Hà Nội - Hải Phòng</option>
+                       {routesList.map(r => (
+                           <option key={r.MaTuyenTau} value={r.MaTuyenTau}>{r.TenTuyen}</option>
+                       ))}
                     </select>
                  </div>
+
+                 {/* SELECT TÀU */}
                  <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">Đoàn tàu</label>
-                    <select className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, trainCode: e.target.value})}>
+                    <select 
+                        className="w-full border p-2.5 rounded-lg" 
+                        onChange={(e) => setFormData({...formData, trainCode: e.target.value})}
+                        value={formData.trainCode}
+                        disabled={isLoading}
+                    >
                        <option value="">-- Chọn tàu --</option>
-                       {trainFleet.map(t => <option key={t.code} value={t.code}>{t.code}</option>)}
+                       {trainFleet.map(t => (
+                           <option key={t.MaDoanTau} value={t.MaDoanTau}>{t.TenTau}</option>
+                       ))}
                     </select>
                  </div>
+
+                 {/* SELECT GA ĐI (Phụ thuộc Tuyến) */}
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ga đi</label>
-                    <select className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, departureStation: e.target.value})}>
-                       <option value="">Chọn...</option>{stations.map(s => <option key={s} value={s}>{s}</option>)}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Ga đi {isLoadingStations && <span className="text-xs text-blue-500">(Đang tải...)</span>}
+                    </label>
+                    <select 
+                        className="w-full border p-2.5 rounded-lg" 
+                        onChange={(e) => setFormData({...formData, departureStation: e.target.value})}
+                        value={formData.departureStation}
+                        disabled={isLoading || !formData.route} // Khóa nếu chưa chọn tuyến
+                    >
+                       <option value="">{formData.route ? "Chọn ga đi" : "-- Chọn tuyến trước --"}</option>
+                       {stations.map(s => (
+                           <option key={s.MaGaTau} value={s.MaGaTau}>{s.TenGa}</option>
+                       ))}
                     </select>
                  </div>
+
+                 {/* SELECT GA ĐẾN (Phụ thuộc Tuyến) */}
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Ga đến</label>
-                    <select className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, arrivalStation: e.target.value})}>
-                       <option value="">Chọn...</option>{stations.map(s => <option key={s} value={s}>{s}</option>)}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Ga đến {isLoadingStations && <span className="text-xs text-blue-500">(Đang tải...)</span>}
+                    </label>
+                    <select 
+                        className="w-full border p-2.5 rounded-lg" 
+                        onChange={(e) => setFormData({...formData, arrivalStation: e.target.value})}
+                        value={formData.arrivalStation}
+                        disabled={isLoading || !formData.route} // Khóa nếu chưa chọn tuyến
+                    >
+                       <option value="">{formData.route ? "Chọn ga đến" : "-- Chọn tuyến trước --"}</option>
+                       {stations.map(s => (
+                           <option key={s.MaGaTau} value={s.MaGaTau}>{s.TenGa}</option>
+                       ))}
                     </select>
                  </div>
+
                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Ngày đi</label>
-                    <input type="date" className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, date: e.target.value})} />
+                    <input 
+                        type="date" 
+                        className="w-full border p-2.5 rounded-lg" 
+                        onChange={(e) => setFormData({...formData, date: e.target.value})}
+                        value={formData.date}
+                    />
                  </div>
                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Giờ đi</label>
-                    <input type="time" className="w-full border p-2.5 rounded-lg" onChange={(e) => setFormData({...formData, time: e.target.value})} />
+                    <input 
+                        type="time" 
+                        className="w-full border p-2.5 rounded-lg" 
+                        onChange={(e) => setFormData({...formData, time: e.target.value})}
+                        value={formData.time}
+                    />
                  </div>
               </div>
             </div>
@@ -378,95 +492,34 @@ const TrainScheduling = () => {
         </div>
       )}
 
-      {/* --- MODAL 2: CHI TIẾT TIMELINE (KHÔI PHỤC) --- */}
+      {/* --- MODAL 2: CHI TIẾT --- */}
       {isDetailModalOpen && selectedTrip && (
-         <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-               {/* Header */}
-               <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                  <div>
-                     <h2 className="text-xl font-bold text-gray-800">{selectedTrip.route}</h2>
-                     <p className="text-sm text-gray-500 flex items-center gap-2">
+                <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                    <div>
+                        <h2 className="text-xl font-bold text-gray-800">{selectedTrip.route}</h2>
+                        <p className="text-sm text-gray-500 flex items-center gap-2">
                         {selectedTrip.trainCode} • {selectedTrip.date} 
                         {selectedTrip.status === 'running' && <span className="text-green-600 font-bold bg-green-50 px-2 rounded-full">Đang chạy</span>}
-                     </p>
-                  </div>
-                  <button onClick={() => setIsDetailModalOpen(false)}><X className="w-6 h-6 text-gray-400 hover:text-gray-600" /></button>
-               </div>
-               
-               {/* Body: Timeline List */}
-               <div className="flex-1 overflow-y-auto p-6 bg-white">
-                  <h3 className="font-bold text-gray-800 mb-6">Chi tiết hành trình thực tế</h3>
-                  <div className="relative pl-4 space-y-0">
-                     {selectedTrip.timeline && selectedTrip.timeline.length > 0 ? (
-                        selectedTrip.timeline.map((point, index) => {
-                           const isPassed = point.status === 'passed';
-                           const isCurrent = point.status === 'current';
-                           const lineColor = isPassed ? 'border-blue-500' : 'border-gray-200';
-                           const iconColor = isPassed ? 'bg-blue-500 text-white' : isCurrent ? 'bg-orange-500 text-white' : 'bg-white border-2 border-gray-300 text-gray-400';
-                           
-                           return (
-                              <div key={index} className={`relative pl-8 pb-8 ${index !== selectedTrip.timeline.length - 1 ? 'border-l-2 ' + lineColor : ''}`}>
-                                 <div className={`absolute -left-[9px] top-0 w-5 h-5 rounded-full flex items-center justify-center z-10 ${iconColor}`}>
-                                    {isPassed ? <Check size={12} /> : isCurrent ? <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div> : <div className="w-2 h-2 bg-gray-300 rounded-full"></div>}
-                                 </div>
-                                 <div className={`p-4 rounded-xl border ${isCurrent ? 'border-orange-200 bg-orange-50 shadow-sm' : 'border-gray-100 bg-white hover:bg-gray-50'} transition-all`}>
-                                    <div className="flex justify-between items-start mb-2">
-                                       <h4 className="font-bold text-gray-800 text-lg">{point.station}</h4>
-                                       {isPassed && <span className="text-xs font-bold text-white bg-green-500 px-2 py-1 rounded-full">Đã qua</span>}
-                                       {isCurrent && <span className="text-xs font-bold text-white bg-orange-500 px-2 py-1 rounded-full animate-pulse">Đang ở đây</span>}
-                                       {point.status === 'waiting' && <span className="text-xs font-bold text-gray-500 bg-gray-200 px-2 py-1 rounded-full">Chờ</span>}
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                       {point.type !== 'departure' && (
-                                          <div>
-                                             <div className="text-gray-500 text-xs mb-1">Giờ đến (Dự kiến / Thực tế)</div>
-                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium text-gray-700">{point.expArr || point.expTime}</span>
-                                                <span className="text-gray-400">→</span>
-                                                <input type="time" className="border border-gray-300 rounded px-2 py-0.5 text-orange-600 font-bold focus:outline-none focus:border-orange-500 bg-white w-28"
-                                                   value={point.actArr || point.actTime || ""}
-                                                   onChange={(e) => point.type === 'arrival' ? handleTimelineUpdate(index, 'actTime', e.target.value) : handleTimelineUpdate(index, 'actArr', e.target.value)}
-                                                />
-                                             </div>
-                                          </div>
-                                       )}
-                                       {point.type !== 'arrival' && (
-                                          <div>
-                                             <div className="text-gray-500 text-xs mb-1">Giờ đi (Dự kiến / Thực tế)</div>
-                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium text-gray-700">{point.expDep || point.expTime}</span>
-                                                <span className="text-gray-400">→</span>
-                                                <input type="time" className="border border-gray-300 rounded px-2 py-0.5 text-orange-600 font-bold focus:outline-none focus:border-orange-500 bg-white w-28"
-                                                   value={point.actDep || point.actTime || ""}
-                                                   onChange={(e) => point.type === 'departure' ? handleTimelineUpdate(index, 'actTime', e.target.value) : handleTimelineUpdate(index, 'actDep', e.target.value)}
-                                                />
-                                             </div>
-                                          </div>
-                                       )}
-                                    </div>
-                                 </div>
-                              </div>
-                           );
-                        })
-                     ) : (
-                        <div className="text-gray-500 text-center py-4">Chưa có thông tin lộ trình chi tiết.</div>
-                     )}
-                  </div>
-               </div>
-               
-               {/* Footer */}
-               <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-                  <button onClick={() => setIsDetailModalOpen(false)} className="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-white">Đóng</button>
-                  <button onClick={handleSaveTimeline} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 flex items-center gap-2">
-                     <Save className="w-4 h-4" /> Lưu cập nhật
-                  </button>
-               </div>
+                        </p>
+                    </div>
+                    <button onClick={() => setIsDetailModalOpen(false)}><X className="w-6 h-6 text-gray-400 hover:text-gray-600" /></button>
+                </div>
+                
+                <div className="flex-1 overflow-y-auto p-6 bg-white">
+                    <h3 className="font-bold text-gray-800 mb-6">Chi tiết hành trình thực tế</h3>
+                    <div className="text-gray-500 text-sm">Tính năng đang cập nhật (Hiển thị dữ liệu từ bảng lịch trình)...</div>
+                </div>
+                
+                <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+                    <button onClick={() => setIsDetailModalOpen(false)} className="px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700">Đóng</button>
+                </div>
             </div>
-         </div>
+        </div>
       )}
 
-      {/* --- MODAL 3: PHÂN CÔNG (NEW) --- */}
+      {/* --- MODAL 3: PHÂN CÔNG --- */}
       {isAssignModalOpen && selectedAssignTrip && (
         <div className="fixed inset-0 bg-black bg-opacity-40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 shadow-2xl">

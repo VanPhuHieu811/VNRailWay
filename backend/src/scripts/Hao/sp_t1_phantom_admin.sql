@@ -1,8 +1,4 @@
 use VNRAILWAY
-select *
-from NHAN_VIEN nv
-join TAI_KHOAN tk on tk.MaNV=nv.MaNV
-where nv.LoaiNhanVien= N'Quản trị'
 GO
 create or alter procedure sp_ThemMoiChuyen
     @MaChuyenTau NVARCHAR(20),
@@ -63,3 +59,5 @@ begin transaction
     deallocate cur_lichtrinh;
 commit transaction;
 END
+
+select *from CHUYEN_TAU

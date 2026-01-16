@@ -3,6 +3,8 @@ import authRoutes from './routes/auth.route.js';
 import userRoutes from './routes/user.route.js';
 import staffRoutes from './routes/staff.route.js';
 import adminRoutes from './routes/admin.route.js';
+import customerRoutes from './routes/customer.route.js';
+import masterRoutes from './routes/master.route.js';
 
 import { getPool } from './config/sqlserver.config.js';
 
@@ -12,7 +14,8 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/staff', staffRoutes);
 app.use('/api/v1/admin', adminRoutes);      
-
+app.use('/api/v1/schedules', customerRoutes);
+app.use('/api/v1/master', masterRoutes);
 
 // Start server
 app.listen(PORT, async () => {

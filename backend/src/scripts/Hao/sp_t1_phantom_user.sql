@@ -1,80 +1,130 @@
 --Tinh huong 3:  Khách hàng xem danh sách toa tàu trong ngày A cùng lúc đó nhân viên thêm một toa
-use VNRAILWAY
-go
-select *
-from CHUYEN_TAU
-go
-create or alter procedure sp_XemDSChuyenTau
-    @NgayDi DATE,
-    @GaDen NVarchar(50),
-    @GaDi NVarchar(50),
-    @GioKhoiHanh time null
+USE VNRAILWAY
+GO
+
+CREATE OR ALTER PROCEDURE sp_XemDSChuyenTau
+    @NgayDi DATE,          -- Ngày khách muốn đi (tại Ga Đi)
+    @GaDi VARCHAR(20),     -- Mã Ga Đi (VD: GA01, GA08...)
+    @GaDen VARCHAR(20),    -- Mã Ga Đến (VD: GA12...)
+    @GioKhoiHanh TIME NULL -- (Tùy chọn) Giờ cụ thể
 AS
 BEGIN
-    set transaction isolation level repeatable READ
-    begin transaction
-    select ct.MaChuyenTau,ct.MaDoanTau, dt.TenTau,
-        g_di.TenGa as GaXuatPhat,
-        g_den.TenGa as GaKetThuc,
-        tgct.DuKienXuatPhat as GioKhoiHanh,
-        tgct.DuKienDen as GioDen,
-        COUNT(vt2.MaViTri) - COUNT(vt.MaVe) AS SoChoTrong
-    from Chuyen_tau ct
-    join TUYEN_TAU tt on tt.MaTuyenTau = ct.MaTuyenTau
-    join DOAN_TAU dt on dt.MaDoanTau= ct.MaDoanTau
-    join THOI_GIAN_CHUYEN_TAU tgct on tgct.MaChuyenTau=ct.MaChuyenTau
-    join GA_TAU g_di on g_di.MaGaTau= ct.GaXuatPhat
-    join GA_TAU g_den on g_den.MaGaTau =ct.GaKetThuc
-    -- Tính tổng số chỗ của toa tàu trong đoàn tàu
-    join toa_tau ttau on ttau.MaDoanTau= dt.MaDoanTau
-    join VI_TRI_TREN_TOA vt2 on vt2.MaToaTau= ttau.MaToaTau
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ; -- Hoặc READ COMMITTED tùy bạn
+    BEGIN TRANSACTION;
 
-    left join VE_TAU vt on vt.MaChuyenTau= ct.MaChuyenTau and vt.MaViTri= vt2.MaViTri
-    and (vt.TrangThai =N'Đã đặt' or vt.TrangThai=N'Giữ chỗ')
-    where convert(date, tgct.DuKienXuatPhat)= @NgayDi
-    and g_di.TenGa =  @GaDi 
-    and g_den.TenGa =  @GaDen 
-    and ct.trangthai = N'Chuẩn bị'
-    and (@GioKhoiHanh is null or convert(time, tgct.DuKienXuatPhat) = @GioKhoiHanh)
-    group by ct.MaChuyenTau,ct.MaDoanTau, dt.TenTau,
-        g_di.TenGa,
-        g_den.TenGa,
-        tgct.DuKienXuatPhat,
-        tgct.DuKienDen
-    having count (vt2.MaViTri) - count(vt.MaVe) >0
-    WAITFOR DELAY '00:00:10'
--- Lần đọc thứ 2
-    select ct.MaChuyenTau,ct.MaDoanTau, dt.TenTau,
-           g_di.TenGa as GaXuatPhat,
-           g_den.TenGa as GaKetThuc,
-           tgct.DuKienXuatPhat as GioKhoiHanh,
-           tgct.DuKienDen as GioDen,
-           COUNT(vt2.MaViTri) - COUNT(vt.MaVe) AS SoChoTrong
-    from Chuyen_tau ct
-    join TUYEN_TAU tt on tt.MaTuyenTau = ct.MaTuyenTau
-    join DOAN_TAU dt on dt.MaDoanTau= ct.MaDoanTau
-    join THOI_GIAN_CHUYEN_TAU tgct on tgct.MaChuyenTau=ct.MaChuyenTau
-    join GA_TAU g_di on g_di.MaGaTau= ct.GaXuatPhat
-    join GA_TAU g_den on g_den.MaGaTau =ct.GaKetThuc
-    -- Tính tổng số chỗ của toa tàu trong đoàn tàu
-    join toa_tau ttau on ttau.MaDoanTau= dt.MaDoanTau
-    join VI_TRI_TREN_TOA vt2 on vt2.MaToaTau= ttau.MaToaTau
+    -- =======================================================
+    -- LẦN ĐỌC 1: TÌM KIẾM CHUYẾN TÀU PHÙ HỢP
+    -- =======================================================
+    SELECT 
+        ct.MaChuyenTau, 
+        ct.MaDoanTau, 
+        dt.TenTau,
+        
+        -- Thông tin Ga Đi (Của khách chọn)
+        gd.TenGa AS GaXuatPhat,
+        T_DI.DuKienXuatPhat AS GioKhoiHanh,
+        
+        -- Thông tin Ga Đến (Của khách chọn)
+        gc.TenGa AS GaKetThuc,
+        T_DEN.DuKienDen AS GioDen,
+        
+        -- Tính số chỗ trống (Tổng chỗ - Vé đã đặt)
+        (COUNT(vt2.MaViTri) - COUNT(vt.MaVe)) AS SoChoTrong
 
-    left join VE_TAU vt on vt.MaChuyenTau= ct.MaChuyenTau and vt.MaViTri= vt2.MaViTri
-    and (vt.TrangThai =N'Đã đặt' or vt.TrangThai=N'Giữ chỗ')
-    where convert(date, tgct.DuKienXuatPhat)= @NgayDi
-      and g_di.TenGa =  @GaDi 
-      and g_den.TenGa =  @GaDen 
-      and ct.trangthai = N'Chuẩn bị'
-      and (@GioKhoiHanh is null or convert(time, tgct.DuKienXuatPhat) = @GioKhoiHanh)
-    group by ct.MaChuyenTau,ct.MaDoanTau, dt.TenTau,
-           g_di.TenGa,
-           g_den.TenGa,
-           tgct.DuKienXuatPhat,
-           tgct.DuKienDen
-    having count (vt2.MaViTri) - count(vt.MaVe) >0
+    FROM CHUYEN_TAU ct
+    JOIN DOAN_TAU dt ON dt.MaDoanTau = ct.MaDoanTau
+    
+    -- 1. JOIN ĐỂ TÌM GA ĐI (Quan trọng: Lọc ngày tại đúng ga này)
+    JOIN THOI_GIAN_CHUYEN_TAU T_DI ON T_DI.MaChuyenTau = ct.MaChuyenTau
+    JOIN GA_TAU gd ON gd.MaGaTau = T_DI.MaGaTau -- Lấy tên ga đi
 
-    commit transaction
-END 
+    -- 2. JOIN ĐỂ TÌM GA ĐẾN (Quan trọng: Phải cùng chuyến với ga đi)
+    JOIN THOI_GIAN_CHUYEN_TAU T_DEN ON T_DEN.MaChuyenTau = ct.MaChuyenTau
+    JOIN GA_TAU gc ON gc.MaGaTau = T_DEN.MaGaTau -- Lấy tên ga đến
+
+    -- 3. JOIN ĐỂ TÍNH GHẾ TRỐNG (Logic cũ)
+    JOIN TOA_TAU ttau ON ttau.MaDoanTau = dt.MaDoanTau
+    JOIN VI_TRI_TREN_TOA vt2 ON vt2.MaToaTau = ttau.MaToaTau
+    LEFT JOIN VE_TAU vt ON vt.MaChuyenTau = ct.MaChuyenTau 
+                        AND vt.MaViTri = vt2.MaViTri
+                        AND (vt.TrangThai = N'Đã đặt' OR vt.TrangThai = N'Giữ chỗ')
+
+    -- =======================================================
+    -- ĐIỀU KIỆN LỌC (WHERE)
+    -- =======================================================
+    WHERE 
+        ct.TrangThai = N'Chuẩn bị'
+        
+        -- A. Kiểm tra Ga Đi đúng mã khách chọn
+        AND T_DI.MaGaTau = @GaDi 
+        
+        -- B. Kiểm tra Ngày Đi đúng ngày khách chọn (So sánh Date của Ga Đi)
+        AND CAST(T_DI.DuKienXuatPhat AS DATE) = @NgayDi
+        
+        -- C. Kiểm tra Ga Đến đúng mã khách chọn
+        AND T_DEN.MaGaTau = @GaDen
+        
+        -- D. QUAN TRỌNG: Ga Đến phải nằm SAU Ga Đi (Về mặt thời gian)
+        AND T_DEN.DuKienDen > T_DI.DuKienXuatPhat
+
+        -- E. Lọc theo giờ (nếu có)
+        AND (@GioKhoiHanh IS NULL OR CAST(T_DI.DuKienXuatPhat AS TIME) >= @GioKhoiHanh)
+
+    GROUP BY 
+        ct.MaChuyenTau, ct.MaDoanTau, dt.TenTau,
+        gd.TenGa, T_DI.DuKienXuatPhat,
+        gc.TenGa, T_DEN.DuKienDen
+        
+    HAVING (COUNT(vt2.MaViTri) - COUNT(vt.MaVe)) > 0;
+
+    -- =======================================================
+    -- GIẢ LẬP ĐỘ TRỄ ĐỂ TEST PHANTOM READ
+    -- =======================================================
+    WAITFOR DELAY '00:00:10';
+
+    -- =======================================================
+    -- LẦN ĐỌC 2 (COPY Y HỆT LẦN 1)
+    -- =======================================================
+    SELECT 
+        ct.MaChuyenTau, ct.MaDoanTau, dt.TenTau,
+        gd.TenGa AS GaXuatPhat,
+        T_DI.DuKienXuatPhat AS GioKhoiHanh,
+        gc.TenGa AS GaKetThuc,
+        T_DEN.DuKienDen AS GioDen,
+        (COUNT(vt2.MaViTri) - COUNT(vt.MaVe)) AS SoChoTrong
+    FROM CHUYEN_TAU ct
+    JOIN DOAN_TAU dt ON dt.MaDoanTau = ct.MaDoanTau
+    JOIN THOI_GIAN_CHUYEN_TAU T_DI ON T_DI.MaChuyenTau = ct.MaChuyenTau
+    JOIN GA_TAU gd ON gd.MaGaTau = T_DI.MaGaTau
+    JOIN THOI_GIAN_CHUYEN_TAU T_DEN ON T_DEN.MaChuyenTau = ct.MaChuyenTau
+    JOIN GA_TAU gc ON gc.MaGaTau = T_DEN.MaGaTau
+    JOIN TOA_TAU ttau ON ttau.MaDoanTau = dt.MaDoanTau
+    JOIN VI_TRI_TREN_TOA vt2 ON vt2.MaToaTau = ttau.MaToaTau
+    LEFT JOIN VE_TAU vt ON vt.MaChuyenTau = ct.MaChuyenTau 
+                        AND vt.MaViTri = vt2.MaViTri
+                        AND (vt.TrangThai = N'Đã đặt' OR vt.TrangThai = N'Giữ chỗ')
+    WHERE 
+        ct.TrangThai = N'Chuẩn bị'
+        AND T_DI.MaGaTau = @GaDi 
+        AND CAST(T_DI.DuKienXuatPhat AS DATE) = @NgayDi
+        AND T_DEN.MaGaTau = @GaDen
+        AND T_DEN.DuKienDen > T_DI.DuKienXuatPhat
+        AND (@GioKhoiHanh IS NULL OR CAST(T_DI.DuKienXuatPhat AS TIME) >= @GioKhoiHanh)
+    GROUP BY 
+        ct.MaChuyenTau, ct.MaDoanTau, dt.TenTau,
+        gd.TenGa, T_DI.DuKienXuatPhat,
+        gc.TenGa, T_DEN.DuKienDen
+    HAVING (COUNT(vt2.MaViTri) - COUNT(vt.MaVe)) > 0;
+
+    COMMIT TRANSACTION;
+END;
+GO
+exec sp_XemDSChuyenTau 
+    @NgayDi = '2026-01-16', 
+    @GaDi = 'GA02', 
+    @GaDen = 'GA07', 
+    @GioKhoiHanh = NULL;
 
 
+select *
+from THOI_GIAN_CHUYEN_TAU
