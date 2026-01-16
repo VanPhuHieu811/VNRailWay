@@ -1,5 +1,9 @@
 import client from '../api/client';
 
+export const getAllStaffService = async () => {
+  return await client.get('/api/v1/staff/all');
+};
+
 export const getMyProfileService = async () => {
   const employeeData = JSON.parse(localStorage.getItem('employee'));
   const maNV = employeeData?.maNV;
@@ -73,3 +77,20 @@ export const getMyPayslipsService = async (thang, nam) => {
     headers: { 'x-staff-id': maNV }
   });
 };
+
+export const getStaffScheduleService = async (staffId, tuNgay, denNgay) => {
+  return await client.get('/api/v1/staff/me/schedule', {
+    params: {
+      tuNgay: tuNgay,
+      denNgay: denNgay
+    },
+    headers: {
+      'x-staff-id': staffId 
+    }
+  });
+};
+
+export const updateMyProfileService = async (data) => {
+  return await client.put('/api/v1/staff/me', data);
+};
+

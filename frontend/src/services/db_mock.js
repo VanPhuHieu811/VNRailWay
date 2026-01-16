@@ -212,34 +212,60 @@ export const LICH_TRINH_DB = [
   }
 ];
 
-// 4. Hàm sinh dữ liệu ghế (Mock Seats)
+// services/db_mock.js
+
 export const getGheByTauId = (tripId) => {
-  // Logic giả: Tàu SE1 thì ghế đẹp hơn, tàu TN1 thì ghế thường
-  // Ở đây trả về cố định để test cho dễ
+  // Hàm helper sinh ghế/giường
+  const generateSeats = (prefix, count, type, startId = 1) => {
+    return Array.from({ length: count }, (_, i) => {
+      const seatNum = startId + i;
+      // Logic random ghế đã đặt (30% tỉ lệ đã đặt)
+      const isBooked = Math.random() < 0.3; 
+      
+      // Nếu là giường nằm, tính toán số khoang (Cabin)
+      let cabin = null;
+      if (type === 'sleeper_4') {
+        cabin = Math.ceil(seatNum / 4); // 4 giường 1 khoang
+      } else if (type === 'sleeper_6') {
+        cabin = Math.ceil(seatNum / 6); // 6 giường 1 khoang
+      }
+
+      return {
+        id: seatNum,
+        label: seatNum.toString(),
+        status: isBooked ? 'booked' : 'available',
+        cabin: cabin // Quan trọng để group UI
+      };
+    });
+  };
+
   return [
     {
-      maToa: "A",
-      tenToa: "Toa 1 (VIP)",
-      loaiToa: "Giường nằm mềm",
-      giaCoBan: 1200000,
-      soGhe: 20, 
-      gheDaDat: [2, 5, 6, 18, 19] // Ghế đã bán
+      maToa: 'TOA-01',
+      tenToa: 'Toa 1',
+      loaiToa: 'Ngồi mềm điều hòa',
+      type: 'seat', // Loại ghế
+      giaCoBan: 150000,
+      soGhe: 64,
+      danhSachGhe: generateSeats('G', 64, 'seat')
     },
     {
-      maToa: "B",
-      tenToa: "Toa 2 (Standard)",
-      loaiToa: "Ghế mềm điều hòa",
-      giaCoBan: 890000,
-      soGhe: 30,
-      gheDaDat: [10, 11, 12, 25, 26, 1, 2, 3]
+      maToa: 'TOA-02',
+      tenToa: 'Toa 2',
+      loaiToa: 'Giường nằm khoang 6',
+      type: 'sleeper_6', // Loại giường 6
+      giaCoBan: 250000,
+      soGhe: 42, // 7 khoang x 6 giường
+      danhSachGhe: generateSeats('G', 42, 'sleeper_6')
     },
     {
-      maToa: "C",
-      tenToa: "Toa 3 (Economy)",
-      loaiToa: "Ghế cứng", 
-      giaCoBan: 650000,
-      soGhe: 40,
-      gheDaDat: [1, 5, 8, 9, 20, 21]
+      maToa: 'TOA-03',
+      tenToa: 'Toa 3',
+      loaiToa: 'Giường nằm khoang 4',
+      type: 'sleeper_4', // Loại giường 4
+      giaCoBan: 350000,
+      soGhe: 28, // 7 khoang x 4 giường
+      danhSachGhe: generateSeats('G', 28, 'sleeper_4')
     }
   ];
 };

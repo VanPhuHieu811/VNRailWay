@@ -20,7 +20,6 @@ const router = express.Router();
 
 router.get('/me', authenticationMiddleware, authorizeAdmin, getCurrentStaff);
 router.put('/me', authenticationMiddleware, authorizeAdmin, updateStaff);
-router.patch('/me', authenticationMiddleware, authorizeAdmin, updateStaff);
 router.delete('/me', authenticationMiddleware, authorizeAdmin, deleteStaff);
 router.get('/all', authenticationMiddleware, authorizeAdmin, getAllStaff);
 router.get('/me/schedule', getMySchedule); //SP01
