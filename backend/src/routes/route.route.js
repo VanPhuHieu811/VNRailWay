@@ -11,8 +11,8 @@ import {
 } from '../controllers/route.controller.js';
 
 const router = express.Router();
-router.get('/', getRoutes);
-router.get('/:id', getRouteById);
+router.get('/', authenticationMiddleware, getRoutes);
+router.get('/:id', authenticationMiddleware, getRouteById);
 
 // 1. Manage Route Header (TUYEN_TAU)
 router.post('/', authenticationMiddleware, authorizeAdmin, createRoute);
