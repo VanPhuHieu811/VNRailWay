@@ -67,5 +67,5 @@ select *from VE_TAU
 select * from HOA_DON
 select* from DANH_SACH_GA
 
-
+select * from DAT_VE
 select * from VI_TRI_TREN_TOA
