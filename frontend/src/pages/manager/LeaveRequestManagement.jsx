@@ -578,9 +578,20 @@ const LeaveRequestManagement = () => {
 
     } catch (err) {
       console.error(err);
-      // Hiển thị lỗi từ Backend trả về (VD: "Đơn đã được xử lý bởi người khác")
-      const msg = err.message || "Có lỗi xảy ra";
-      alert(`Lỗi duyệt đơn: ${msg}`);
+      
+      // Parse error message từ backend
+      let errorMsg = "Có lỗi xảy ra khi duyệt đơn";
+      
+      if (err.response?.data?.message) {
+        errorMsg = err.response.data.message;
+      } else if (err.message) {
+        // Extract message từ error string nếu có format "Error: message"
+        const match = err.message.match(/Error: (.+)$/);
+        errorMsg = match ? match[1] : err.message;
+      }
+      
+      // Hiển thị thông báo thân thiện
+      alert(errorMsg);
     } finally {
       setLoadingApprove(false);
     }
