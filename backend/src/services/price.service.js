@@ -26,10 +26,15 @@ export const getTrainCarriagePriceById = async (id) => {
 
 export const updateTrainCarriagePriceById = async (id, price) => {
   const pool = await getPool();
-  const request = pool.request()
+  const query = `
+    update GIA_THEO_LOAI_TOA
+    set GiaTien = @GiaMoi
+    where MaGiaToa = @MaGiaToa
+  `
+  const result = await pool.request()
     .input('MaGiaToa', id)
-    .input('GiaMoi', price);
-  const result = await request.execute('sp_th6_cuong_writer');
+    .input('GiaMoi', price)
+    .query(query);
   return result.rowsAffected[0] > 0 ? { MaGiaToa: id, GiaTien: price } : null;
 }
 
