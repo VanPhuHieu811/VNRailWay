@@ -1,0 +1,25 @@
+@baseUrl = http://localhost:3000/api/v1
+
+### Login Request
+# @name loginRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+
+### log
+@authToken = {{loginRequest.response.body.$.data.token}}
+
+### Excecute
+PATCH {{baseUrl}}/trains/DT03
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "TrangThai": "Bảo trì",
+    "TenTau": "AAAAAAAAAAAAAAAexxddasdasaffsdasdfsdfassafda"
+}

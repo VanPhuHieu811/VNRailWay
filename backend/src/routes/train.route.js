@@ -1,7 +1,7 @@
 import express from 'express';
 import { authenticationMiddleware } from '../middlewares/authentication.middleware.js';
 import { authorizeAdmin } from '../middlewares/authorize.middleware.js';
-import { createTrain, createCarriage, getTrain, getTrainById, getCarriages, updateTrain, updateCarriage } from '../controllers/train.controller.js';
+import { createTrain, createCarriage, getTrain, getTrainById, getCarriages, updateTrain, updateCarriage, updateTrainDeadlock } from '../controllers/train.controller.js';
 import * as trainController from '../controllers/train.controller.js';
 const router = express.Router();
 
@@ -22,5 +22,6 @@ router.post('/', authenticationMiddleware, authorizeAdmin, createTrain);
 
 router.get('/:id', authenticationMiddleware, getTrainById);
 router.patch('/:id', authenticationMiddleware, authorizeAdmin, updateTrain);
+router.patch('/:id/deadlock', authenticationMiddleware, authorizeAdmin, updateTrainDeadlock);
 
 export default router;

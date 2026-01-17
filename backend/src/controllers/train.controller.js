@@ -10,7 +10,9 @@ import { createTrainService,
      getTripTimelineService,
      updateTripTimeService,
      getUnassignedTripsService,
-     getTripAssignmentsService } from '../services/train.service.js';
+     getTripAssignmentsService,
+     updateTrainServiceDeadlock
+    } from '../services/train.service.js';
 
 ///////////////////////////////////////////////////////////////////////////////////
 // Train 
@@ -69,6 +71,17 @@ export const updateTrain = async (req, res, next) => {
         const trainId = req.params.id;
         const updateData = req.body;
         await updateTrainService(trainId, updateData);
+        return res.status(200).json({ success: true, message: 'Update train successfully'});
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateTrainDeadlock = async (req, res, next) => {
+    try {
+        const trainId = req.params.id;
+        const updateData = req.body;
+        await updateTrainServiceDeadlock(trainId, updateData);
         return res.status(200).json({ success: true, message: 'Update train successfully'});
     } catch (error) {
         next(error);
