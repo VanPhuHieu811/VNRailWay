@@ -88,7 +88,7 @@ const BookingSuccessPage = ({ isEmployee = false }) => {
                 </div>
                 <div className="ticket-field text-right">
                   <label>Ngày đi / Date</label>
-                  <span className="font-bold">{tripInfo.ngayDi || '02/01/2026'}</span>
+                  <span className="font-bold">{tripInfo.ngayDi}</span>
                 </div>
               </div>
 
@@ -113,7 +113,7 @@ const BookingSuccessPage = ({ isEmployee = false }) => {
                   <div key={index} className="bg-slate-50 p-3 rounded border border-slate-100 mb-2">
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-bold text-slate-800 text-lg">
-                        {p.tenToa || 'Toa Khách'} - Số {p.seatNum || p.SoGhe}
+                       Tàu {tripInfo.tenTau} - Số {p.maViTri || p.SoGhe}
                       </span>
                       <span className="font-bold text-slate-800">
                         {p.price ? p.price.toLocaleString() : (p.GiaCoBan || 0).toLocaleString()} đ
@@ -121,7 +121,7 @@ const BookingSuccessPage = ({ isEmployee = false }) => {
                     </div>
                     
                     <div className="flex justify-between items-center text-sm text-slate-500">
-                      <span>Loại: {p.loaiToa || p.DoiTuong || 'Thường'}</span>
+                      <span>Loại: {p.loaiToa|| 'Thường'}</span>
                       <span className="flex items-center gap-1 uppercase font-semibold">
                         <User size={12}/> {p.fullName || p.HoTen}
                       </span>

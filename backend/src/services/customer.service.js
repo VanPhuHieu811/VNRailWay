@@ -76,6 +76,7 @@ const customerService = {
                 vt.STT AS SoGhe,
                 g.Phong,
                 g.Tang,
+                dt.TenTau,
                 CASE 
                     WHEN ve.MaVe IS NOT NULL THEN 'Booked' 
                     ELSE 'Available'                       
@@ -217,9 +218,9 @@ const customerService = {
 
                 // Tính giá
                 let phanTramGiam = 0;
-                if (p.DoiTuong === 'Sinh viên') phanTramGiam = 0.1; 
-                else if (p.DoiTuong === 'Trẻ em') phanTramGiam = 0.25;
-                else if (p.DoiTuong === 'Người cao tuổi') phanTramGiam = 0.15;
+                // if (p.DoiTuong === 'Sinh viên') phanTramGiam = 0.1; 
+                // else if (p.DoiTuong === 'Trẻ em') phanTramGiam = 0.25;
+                // else if (p.DoiTuong === 'Người cao tuổi') phanTramGiam = 0.15;
                 
                 const giaGoc = p.GiaCoBan;
                 const soTienGiam = giaGoc * phanTramGiam;
@@ -232,23 +233,23 @@ const customerService = {
                 reqVe.input('MaChuyenTau', sql.VarChar(20), paymentData.tripId);
                 reqVe.input('MaViTri', sql.VarChar(20), p.MaViTri);
                 reqVe.input('GiaThuc', sql.Decimal(18, 0), giaThuc);
-                reqVe.input('SoTienGiam', sql.Decimal(18, 0), soTienGiam);
                 // [QUAN TRỌNG]: Gán vé cho đúng Mã Khách Hàng của Người Đi
                 reqVe.input('MaKhachHang', sql.VarChar(20), maKhachHangCuaNguoiDi); 
                 reqVe.input('GaXuatPhat', sql.VarChar(20), paymentData.gaDi);
                 reqVe.input('GaDen', sql.VarChar(20), paymentData.gaDen);
+                reqVe.input('MaUuDai', sql.VarChar(20), p.MaUuDai);
 
                 await reqVe.query(`
                     INSERT INTO VE_TAU (
                         MaVe, MaKhachHang, MaDatVe, MaChuyenTau, 
                         GaXuatPhat, GaDen, MaViTri, 
-                        GiaThuc, SoTienGiam, 
+                        GiaThuc, MaUuDai,
                         ThoiGianXuatVe, TrangThai
                     )
                     VALUES (
                         @MaVe, @MaKhachHang, @MaDatVe, @MaChuyenTau,
                         @GaXuatPhat, @GaDen, @MaViTri, 
-                        @GiaThuc, @SoTienGiam,
+                        @GiaThuc, @MaUuDai,
                         GETDATE(), N'Đã đặt'
                     )
                 `);
@@ -320,12 +321,15 @@ const customerService = {
                             tenTau: row.MaChuyenTau, 
                             gaDi: row.GaXuatPhat,
                             gaDen: row.GaDen,
+                            LoaiToa: row.LoaiToa,
                             
                             // Map Giờ đi từ DuKienXuatPhat
                             gioDi: row.DuKienXuatPhat 
                                 ? new Date(row.DuKienXuatPhat).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) 
                                 : '--:--',
-                            
+                            gioDen: row.DuKienDen 
+                                ? new Date(row.DuKienDen).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) 
+                                : '--:--',
                             // Lấy ngày đi từ DuKienXuatPhat
                             ngayDi: row.DuKienXuatPhat 
                                 ? new Date(row.DuKienXuatPhat).toISOString().split('T')[0] 

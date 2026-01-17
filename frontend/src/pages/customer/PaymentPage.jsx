@@ -3,8 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, User, Loader2, Train, Tag } from 'lucide-react';
 import CustomerNavbar from '../../components/layout/CustomerNavbar';
 import BookingSteps from '../../components/common/BookingSteps';
-import { bookingApi } from '../../services/bookingApi'; 
-import { LICH_TRINH_DB } from '../../services/db_mock';
+import { bookingApi } from '../../services/bookingApi'; // 
 import '../../styles/pages/BookingFlow.css';
 
 const PaymentPage = ({ isEmployee = false }) => {
@@ -139,21 +138,34 @@ const PaymentPage = ({ isEmployee = false }) => {
                 HoTen: p.fullName,
                 CCCD: p.cmnd,
                 NgaySinh: p.dob,
+                tenTau: tripInfo.tenTau,
                 MaUuDai: p.promotionCode || null 
             })),
             gaDi: tripInfo.maGaDi,
             gaDen: tripInfo.maGaDen
         };
-
+        console.log("Payload gửi lên API:", payload);
         const res = await bookingApi.submitPayment(payload);
         if (res.success) {
             const basePath = isEmployee ? '/employee/sales' : '/booking';
+            const updatedPasengers=passengerList.map(p => ({
+                MaViTri: p.maViTri, // ID ghế trong DB
+                GiaCoBan: p.price,
+                DoiTuong: p.type || 'Người lớn',
+                HoTen: p.fullName,
+                CCCD: p.cmnd,
+                NgaySinh: p.dob,
+                tenTau: tripInfo.tenTau,
+                loaiToa: p.loaiToa
+            }));
+            // Chuyển sang trang Thành công kèm kết quả trả về
             navigate(`${basePath}/success`, {
                 state: { 
                     resultData: res.data, 
-                    tripInfo, 
-                    totalPrice: dynamicTotalPrice, 
-                    passengers: passengerList 
+                    tripInfo,  
+                    paymentMethod,
+                    passengers: updatedPasengers,
+                    totalPrice: dynamicTotalPrice
                 }
             });
         } else {
