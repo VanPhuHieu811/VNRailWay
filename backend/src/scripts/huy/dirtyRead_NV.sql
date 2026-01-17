@@ -35,9 +35,9 @@ BEGIN
 
         -- 2. Thực hiện chèn dữ liệu
         INSERT INTO DON_NGHI_PHEP (MaDon, MaPhanCong, NgayGui, LyDo, NVGuiDon, TrangThai)
-        VALUES (@NewID, @MaPhanCong, getdate(), @LyDo, @MaNVGui, N'Đang chờ');
+        VALUES (@NewID, @MaPhanCong, '2025-12-29', @LyDo, @MaNVGui, N'Đang chờ');
 
-		WAITFOR DELAY '00:00:20';
+		WAITFOR DELAY '00:00:10';
 
 		DECLARE @NgayXuatPhat date;
 		DECLARE @MaChuyenTau varchar(10);
@@ -51,7 +51,7 @@ BEGIN
 		from THOI_GIAN_CHUYEN_TAU
 		where MaChuyenTau = @MaChuyenTau
 
-		if cast(getdate() as date) >= dateadd(day, -2, @NgayXuatPhat)
+		if '2025-12-29' >= dateadd(day, -2, @NgayXuatPhat)
 		begin
 			raiserror (N'Lỗi: Đơn nghỉ phép phải gửi trước ngày xuất phát 2 ngày.', 16, 1);  
 		end
@@ -66,4 +66,4 @@ BEGIN
     END CATCH
 END;
 GO
-exec sp_GuiDonNghiPhep 'PC04', 'NV05', N'Nghỉ việc gia đình'
+exec sp_GuiDonNghiPhep 'PC011', 'NV004', N'Nghỉ việc gia đình'

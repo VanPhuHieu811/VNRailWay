@@ -1,4 +1,4 @@
-import { findTicketForExchangeService } from '../services/ticket.service.js';
+import { findTicketForExchangeService, confirmExchangeTicket} from '../services/ticket.service.js';
 import sql from 'mssql';
 import { getPool } from '../config/sqlserver.config.js';
 
@@ -60,6 +60,44 @@ const ticketController = {
       });
     }
   },
+};
+
+export const processExchange = async (req, res) => {
+    try {
+        const exchangeData = req.body;
+
+        // Validate cơ bản
+        if (!exchangeData.oldTicketCode || !exchangeData.newTripId || !exchangeData.newSeatId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Thiếu thông tin vé cũ hoặc vé mới.' 
+            });
+        }
+
+        // Validate thông tin khách
+        if (!exchangeData.passengerName || !exchangeData.passengerID) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Thiếu thông tin hành khách (Tên, CCCD).' 
+            });
+        }
+
+        const result = await confirmExchangeTicket(exchangeData);
+        
+        return res.status(200).json({
+            success: true,
+            message: 'Đổi vé thành công!',
+            data: result // Trả về: MaVeMoi, MaDoiVe, TongTienThanhToan...
+        });
+
+    } catch (error) {
+        console.error("API Error:", error);
+        // Bắt lỗi từ RAISERROR trong SQL
+        return res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Lỗi server khi xử lý đổi vé.' 
+        });
+    }
 };
 
 export default ticketController;

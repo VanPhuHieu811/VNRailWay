@@ -17,6 +17,7 @@ import {
     getAllLeaveRequests,
     fixLostUpdateApprove
 } from '../controllers/staff.controller.js';
+import {concurrencyController} from '../controllers/staff.controller.js';
 
 const router = express.Router();
 
@@ -35,6 +36,13 @@ router.get('/me/leave-history', authenticationMiddleware, getMyLeaveHistory);
 
 router.get('/leave-requests', authenticationMiddleware, getAllLeaveRequests);
 router.patch('/leave-requests/approve/fix-lost-update', authenticationMiddleware, fixLostUpdateApprove); // SP04
+
+
+// POST: /api/v1/concurrency/approve-leave/fixed
+router.post('/approve-leave/fixed', authenticationMiddleware, concurrencyController.approveLeaveFixed);
+
+// POST: /api/v1/concurrency/approve-leave/dirty-read
+router.post('/approve-leave/dirty-read', authenticationMiddleware, concurrencyController.approveLeaveDirtyRead);
 
 export default router;
 

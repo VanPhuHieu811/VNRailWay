@@ -1,73 +1,58 @@
-﻿--SP4: API4 DUYET DON NGHI PHEP (TRANH CHAP)
+﻿create or alter PROCEDURE sp_th2_huy_fixed
+  @MaDonNghiPhep VARCHAR(10),
+  @MaQuanLyDuyetDon VARCHAR(10),
+  @MaNhanVienThayThe VARCHAR(10)
+as
+begin
+  begin transaction;
+
+  if not exists (
+    select 1
+    from DON_NGHI_PHEP
+    where MaDon = @MaDonNghiPhep
+      and TrangThai = N'Đang chờ'
+  )
+  begin
+    rollback transaction;
+    throw 50001, N'Đơn nghỉ phép không tồn tại hoặc đã được xử lý bởi người khác.', 1;
+    return;
+  end
+
+  -- p2: cap nhat phan cong chuyen tau
+  declare @MaPhanCongCu varchar(10);
+  declare @MaPhanCongMoi varchar(10);
+  declare @VaiTro nvarchar(50);
+  declare @MaChuyenTau varchar(10);
+  declare @MaToa varchar(10);
+
+  -- Lay thong tin phan cong cu
+  select 
+    @MaPhanCongCu = dnp.MaPhanCong,
+    @VaiTro = pcct.VaiTro,
+    @MaChuyenTau = pcct.MaChuyenTau,
+    @MaToa = pcct.MaToa
+  from DON_NGHI_PHEP dnp 
+  inner join PHAN_CONG_CHUYEN_TAU pcct on dnp.MaPhanCong = pcct.MaPhanCong
+  where dnp.MaDon = @MaDonNghiPhep;
+
+  -- cap nhat vao bang PHAN_CONG_CHUYEN_TAU cho nhan vien cu nghi phep
+  update PHAN_CONG_CHUYEN_TAU
+  set TrangThai = N'Nghỉ'
+  where MaPhanCong = @MaPhanCongCu;
+
+  -- Tao ma phan cong moi
+  declare @MaxNumber int;
+  select @MaxNumber = ISNULL(MAX(CAST(SUBSTRING(MaPhanCong, 3, LEN(MaPhanCong)-2) AS INT)), 0)
+  from PHAN_CONG_CHUYEN_TAU;
+  
+  set @MaPhanCongMoi = 'PC' + RIGHT('000' + CAST(@MaxNumber + 1 AS VARCHAR(3)), 3);
+
+  -- tao phan cong moi cho nhan vien thay the
+  insert into PHAN_CONG_CHUYEN_TAU (MaPhanCong, MaNV, VaiTro, MaChuyenTau, MaToa, TrangThai)
+  values (@MaPhanCongMoi, @MaNhanVienThayThe, @VaiTro, @MaChuyenTau, @MaToa, N'Nhận việc');
+
+  commit;
+  print N'[T1] Duyệt đơn thành công - Nhân viên thay thế: ' + @MaNhanVienThayThe;
+  print N'[T1] Mã phân công mới: ' + @MaPhanCongMoi;
+end
 GO
-CREATE OR ALTER PROCEDURE sp_DuyetDonNghiPhep
-    @MaDon VARCHAR(10),
-    @MaNVQuanLy VARCHAR(10),
-    @TrangThaiMoi NVARCHAR(20), 
-    @MaNVThayThe VARCHAR(10) = NULL
-AS
-BEGIN
-    SET NOCOUNT ON;
-    BEGIN TRY
-		
-		SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
-
-        BEGIN TRANSACTION;
-
-		IF NOT EXISTS (SELECT 1 FROM NHAN_VIEN WHERE MaNV = @MaNVQuanLy)
-		BEGIN
-			RAISERROR(N'Lỗi: Mã nhân viên quản lý không tồn tại.', 16, 1);
-		END
-
-        -- 1. Chỉ cần check cơ bản: Nếu duyệt thì phải có người thay
-        IF @TrangThaiMoi = N'Chấp nhận' AND @MaNVThayThe IS NULL
-        BEGIN
-            RAISERROR(N'Lỗi: Phải chỉ định nhân viên thay thế khi chấp nhận đơn nghỉ.', 16, 1);
-        END
-
-        -- 2. Cập nhật trạng thái đơn nghỉ phép
-        /*UPDATE DON_NGHI_PHEP
-        SET TrangThai = @TrangThaiMoi,
-            NVDuyetDon = @MaNVQuanLy,
-            NVThayThe = @MaNVThayThe
-        WHERE MaDon = @MaDon;*/
-
-        -- 3. Xử lý nghiệp vụ khi Chấp nhận
-        IF @TrangThaiMoi = N'Chấp nhận'
-        BEGIN
-            DECLARE @MaChuyenTau VARCHAR(10), @VaiTro NVARCHAR(30), @MaToa VARCHAR(10), @MaPC_Cu VARCHAR(10);
-            
-            -- Lấy thông tin từ phân công cũ
-            SELECT 
-                @MaPC_Cu = pc.MaPhanCong,
-                @MaChuyenTau = pc.MaChuyenTau,
-                @VaiTro = pc.VaiTro,
-                @MaToa = pc.MaToa
-            FROM DON_NGHI_PHEP dnp
-            JOIN PHAN_CONG_CHUYEN_TAU pc ON dnp.MaPhanCong = pc.MaPhanCong
-            WHERE dnp.MaDon = @MaDon;
-
-            -- A. Đánh dấu người cũ nghỉ
-            UPDATE PHAN_CONG_CHUYEN_TAU SET TrangThai = N'Nghỉ' WHERE MaPhanCong = @MaPC_Cu;
-
-            -- B. Ủy thác toàn bộ việc kiểm tra vai trò và lịch trình cho SP 7
-            EXEC sp_PhanCongNhanSu 
-                @MaNV = @MaNVThayThe, 
-                @MaChuyenTau = @MaChuyenTau, 
-                @VaiTro = @VaiTro, 
-                @MaToa = @MaToa;
-
-        END
-
-        COMMIT TRANSACTION;
-        PRINT N'Điều phối nhân sự thành công.';
-    END TRY
-    BEGIN CATCH
-        -- Nếu SP 7 báo lỗi vai trò, nó sẽ nhảy vào đây để Rollback
-        IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;
-        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
-        RAISERROR(@ErrorMessage, 16, 1);
-    END CATCH
-END;
-GO
-
