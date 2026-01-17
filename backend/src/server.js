@@ -32,6 +32,7 @@ app.use('/api/v1/staff', staffRoutes);
 app.use('/api/v1/admin', adminRoutes);      
 app.use('/api/v1/schedules', customerRoutes);
 app.use('/api/v1/master', masterRoutes);
+app.use('/api/v1/customers', customerRoutes);
 
 // Train, route, trip
 app.use('/api/v1/trips', tripRoutes);
