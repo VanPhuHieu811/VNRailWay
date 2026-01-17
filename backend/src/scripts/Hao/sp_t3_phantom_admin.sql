@@ -62,7 +62,6 @@ BEGIN
             WHERE MaTuyenTau = @MaTuyenTau AND ThuTu >= @ThuTuDen AND ThuTu <= @ThuTuDi
             ORDER BY ThuTu DESC; 
         END
-
         OPEN cur_lichtrinh;
         FETCH NEXT FROM cur_lichtrinh INTO @CurMaGa, @CurThuTu, @CurKhoangCach;
 
@@ -106,3 +105,4 @@ BEGIN
     COMMIT TRANSACTION;
 END
 GO
+

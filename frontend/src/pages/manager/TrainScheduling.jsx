@@ -274,9 +274,9 @@ const TrainScheduling = () => {
         
         const carriageInfo = selectedAssignTrip.assignedCarriages[index];
         if (carriageInfo && carriageInfo.coachId) {
-            payload.maToa = carriageInfo.coachId; 
+            payload.maToa = carriageInfo.coachId + '0'; 
         } else {
-            payload.maToa = index.toString(); 
+            payload.maToa = index.toString() + '0'; 
         }
     }
 

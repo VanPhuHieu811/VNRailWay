@@ -6,5 +6,7 @@ const router = express.Router();
 // API Tìm kiếm chuyến tàu
 // URL: GET /api/v1/schedules/search?from=...&to=...&date=...
 router.get('/search', customerController.searchSchedules);
+router.get('/seats/:tripId', customerController.getSeats);
+router.post('/payment', customerController.submitPayment);
 
 export default router;  

@@ -1,4 +1,5 @@
-
+USE VNRAILWAY
+GO
 CREATE OR ALTER PROCEDURE sp_LayLichLamViecNhanVien
     @MaNV VARCHAR(10),
     @TuNgay DATE = NULL,
@@ -42,6 +43,3 @@ BEGIN
     ORDER BY lt.GioKhoiHanhDauTien ASC;
 END;
 GO
-
-EXEC sp_LayLichLamViecNhanVien 
-    @MaNV = 'NV005'

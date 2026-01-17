@@ -45,6 +45,62 @@ const customerController = {
                 error: error.message
             });
         }
+    },
+
+    getSeats: async (req, res) => {
+        try {
+            const { tripId } = req.params;
+            const data = await customerService.getSeatMap(tripId);
+            return res.status(200).json({ success: true, data });
+        } catch (error) {
+            return res.status(500).json({ success: false, message: error.message });
+        }
+    },
+
+    submitPayment: async (req, res) => {
+        try {
+            // Dữ liệu Frontend gửi lên phải đúng format này
+            const { 
+                tripId, 
+                buyerInfo, // Object: { HoTen, CCCD, SDT, ... }
+                passengers, // Array: [{ MaViTri, HoTen, DoiTuong, GiaCoBan }]
+                paymentMethod, gaDi, gaDen 
+            } = req.body;
+
+            // Validate sơ bộ
+            if (!tripId || !buyerInfo || !buyerInfo.HoTen || !passengers || passengers.length === 0) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "Thiếu thông tin bắt buộc (Người đặt hoặc Hành khách)" 
+                });
+            }
+
+            const result = await customerService.processPayment({
+                tripId,
+                buyerInfo,
+                passengers,
+                paymentMethod,
+                gaDi,
+                gaDen
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: "Thanh toán và xuất vé thành công!",
+                data: result
+            });
+
+        } catch (error) {
+            console.error("API /payment error:", error);
+            if (error.originalError) {
+                console.error("SQL:", error.originalError.message);
+            }
+
+            res.status(500).json({
+                success: false,
+                message: error.originalError?.message || error.message
+            });
+        }
     }
 };
 
