@@ -95,3 +95,4 @@ BEGIN
         @GiaCuoiCung AS GiaThucTe         -- Giá phải trả
 END;
 GO
+

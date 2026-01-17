@@ -23,4 +23,6 @@ router.get('/kilometer', priceController.getAllPriceByKilometer)
 router.get('/kilometer/:id', priceController.getPriceByKilometerById)
 router.put('/kilometer/:id', priceController.updatePriceByKilometerById)
 
+// calculate price
+router.post('/calculate', priceController.calculatePrice);
 export default router
