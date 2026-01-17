@@ -15,11 +15,9 @@ BEGIN
     BEGIN TRY
         DECLARE @NewMaChuyenTau VARCHAR(10);
 
-        /* ===== 1. LOCK + ID GENERATION (KEEP FOR DEADLOCK) ===== */
+        /* ===== 1. LOCK + ID GENERATION ===== */
         SELECT @NewMaChuyenTau =
-            'CT' + RIGHT('000' + CAST(
-                ISNULL(MAX(CAST(SUBSTRING(MaChuyenTau, 3, 5) AS INT)), 0) + 1
-            AS VARCHAR), 3)
+            'CT' + RIGHT('000' + CAST(ISNULL(MAX(CAST(SUBSTRING(MaChuyenTau, 3, 5) AS INT)), 0) + 1 AS VARCHAR), 3)
         FROM CHUYEN_TAU WITH (UPDLOCK, HOLDLOCK);
 
         INSERT INTO CHUYEN_TAU
@@ -101,7 +99,7 @@ BEGIN
         CLOSE cur;
         DEALLOCATE cur;
 
-        /* ===== 4. DEADLOCK TRIGGER (KEEP EXACT POSITION) ===== */
+        /* ===== 4. DEADLOCK TRIGGER ===== */
         WAITFOR DELAY '00:00:10';
 
         UPDATE DOAN_TAU
