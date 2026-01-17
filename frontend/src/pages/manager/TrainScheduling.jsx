@@ -4,7 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import {
     Train, Calendar, Clock, MapPin, Users,
     Plus, Check, X, ArrowRight, User,
-    Filter, Briefcase, Save, AlertCircle, Circle, Loader
+    Filter, Briefcase, Save, AlertCircle, Circle, Loader, Search
 } from 'lucide-react';
 
 // --- IMPORT API SERVICES ---
@@ -73,6 +73,8 @@ const TrainScheduling = () => {
         maTuyenTau: '', maDoanTau: '', gaXuatPhat: '', gaKetThuc: '',
         ngayKhoiHanh: '', gioKhoiHanh: ''
     });
+
+    const [searchTerm, setSearchTerm] = useState('');
 
     // --- 2. EFFECTS: LOAD DỮ LIỆU ---
 
@@ -244,6 +246,18 @@ const TrainScheduling = () => {
         }
     };
 
+    const filteredTrips = trips.filter(trip => {
+        if (!searchTerm) return true;
+        const term = searchTerm.toLowerCase();
+        return (
+            trip.id?.toLowerCase().includes(term) ||          // Search by Trip ID (e.g., CT003)
+            trip.route?.toLowerCase().includes(term) ||       // Search by Route (e.g., Hà Nội)
+            trip.trainCode?.toLowerCase().includes(term) ||   // Search by Train Code (e.g., SE1)
+            trip.date?.includes(term) ||                      // Search by Date (e.g., 2025-12-28)
+            trip.time?.includes(term)                         // Search by Time (e.g., 19:00)
+        );
+    });
+
     // --- [UPDATED] LOGIC PHÂN CÔNG VỚI LOADING ---
     const confirmAssignment = async (type, index = null) => {
         if (!selectedAssignTrip) return;
@@ -379,7 +393,19 @@ const TrainScheduling = () => {
             {/* --- TAB 1: LỊCH TRÌNH --- */}
             {activeMainTab === 'schedule' && (
                 <div className="animate-in fade-in duration-300">
-                    <div className="flex justify-end mb-4">
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                        <div className="relative w-full md:w-96">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <Search className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                                type="text"
+                                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-colors"
+                                placeholder="Tìm theo mã chuyến, tên tàu, giờ đi..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                        </div>
                         <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
                             {[{ id: 'all', label: 'Tất cả' }, { id: 'Đang chạy', label: 'Đang chạy' }, { id: 'Chuẩn bị', label: 'Chuẩn bị' }, { id: 'Hoàn thành', label: 'Hoàn thành' }, { id: 'Hủy', label: 'Đã hủy' }].map(tab => (
                                 <button
@@ -392,53 +418,74 @@ const TrainScheduling = () => {
                         </div>
                     </div>
 
-                    {loading ? (
-                        <div className="flex justify-center py-10"><Loader className="animate-spin text-blue-600" /></div>
-                    ) : (
-                        <div className="space-y-4">
-                            {trips.length === 0 && <div className="text-center text-gray-500 py-10">Không tìm thấy chuyến tàu nào.</div>}
-                            {trips.map((trip) => (
-                                <div
-                                    key={trip.id}
-                                    onClick={() => handleOpenDetail(trip)}
-                                    className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
-                                >
-                                    <div className="flex items-start gap-4 mb-4 md:mb-0 w-full md:w-auto">
-                                        <div className={`p-3 rounded-lg shrink-0 ${trip.status === 'Đang chạy' ? 'bg-green-100 text-green-600' :
-                                                trip.status === 'Hủy' ? 'bg-red-50 text-red-500' : // Add red style for Cancelled
-                                                    'bg-blue-50 text-blue-600'
-                                            }`}>
-                                            {trip.status === 'Hủy' ? <X className="w-8 h-8" /> : <Train className="w-8 h-8" />}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-gray-800">{trip.route}</h3>
-                                            <div className="text-gray-500 text-sm flex flex-col gap-1 mt-1">
-                                                <span className="flex items-center gap-1 font-medium">{trip.departureStation} <ArrowRight className="w-3 h-3" /> {trip.arrivalStation}</span>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">
-                                                        {trip.id}
-                                                    </span>
-                                                    <span className="text-gray-500 text-xs">
-                                                        • {trip.trainCode} • {trip.time}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-8 w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-8">
-                                        <div>
-                                            <div className="text-xs text-gray-400 mb-1">Lái tàu</div>
-                                            <div className={`text-sm font-medium ${trip.driver ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.driver || "Chưa có"}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-400 mb-1">Trưởng tàu</div>
-                                            <div className={`text-sm font-medium ${trip.manager ? 'text-gray-700' : 'text-orange-500 italic'}`}>{trip.manager || "Chưa có"}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
+{loading ? (
+    <div className="flex justify-center py-10">
+        <Loader className="animate-spin text-blue-600" />
+    </div>
+) : (
+    <div className="space-y-4">
+        {/* CASE 1: No results found after filtering */}
+        {filteredTrips.length === 0 ? (
+            <div className="text-center text-gray-500 py-10 bg-white rounded-xl border border-dashed border-gray-300">
+                Không tìm thấy chuyến tàu nào phù hợp.
+            </div>
+        ) : (
+            /* CASE 2: Map through filteredTrips */
+            filteredTrips.map((trip) => (
+                <div
+                    key={trip.id}
+                    onClick={() => handleOpenDetail(trip)}
+                    className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
+                >
+                    {/* LEFT SIDE: Icon & Route Info */}
+                    <div className="flex items-start gap-4 mb-4 md:mb-0 w-full md:w-auto">
+                        {/* Status Icon with "Hủy" logic */}
+                        <div className={`p-3 rounded-lg shrink-0 ${
+                            trip.status === 'Đang chạy' ? 'bg-green-100 text-green-600' :
+                            trip.status === 'Hủy' ? 'bg-red-50 text-red-500' : 
+                            'bg-blue-50 text-blue-600'
+                        }`}>
+                             {trip.status === 'Hủy' ? <X className="w-8 h-8" /> : <Train className="w-8 h-8" />}
                         </div>
-                    )}
+
+                        <div>
+                            <h3 className="text-lg font-bold text-gray-800">{trip.route}</h3>
+                            <div className="text-gray-500 text-sm flex flex-col gap-1 mt-1">
+                                <span className="flex items-center gap-1 font-medium">
+                                    {trip.departureStation} <ArrowRight className="w-3 h-3" /> {trip.arrivalStation}
+                                </span>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">
+                                        {trip.id}
+                                    </span>
+                                    <span className="text-gray-500 text-xs">
+                                        • {trip.trainCode} • {trip.time}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* RIGHT SIDE: Staff Info */}
+                    <div className="flex items-center gap-8 w-full md:w-auto border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-8">
+                        <div>
+                            <div className="text-xs text-gray-400 mb-1">Lái tàu</div>
+                            <div className={`text-sm font-medium ${trip.driver ? 'text-gray-700' : 'text-orange-500 italic'}`}>
+                                {trip.driver || "Chưa có"}
+                            </div>
+                        </div>
+                        <div>
+                            <div className="text-xs text-gray-400 mb-1">Trưởng tàu</div>
+                            <div className={`text-sm font-medium ${trip.manager ? 'text-gray-700' : 'text-orange-500 italic'}`}>
+                                {trip.manager || "Chưa có"}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ))
+        )}
+    </div>
+)}
                 </div>
             )}
 
