@@ -58,4 +58,4 @@ BEGIN
       AND YEAR(bl.NgayNhanLuong) = @Nam;
 END;
 GO
---exec sp_LayPhieuLuongNhanVien 'NV05', 11, 2025
+--exec sp_LayPhieuLuongNhanVien 'NV04', 12, 2025

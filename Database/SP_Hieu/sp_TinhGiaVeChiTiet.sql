@@ -6,7 +6,7 @@ CREATE OR ALTER PROCEDURE sp_TinhGiaVeChiTiet
     @GaDi VARCHAR(10),        
     @GaDen VARCHAR(10),       
     @MaViTri VARCHAR(10),
-    @MaUuDai VARCHAR(10) = NULL -- [MỚI] Thêm tham số này (Mặc định là NULL nếu không nhập)
+    @MaUuDai VARCHAR(10) = NULL 
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -22,9 +22,8 @@ BEGIN
     DECLARE @GiaLoaiToa DECIMAL(18, 0) = 0;
     DECLARE @GiaTang DECIMAL(18, 0) = 0;
     
-    DECLARE @TongTienTamTinh DECIMAL(18, 0) = 0; -- Giá trước khi giảm
+    DECLARE @TongTienTamTinh DECIMAL(18, 0) = 0; 
     
-    -- [MỚI] Biến xử lý ưu đãi
     DECLARE @PhanTramGiam INT = 0;
     DECLARE @SoTienGiam DECIMAL(18, 0) = 0;
     DECLARE @GiaCuoiCung DECIMAL(18, 0) = 0;
@@ -95,3 +94,6 @@ BEGIN
         @GiaCuoiCung AS GiaThucTe         -- Giá phải trả
 END;
 GO
+
+select *
+from UU_DAI_GIA

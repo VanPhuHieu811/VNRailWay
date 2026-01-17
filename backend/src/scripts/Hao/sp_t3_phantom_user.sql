@@ -80,7 +80,7 @@ BEGIN
     -- =======================================================
     -- GIẢ LẬP ĐỘ TRỄ ĐỂ TEST PHANTOM READ
     -- =======================================================
-    --WAITFOR DELAY '00:00:10';
+    WAITFOR DELAY '00:00:10';
 
     -- =======================================================
     -- LẦN ĐỌC 2 (COPY Y HỆT LẦN 1)
@@ -119,27 +119,3 @@ BEGIN
     COMMIT TRANSACTION;
 END;
 GO
-exec sp_XemDSChuyenTau 
-    @NgayDi = '2026-01-16', 
-    @GaDi = 'GA01', 
-    @GaDen = 'GA12', 
-    @GioKhoiHanh = NULL;
-
-
-select *
-from THOI_GIAN_CHUYEN_TAU
-
-select *
-from  DAT_VE
-
-select *
-from TAI_KHOAN
-
-select *
-FROM VI_TRI_TREN_TOA
-
-SELECT*
-FROM THAM_SO
-
-SELECT *
-FROM GIA_THEO_LOAI_TAU

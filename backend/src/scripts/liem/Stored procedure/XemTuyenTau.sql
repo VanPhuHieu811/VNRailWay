@@ -1,7 +1,7 @@
 ﻿USE VNRAILWAY
 GO
 
-CREATE OR ALTER PROCEDURE sp_LayChiTietTuyenTau
+CREATE OR ALTER PROCEDURE sp_ChiTietTuyenTau
     @MaTuyenTau VARCHAR(10)
 AS
 BEGIN
@@ -25,5 +25,5 @@ BEGIN
 END;
 GO
 
-EXEC sp_LayChiTietTuyenTau
+EXEC sp_ChiTietTuyenTau
 	@MaTuyenTau = 'TT01'

@@ -4,8 +4,21 @@ import sql from 'mssql';
 // 1. Get All Routes
 export const getAllRoutesService = async () => {
     try {
+        const query = `
+            SELECT 
+                tt.MaTuyenTau AS id,
+                tt.TenTuyen AS name,
+                tt.MaTuyenTau AS code,
+                COUNT(DISTINCT ds.MaGaTau) AS totalStations,
+                ISNULL(MAX(ds.KhoangCach), 0) AS totalLength 
+            FROM TUYEN_TAU tt
+            LEFT JOIN DANH_SACH_GA ds ON tt.MaTuyenTau = ds.MaTuyenTau
+            GROUP BY tt.MaTuyenTau, tt.TenTuyen
+            ORDER BY tt.MaTuyenTau;
+            `;
+
         const pool = await getPool();
-        const result = await pool.request().query('SELECT * FROM TUYEN_TAU');
+        const result = await pool.request().query(query);
         return result.recordset;
     } catch (error) {
         throw error;
@@ -18,7 +31,7 @@ export const getRouteDetailService = async (routeId) => {
         const pool = await getPool();
         const result = await pool.request()
             .input('MaTuyenTau', sql.VarChar(10), routeId)
-            .execute('sp_LayChiTietTuyenTau');
+            .execute('sp_ChiTietTuyenTau');
 
         if (result.recordset.length === 0) return null;
 

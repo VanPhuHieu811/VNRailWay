@@ -8,6 +8,7 @@ import CustomerNavbar from '../../components/layout/CustomerNavbar';
 
 // Services
 import { bookingApi } from '../../services/bookingApi';
+import { getCurrentUserInfo } from '../../services/authApi';
 
 // Styles
 import '../../styles/pages/MyTickets.css';
@@ -17,29 +18,66 @@ const MyTicketsPage = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [tickets, setTickets] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUserEmail, setCurrentUserEmail] = useState(null); // State lưu email người dùng
 
   // Lấy ngày hiện tại (đặt giờ về 0 để so sánh chính xác theo ngày)
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Hàm gọi API lấy danh sách vé
-  const fetchTickets = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Lấy user từ localStorage an toàn hơn
-      const userStr = localStorage.getItem('user');
-      const user = userStr ? JSON.parse(userStr) : null;
-      // Fallback email để test nếu không có user thật
-      const email = user?.email || 'ducho60@gmail.com'; 
+  // --- BƯỚC 1: LẤY THÔNG TIN USER (EMAIL) ---
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            // Nếu chưa đăng nhập -> Có thể redirect login hoặc để trống
+            console.warn("Chưa đăng nhập");
+            return; 
+        }
 
-      if (!email) {
-        console.warn("Không tìm thấy email người dùng");
+        const res = await getCurrentUserInfo();
+        if (res.success || res.data) {
+            const data = res.data || res;
+            // Lấy email từ các vị trí có thể có trong response
+            const email = data.account?.email || data.khachHang?.Email || data.email;
+            
+            if (email) {
+                console.log("📧 Đã lấy được email:", email);
+                setCurrentUserEmail(email); // Set email -> Kích hoạt Bước 2
+            } else {
+                console.warn("Không tìm thấy email trong thông tin user");
+            }
+        }
+      } catch (error) {
+        console.error("Lỗi lấy thông tin user:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // --- BƯỚC 2: LẤY DANH SÁCH VÉ (KHI ĐÃ CÓ EMAIL) ---
+  const fetchTickets = async () => {
+    // Ưu tiên email từ API, nếu không có thì thử lấy localStorage (fallback)
+    let emailToFetch = currentUserEmail;
+    
+    if (!emailToFetch) {
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : null;
+        emailToFetch = user?.email;
+    }
+
+    if (!emailToFetch) {
+        console.warn("Chưa có email để tải vé.");
         setIsLoading(false);
         return;
-      }
+    }
 
-      const res = await bookingApi.getMyTickets(email);
+    try {
+      setIsLoading(true);
+      console.log("Fetching tickets for:", emailToFetch);
+      
+      const res = await bookingApi.getMyTickets(emailToFetch);
 
       if (res.success) {
         // Sắp xếp: Vé mới đặt nhất lên đầu
@@ -53,14 +91,16 @@ const MyTicketsPage = () => {
     }
   };
 
+  // Gọi fetchTickets khi currentUserEmail thay đổi HOẶC khi user bấm nút refresh
   useEffect(() => {
-    fetchTickets();
+    if (currentUserEmail) {
+        fetchTickets();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [currentUserEmail]);
 
   // Logic hiển thị trạng thái vé
   const renderStatus = (ticket) => {
-    // 1. Đang xử lý (Chờ thanh toán hoặc hệ thống đang xử lý)
     if (ticket.status === 'processing') {
       return (
         <span className="status-badge processing border-yellow-400 bg-yellow-50 text-yellow-700 flex items-center gap-1">
@@ -68,27 +108,22 @@ const MyTicketsPage = () => {
         </span>
       );
     }
-    
-    // 2. Đã hủy
     if (ticket.status === 'cancelled') {
       return <span className="status-badge cancelled bg-red-50 text-red-600 border-red-200">Đã hủy</span>;
     }
     
-    // 3. Đã sử dụng (check status DB hoặc check ngày đi < ngày hiện tại)
     const tripDate = new Date(ticket.tripInfo.ngayDi);
     if (ticket.status === 'used' || tripDate < today) {
       return <span className="status-badge used bg-gray-100 text-gray-500 border-gray-300">Đã hoàn thành</span>;
     }
 
-    // 4. Sắp khởi hành (Active)
     return <span className="status-badge active bg-green-50 text-green-600 border-green-200">Sắp khởi hành</span>;
   };
 
-  // Logic kiểm tra xem vé có được đổi không (Chưa đi và trạng thái active)
+  // Logic kiểm tra vé có được đổi không
   const checkExchangeable = (ticket) => {
     if (ticket.status !== 'active') return false;
     const tripDate = new Date(ticket.tripInfo.ngayDi);
-    // Chỉ cho đổi nếu ngày đi >= ngày hiện tại
     return tripDate >= today;
   };
 
@@ -137,8 +172,7 @@ const MyTicketsPage = () => {
               const isExchangeable = checkExchangeable(ticket);
               const tripDate = new Date(ticket.tripInfo.ngayDi);
 
-              // Xác định class style dựa trên trạng thái để border màu bên trái
-              let cardClass = "active border-l-4 border-l-green-500"; // Mặc định
+              let cardClass = "active border-l-4 border-l-green-500"; 
               if (ticket.status === 'cancelled') {
                 cardClass = "cancelled border-l-4 border-l-red-400 opacity-75";
               } else if (ticket.status === 'processing') {
@@ -150,7 +184,7 @@ const MyTicketsPage = () => {
               return (
                 <div key={ticket.maVe} className={`bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow ${cardClass}`}>
                   
-                  {/* Card Header: ID & Status */}
+                  {/* Card Header */}
                   <div className="flex justify-between items-center px-4 py-3 border-b border-slate-100 bg-slate-50/50">
                     <span className="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded">
                       #{ticket.maVe}
@@ -158,9 +192,8 @@ const MyTicketsPage = () => {
                     {renderStatus(ticket)}
                   </div>
 
-                  {/* Card Body: Info */}
+                  {/* Card Body */}
                   <div className="p-4 flex flex-col sm:flex-row justify-between gap-4">
-                    {/* Route Info */}
                     <div className="flex-1">
                       <div className="text-lg font-bold text-blue-900 uppercase mb-2 flex items-center gap-2">
                          {ticket.tripInfo.tenTau} <span className="text-slate-300">|</span> {ticket.tripInfo.ngayDi}
@@ -175,11 +208,11 @@ const MyTicketsPage = () => {
                       <div className="flex flex-wrap gap-4 text-sm text-slate-600">
                         <div className="flex items-center gap-1">
                           <Clock size={14} className="text-blue-500"/>
-                          {ticket.tripInfo.gioDi} - {ticket.tripInfo.gioDen}
+                          {/* Hiển thị Giờ đi - Giờ đến */}
+                          {ticket.tripInfo.gioDi} - {ticket.tripInfo.gioDen || '--:--'}
                         </div>
                         <div className="flex items-center gap-1">
                            <MapPin size={14} className="text-orange-500"/>
-                           {/* Lấy danh sách toa duy nhất */}
                            <span>Toa: {Array.from(new Set(ticket.seats.map(s => s.maToa))).join(', ')}</span>
                         </div>
                       </div>
@@ -192,7 +225,6 @@ const MyTicketsPage = () => {
                       </div>
                     </div>
 
-                    {/* Price & Actions (Desktop) */}
                     <div className="flex flex-col justify-between items-end min-w-[140px]">
                        <div className="text-right">
                           <span className="block text-xs text-slate-400">Tổng thanh toán</span>
@@ -203,9 +235,8 @@ const MyTicketsPage = () => {
                     </div>
                   </div>
 
-                  {/* Card Footer: Buttons */}
+                  {/* Card Footer */}
                   <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between sm:justify-end gap-3">
-                     {/* Mobile Price Display */}
                     <span className="sm:hidden text-lg font-bold text-blue-600">
                       {ticket.totalPrice?.toLocaleString('vi-VN')} đ
                     </span>
@@ -230,7 +261,6 @@ const MyTicketsPage = () => {
                         </button>
                       ) : (
                         (ticket.status === 'cancelled' || ticket.status === 'used' || !checkExchangeable(ticket)) && (
-                           // Chỉ hiện text "không thể đổi" nếu không phải đang xử lý
                            ticket.status !== 'processing' && (
                              <span className="hidden sm:flex px-3 py-2 text-xs text-slate-400 italic items-center gap-1 cursor-not-allowed select-none">
                                <AlertCircle size={14} /> Không khả dụng

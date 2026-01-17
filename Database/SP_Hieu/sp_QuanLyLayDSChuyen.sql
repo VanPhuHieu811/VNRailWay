@@ -44,3 +44,5 @@ BEGIN
     ORDER BY tg_di.DuKienXuatPhat DESC;
 END
 GO
+
+exec sp_QuanLyLayDSChuyen 

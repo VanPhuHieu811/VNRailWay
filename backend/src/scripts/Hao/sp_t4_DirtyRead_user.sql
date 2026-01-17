@@ -30,10 +30,12 @@ BEGIN
         -- Thông tin chuyến tàu
         ct.MaChuyenTau,
         tgct.DuKienXuatPhat,
+        tgcd.DuKienDen,
 
         -- Thông tin toa tàu
         tt.MaToaTau,
         tt.STT as STTToaTau,
+        tt.LoaiToa,
         vttt.STT as STTViTri
     FROM DAT_VE dv
     JOIN VE_TAU vt ON dv.MaDatVe = vt.MaDatVe
@@ -44,6 +46,7 @@ BEGIN
     JOIN TOA_TAU tt on tt.MaDoanTau= ct.MaDoanTau
     JOIN VI_TRI_TREN_TOA vttt on vttt.MaToaTau=tt.MaToaTau and vttt.MaViTri=vt.MaViTri
     JOIN THOI_GIAN_CHUYEN_TAU tgct on tgct.MaChuyenTau=ct.MaChuyenTau and tgct.MaGaTau=vt.GaXuatPhat
+    JOIN THOI_GIAN_CHUYEN_TAU tgcd on tgcd.MaChuyenTau=ct.MaChuyenTau and tgcd.MaGaTau=vt.GaDen
 
     WHERE dv.Email =@Email
     ORDER BY dv.ThoiGianDat DESC;

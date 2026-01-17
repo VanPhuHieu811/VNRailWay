@@ -10,6 +10,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRY
+        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
         BEGIN TRANSACTION;
 
         IF NOT EXISTS (SELECT * FROM NHAN_VIEN WHERE MaNV = @MaNV)
@@ -23,7 +24,7 @@ BEGIN
         IF (@VaiTro LIKE N'%lái%' AND @LoaiNV <> N'Lái tàu')
            OR (@VaiTro LIKE N'%trưởng%' AND @LoaiNV NOT IN (N'Toa tàu', N'Lái tàu'))
            OR (@VaiTro LIKE N'%toa%' AND @LoaiNV <> N'Toa tàu')
-        BEGIN
+        BEGIN   
             RAISERROR(N'Lỗi: Loại nhân viên không phù hợp với vai trò được phân công.', 16, 1);
         END
 
@@ -65,3 +66,7 @@ BEGIN
     END CATCH
 END;
 GO
+
+
+select *
+from DAT_VE

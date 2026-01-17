@@ -271,14 +271,18 @@ GO
 -- 12. TAI_KHOAN
 -- =============================================
 INSERT INTO TAI_KHOAN (Email, MaKH, MaNV, TenTaiKhoan, MatKhau, TrangThai, VaiTro) VALUES
-('admin@vnrailway.vn', NULL, 'NV010', 'admin', 'admin123', 1, N'Quản lý'),
 ('quanly@vnrailway.vn', NULL, 'NV001', 'quanly', 'ql123456', 1, N'Quản lý'),
 ('banve01@vnrailway.vn', NULL, 'NV002', 'banve01', 'bv123456', 1, N'Bán vé'),
 ('banve02@vnrailway.vn', NULL, 'NV003', 'banve02', 'bv123456', 1, N'Bán vé'),
 ('laitau01@vnrailway.vn', NULL, 'NV004', 'laitau01', 'lt123456', 1, N'Nhân viên'),
 ('laitau02@vnrailway.vn', NULL, 'NV005', 'laitau02', 'lt123456', 1, N'Nhân viên'),
+('laitau03@vnrailway.vn', NULL, 'NV006', 'laitau03', 'lt123456', 1, N'Nhân viên'),
 ('toatau01@vnrailway.vn', NULL, 'NV007', 'toatau01', 'tt123456', 1, N'Nhân viên'),
 ('toatau02@vnrailway.vn', NULL, 'NV008', 'toatau02', 'tt123456', 1, N'Nhân viên'),
+('toatau03@vnrailway.vn', NULL, 'NV009', 'toatau03', 'tt123456', 1, N'Nhân viên'),
+('admin@vnrailway.vn', NULL, 'NV010', 'admin', 'admin123', 1, N'Quản lý'),
+('toatau04@vnrailway.vn', NULL, 'NV011', 'toatau04', 'tt123456', 1, N'Nhân viên'),
+('toatau05@vnrailway.vn', NULL, 'NV012', 'toatau05', 'tt123456', 1, N'Nhân viên'),
 ('thanhtung95@gmail.com', 'KH001', NULL, 'thanhtung95', 'kh123456', 1, N'Khách hàng'),
 ('maimai98@gmail.com', 'KH002', NULL, 'maimai98', 'kh123456', 1, N'Khách hàng'),
 ('hoangnam92@gmail.com', 'KH003', NULL, 'hoangnam92', 'kh123456', 1, N'Khách hàng'),

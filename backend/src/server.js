@@ -7,6 +7,7 @@ import tripRoutes from './routes/trip.route.js';
 import routeRoutes from './routes/route.route.js';
 import trainRoutes from './routes/train.route.js';
 import priceRoutes from './routes/price.route.js';
+import ticketRoutes from './routes/ticket.routes.js'
 
 // promotion route
 import promotionRoutes from './routes/promotion.route.js';
@@ -37,6 +38,9 @@ app.use('/api/v1/customers', customerRoutes);
 app.use('/api/v1/trips', tripRoutes);
 app.use('/api/v1/routes', routeRoutes);
 app.use('/api/v1/trains', trainRoutes);
+
+//tiket
+app.use('/api/v1/tickets', ticketRoutes);
 
 // price
 app.use('/api/v1/prices', priceRoutes);

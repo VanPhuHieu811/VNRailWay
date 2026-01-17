@@ -1,6 +1,6 @@
 ﻿--SP4: API4 DUYET DON NGHI PHEP (TRANH CHAP)
 GO
-CREATE or alter PROCEDURE sp_DuyetDonNghiPhep
+CREATE OR ALTER PROCEDURE sp_DuyetDonNghiPhep
     @MaDon VARCHAR(10),
     @MaNVQuanLy VARCHAR(10),
     @TrangThaiMoi NVARCHAR(20), 
@@ -9,6 +9,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRY
+		
+		SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;
+
         BEGIN TRANSACTION;
 
 		IF NOT EXISTS (SELECT 1 FROM NHAN_VIEN WHERE MaNV = @MaNVQuanLy)
@@ -53,6 +56,7 @@ BEGIN
                 @MaChuyenTau = @MaChuyenTau, 
                 @VaiTro = @VaiTro, 
                 @MaToa = @MaToa;
+
         END
 
         COMMIT TRANSACTION;
@@ -66,3 +70,5 @@ BEGIN
     END CATCH
 END;
 GO
+
+exec sp_DuyetDonNghiPhep 'DNP01', 'NV01', N'Chấp nhận', 'NV04'

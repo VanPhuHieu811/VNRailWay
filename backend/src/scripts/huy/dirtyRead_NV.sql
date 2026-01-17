@@ -36,7 +36,26 @@ BEGIN
         -- 2. Thực hiện chèn dữ liệu
         -- Trigger trg_KiemTraDonNghiPhep sẽ tự động kiểm tra quy định gửi trước 1 ngày (RB-140)
         INSERT INTO DON_NGHI_PHEP (MaDon, MaPhanCong, NgayGui, LyDo, NVGuiDon, TrangThai)
-        VALUES (@NewID, @MaPhanCong, GETDATE(), @LyDo, @MaNVGui, N'Đang chờ');
+        VALUES (@NewID, @MaPhanCong, getdate(), @LyDo, @MaNVGui, N'Đang chờ');
+
+		WAITFOR DELAY '00:00:20';
+
+		DECLARE @NgayXuatPhat date;
+		DECLARE @MaChuyenTau varchar(10);
+
+		SELECT @MaChuyenTau = MaChuyenTau
+		FROM PHAN_CONG_CHUYEN_TAU
+		WHERE MaPhanCong = @MaPhanCong
+
+
+		select @NgayXuatPhat = cast (min(DuKienXuatPhat) as date)
+		from THOI_GIAN_CHUYEN_TAU
+		where MaChuyenTau = @MaChuyenTau
+
+		if cast(getdate() as date) >= dateadd(day, -2, @NgayXuatPhat)
+		begin
+			raiserror (N'Lỗi: Đơn nghỉ phép phải gửi trước ngày xuất phát 2 ngày.', 16, 1);  
+		end
 
         COMMIT TRANSACTION;
         PRINT N'Gửi đơn nghỉ phép thành công.';
@@ -48,4 +67,4 @@ BEGIN
     END CATCH
 END;
 GO
---exec sp_GuiDonNghiPhep 'PC08', 'NV05', N'Nghỉ việc gia đình'
+exec sp_GuiDonNghiPhep 'PC04', 'NV05', N'Nghỉ việc gia đình'

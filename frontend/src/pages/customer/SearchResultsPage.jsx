@@ -193,7 +193,8 @@ const SearchResultsPage = () => {
         // Format giờ
         gioDi: formatTimeOnly(selectedTrain.GioKhoiHanh),
         gioDen: formatTimeOnly(selectedTrain.GioDen),
-        thoiGianChay: calculateDuration(selectedTrain.GioKhoiHanh, selectedTrain.GioDen)
+        thoiGianChay: calculateDuration(selectedTrain.GioKhoiHanh, selectedTrain.GioDen),
+        ngayDi: new Date(selectedTrain.GioKhoiHanh).toLocaleDateString('vi-VN')
     };
 
     const targetPath = isExchange ? `/exchange/seats/${tripId}` : `/booking/seats/${tripId}`;
