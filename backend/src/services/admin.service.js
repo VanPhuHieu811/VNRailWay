@@ -23,8 +23,8 @@ const adminService = {
             request.input('NgayKhoiHanh', sql.DateTime, data.ngayKhoiHanh);
 
             // Execute SP
-            // const result = await request.execute('sp_ThemMoiChuyen');
-            const result = await request.execute('sp_ThemMoiChuyen_DeadlockDemo'); // DEMO DEADLOCK
+            const result = await request.execute('sp_ThemMoiChuyen');
+            //const result = await request.execute('sp_ThemMoiChuyen_DeadlockDemo'); // DEMO DEADLOCK
 
             return {
                 success: true,
