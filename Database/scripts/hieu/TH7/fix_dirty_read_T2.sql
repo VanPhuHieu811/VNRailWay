@@ -41,3 +41,8 @@ BEGIN
     ORDER BY lt.GioKhoiHanhDauTien ASC;
 END;
 GO
+
+EXEC sp_LayLichLamViecNhanVien 
+    @MaNV = 'NV001',
+    @TuNgay = '2026-01-01',
+    @DenNgay = '2026-12-31';

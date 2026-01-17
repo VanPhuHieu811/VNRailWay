@@ -15,5 +15,3 @@ BEGIN
     WHERE MaChuyenTau = @MaChuyenTau AND MaGaTau = @MaGaTau;
 END
 GO
-
-EXEC sp_CapNhatTGThucTe 'CT001', 'GA05', '2024-06-01 10:15:00', '2024-06-01 10:25:00';

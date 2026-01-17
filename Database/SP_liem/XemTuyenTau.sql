@@ -24,6 +24,3 @@ BEGIN
         TT.MaTuyenTau, DS.ThuTu;
 END;
 GO
-
-EXEC sp_ChiTietTuyenTau
-	@MaTuyenTau = 'TT01'

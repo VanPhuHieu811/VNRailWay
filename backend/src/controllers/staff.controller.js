@@ -215,7 +215,6 @@ export const postAssignment = async (req, res) => {
 export const getAvailableStaffList = async (req, res) => {
   try {
     const { maChuyenTau, loaiNV } = req.body;
-
     if (!maChuyenTau || !loaiNV) {
       return res.status(400).json({ 
         success: false, 

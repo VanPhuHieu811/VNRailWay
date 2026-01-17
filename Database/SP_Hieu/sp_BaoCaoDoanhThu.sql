@@ -128,5 +128,3 @@ BEGIN
     DROP TABLE #CurrentStats;
 END;
 GO
-
-EXEC sp_BaoCaoDoanhThu @Type = 'month', @Thang = 12, @Nam = 2025;

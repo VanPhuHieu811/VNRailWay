@@ -31,5 +31,3 @@ BEGIN
 END;
 GO
 
-EXEC sp_LaySoDoGhe
-	@MaChuyenTau = 'CT004'

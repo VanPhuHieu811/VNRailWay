@@ -61,5 +61,4 @@ BEGIN
 END
 GO
 
-EXEC sp_LayChiTietPC 'CT001';
 

@@ -194,9 +194,9 @@ const TrainScheduling = () => {
             }));
 
             const [resDrivers, resManagers, resStaffs] = await Promise.all([
-                getAvailableStaffApi(trip.id, 'Nhân viên phụ trách lái'),
-                getAvailableStaffApi(trip.id, 'Nhân viên trưởng'),
-                getAvailableStaffApi(trip.id, 'Nhân viên phụ trách toa')
+                getAvailableStaffApi(trip.id, 'Lái tàu'),
+                getAvailableStaffApi(trip.id, 'Lái tàu'),
+                getAvailableStaffApi(trip.id, 'Toa tàu')
             ]);
 
             if (resDrivers.success) setAvailableDrivers(resDrivers.data);
