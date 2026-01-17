@@ -1,4 +1,5 @@
 ﻿--sp3: API3 gui don nghi phep (TRANH CHAP)
+
 GO
 CREATE OR ALTER PROCEDURE sp_GuiDonNghiPhep
     @MaPhanCong VARCHAR(10),

@@ -639,27 +639,72 @@ const LeaveRequestManagement = () => {
          requests.length === 0 ? <div className="text-center py-10 text-gray-400">Không có đơn nào.</div> : (
           <div className="space-y-4">
             {requests.map((req) => (
-              <div key={req.id} className="p-5 rounded-xl border bg-white border-gray-200 hover:shadow-md transition-all">
+              <div 
+                key={req.id} 
+                className={`p-5 rounded-xl border transition-all ${
+                  req.status === 'approved' ? 'bg-green-50 border-green-200' :
+                  req.status === 'rejected' ? 'bg-red-50 border-red-200' :
+                  'bg-white border-gray-200 hover:shadow-md'
+                }`}
+              >
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   
                   {/* Info Section */}
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-bold shrink-0">
-                      {req.employeeName?.charAt(0)}
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold shrink-0 ${
+                      req.status === 'pending' ? 'bg-blue-100 text-blue-600' :
+                      req.status === 'approved' ? 'bg-green-100 text-green-600' : 
+                      'bg-red-100 text-red-600'
+                    }`}>
+                      {req.employeeName?.charAt(0) || '?'}
                     </div>
                     <div className="w-full">
-                      <h3 className="font-bold text-gray-800 text-lg">{req.employeeName}</h3>
-                      <p className="text-sm text-gray-500 mb-2">{req.role} - {req.employeeId}</p>
+                      <div className="flex flex-wrap items-center gap-2 mb-1">
+                        <h3 className="font-bold text-gray-800 text-lg">{req.employeeName}</h3>
+                        <span className={`px-2 py-0.5 text-xs rounded-full font-bold ${
+                          req.status === 'pending' ? 'bg-orange-100 text-orange-700' :
+                          req.status === 'approved' ? 'bg-green-100 text-green-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>
+                          {req.status === 'pending' ? 'Chờ duyệt' :
+                           req.status === 'approved' ? 'Đã chấp nhận' : 
+                           'Đã từ chối'}
+                        </span>
+                      </div>
+                      
+                      <p className="text-sm text-gray-500 mb-2">{req.role} - Mã NV: {req.employeeId}</p>
                       
                       <div className="flex flex-col gap-2 text-sm text-gray-700 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                        <span className="flex items-center gap-2"><MapPin className="w-4 h-4 text-blue-400" /> Tàu: <b>{req.trainCode}</b></span>
-                        <span className="flex items-center gap-2"><Calendar className="w-4 h-4 text-blue-400" /> Ngày: <b>{req.date}</b></span>
-                        <div className="mt-1 pt-2 border-t border-gray-200"><span className="font-semibold">Lý do:</span> {req.reason}</div>
+                        <span className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-blue-400" /> 
+                          Tàu: <b>{req.trainCode}{req.carriage ? ` - ${req.carriage}` : ''}</b>
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-blue-400" /> 
+                          Ngày: <b>{new Date(req.date).toLocaleDateString('vi-VN')}</b>
+                        </span>
+                        {req.shift && (
+                          <span className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-blue-400" /> 
+                            Ca: <b>{req.shift}</b>
+                          </span>
+                        )}
+                        <div className="mt-1 pt-2 border-t border-gray-200">
+                          <span className="font-semibold">Lý do:</span> {req.reason}
+                        </div>
                       </div>
+
+                      {/* Replacement Info (History tab) */}
+                      {req.status === 'approved' && req.replacement && (
+                        <div className="mt-3 text-sm text-green-700 flex items-center gap-2 bg-green-100/50 p-2 rounded border border-green-100">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Người thay thế: <b>{req.replacement}</b></span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  {/* BUTTON GROUP */}
+                  {/* BUTTON GROUP - Only for Pending */}
                   {activeTab === 'pending' && (
                     <div className="flex flex-col gap-2 shrink-0 min-w-[200px]">
                       
@@ -731,7 +776,6 @@ const LeaveRequestManagement = () => {
         </div>
       )}
 
-      {/* --- MODAL TỪ CHỐI (GIỮ NGUYÊN) --- */}
       {rejectModal.open && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg">
