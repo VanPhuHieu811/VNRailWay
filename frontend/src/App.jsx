@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { BookingProvider } from './context/BookingContext';
+
 // --- IMPORT CÁC TRANG ---
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -75,69 +75,67 @@ const EmployeeHomeRedirect = () => {
 
 function App() {
   return (
-    <BookingProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-          {/* --- KHÁCH HÀNG --- */}
-          <Route path="/customer/dashboard" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
-          <Route path="/my-tickets" element={<PrivateRoute><MyTicketsPage /></PrivateRoute>} />
-          <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+        {/* --- KHÁCH HÀNG --- */}
+        <Route path="/customer/dashboard" element={<PrivateRoute><CustomerDashboard /></PrivateRoute>} />
+        <Route path="/my-tickets" element={<PrivateRoute><MyTicketsPage /></PrivateRoute>} />
+        <Route path="/profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+        
+        {/* Luồng Đặt vé */}
+        <Route path="/booking/search-results" element={<PrivateRoute><SearchResultsPage /></PrivateRoute>} />
+        <Route path="/booking/seats/:tripId" element={<PrivateRoute><SeatSelectionPage /></PrivateRoute>} />
+        <Route path="/booking/passengers" element={<PrivateRoute><PassengerInfoPage /></PrivateRoute>} />
+        <Route path="/booking/payment" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
+        <Route path="/booking/success" element={<PrivateRoute><BookingSuccessPage /></PrivateRoute>} />
+
+        {/* Luồng Đổi Vé */}
+        <Route path="/exchange/select-seats" element={<PrivateRoute><ExchangeSelectSeatsPage /></PrivateRoute>} />
+        <Route path="/exchange/search" element={<PrivateRoute><ExchangeSearchPage /></PrivateRoute>} />
+        <Route path="/exchange/seats/:tripId" element={<PrivateRoute><SeatSelectionPage /></PrivateRoute>} />
+        <Route path="/exchange/confirm" element={<PrivateRoute><ExchangeConfirmPage /></PrivateRoute>} />
+        <Route path="/exchange/success" element={<PrivateRoute><ExchangeSuccessPage /></PrivateRoute>} />
+
+        {/* --- NHÂN VIÊN --- */}
+        <Route path="/employee" element={<EmployeeLayout />}>
+          <Route index element={<EmployeeHomeRedirect />} />
+          <Route path="salary" element={<EmployeeSalary />} />
+          <Route path="profile" element={<EmployeeProfilePage />} />
+          <Route path="schedule" element={<EmployeeSchedulePage />} />
+          <Route path="leave-request" element={<LeaveRequestPage />} />
+
+          {/* SALES ROLES */}
+          <Route path="sales/history" element={<CustomerLookupPage />} />
+          <Route path="sales/exchange" element={<TicketExchangePage />} />
+
+          <Route path="sales/counter" element={<SalesCounterPage />} /> 
+          <Route path="sales/seats/:tripId" element={<SalesSeatSelectionPage />} />
+          <Route path="sales/passengers" element={<SalesPassengerInfoPage />} />
+          <Route path="sales/payment" element={<SalesPaymentPage />} />
+          <Route path="sales/success" element={<SalesSuccessPage />} />
           
-          {/* Luồng Đặt vé */}
-          <Route path="/booking/search-results" element={<PrivateRoute><SearchResultsPage /></PrivateRoute>} />
-          <Route path="/booking/seats/:tripId" element={<PrivateRoute><SeatSelectionPage /></PrivateRoute>} />
-          <Route path="/booking/passengers" element={<PrivateRoute><PassengerInfoPage /></PrivateRoute>} />
-          <Route path="/booking/payment" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
-          <Route path="/booking/success" element={<PrivateRoute><BookingSuccessPage /></PrivateRoute>} />
+          <Route path="sales/exchange/search" element={<SalesExchangeSearchPage />} />
+          <Route path="sales/exchange/seats/:tripId" element={<SalesExchangeSeatSelectionPage />} />
+          <Route path="sales/exchange/confirm" element={<SalesExchangeConfirmPage />} />
+          <Route path="sales/exchange/success" element={<SalesExchangeSuccessPage />} />
 
-          {/* Luồng Đổi Vé */}
-          <Route path="/exchange/select-seats" element={<PrivateRoute><ExchangeSelectSeatsPage /></PrivateRoute>} />
-          <Route path="/exchange/search" element={<PrivateRoute><ExchangeSearchPage /></PrivateRoute>} />
-          <Route path="/exchange/seats/:tripId" element={<PrivateRoute><SeatSelectionPage /></PrivateRoute>} />
-          <Route path="/exchange/confirm" element={<PrivateRoute><ExchangeConfirmPage /></PrivateRoute>} />
-          <Route path="/exchange/success" element={<PrivateRoute><ExchangeSuccessPage /></PrivateRoute>} />
-
-          {/* --- NHÂN VIÊN --- */}
-          <Route path="/employee" element={<EmployeeLayout />}>
-            <Route index element={<EmployeeHomeRedirect />} />
-            <Route path="salary" element={<EmployeeSalary />} />
-            <Route path="profile" element={<EmployeeProfilePage />} />
-            <Route path="schedule" element={<EmployeeSchedulePage />} />
-            <Route path="leave-request" element={<LeaveRequestPage />} />
-
-            {/* SALES ROLES */}
-            <Route path="sales/history" element={<CustomerLookupPage />} />
-            <Route path="sales/exchange" element={<TicketExchangePage />} />
-
-            <Route path="sales/counter" element={<SalesCounterPage />} /> 
-            <Route path="sales/seats/:tripId" element={<SalesSeatSelectionPage />} />
-            <Route path="sales/passengers" element={<SalesPassengerInfoPage />} />
-            <Route path="sales/payment" element={<SalesPaymentPage />} />
-            <Route path="sales/success" element={<SalesSuccessPage />} />
-            
-            <Route path="sales/exchange/search" element={<SalesExchangeSearchPage />} />
-            <Route path="sales/exchange/seats/:tripId" element={<SalesExchangeSeatSelectionPage />} />
-            <Route path="sales/exchange/confirm" element={<SalesExchangeConfirmPage />} />
-            <Route path="sales/exchange/success" element={<SalesExchangeSuccessPage />} />
-
-            {/* MANAGER ROLES */}
-            <Route path="manager/revenue" element={<RevenueReportPage />} />
-            <Route path="manager/staff" element={<EmployeeManagement />} />
-            <Route path="manager/approve-leave" element={<LeaveRequestManagement />} />
-            <Route path="manager/trips" element={<TrainScheduling />} />
-            <Route path="manager/discounts" element={<PromotionManagement />} />
-            {/* 👇 CẬP NHẬT ROUTE QUẢN LÝ TÀU */}
-            <Route path="manager/trains" element={<TrainManagementPage />} />
-            <Route path="manager/routes-stations" element={<RouteStationManagement />} />
-            <Route path="manager/pricing" element={<TicketPriceManagement />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </BookingProvider>
+          {/* MANAGER ROLES */}
+          <Route path="manager/revenue" element={<RevenueReportPage />} />
+          <Route path="manager/staff" element={<EmployeeManagement />} />
+          <Route path="manager/approve-leave" element={<LeaveRequestManagement />} />
+          <Route path="manager/trips" element={<TrainScheduling />} />
+          <Route path="manager/discounts" element={<PromotionManagement />} />
+          {/* 👇 CẬP NHẬT ROUTE QUẢN LÝ TÀU */}
+          <Route path="manager/trains" element={<TrainManagementPage />} />
+          <Route path="manager/routes-stations" element={<RouteStationManagement />} />
+          <Route path="manager/pricing" element={<TicketPriceManagement />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
