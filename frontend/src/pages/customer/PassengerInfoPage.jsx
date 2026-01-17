@@ -173,7 +173,7 @@ const fetchUserData = async () => {
             {passengers.map((passenger, index) => (
                 <div key={passenger.seatId} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 relative mb-4">
                     <div className="absolute top-4 right-4 bg-blue-50 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-100">
-                        {passenger.tenToa} - Ghế {passenger.seatNum}
+                        {passenger.loaiToa} - {passenger.maViTri}
                     </div>
                     <h3 className="font-bold text-gray-700 mb-4 border-b pb-2">Hành khách {index + 1}</h3>
                     
@@ -218,7 +218,7 @@ const fetchUserData = async () => {
                 <div key={seat.id} className="selected-seat-tag">
                   <div className="flex items-center gap-2">
                     <Ticket size={16} className="text-blue-500"/>
-                    <span className="font-semibold text-slate-700">{seat.tenToa} - Ghế {seat.seatNum}</span>
+                    <span className="font-semibold text-slate-700">{seat.loaiToa} - {seat.maViTri}</span>
                   </div>
                   <span className="text-blue-600 font-bold">{seat.price.toLocaleString()}đ</span>
                 </div>

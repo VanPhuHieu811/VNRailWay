@@ -217,9 +217,9 @@ processPayment: async (paymentData) => {
 
                 // Tính giá
                 let phanTramGiam = 0;
-                if (p.DoiTuong === 'Sinh viên') phanTramGiam = 0.1; 
-                else if (p.DoiTuong === 'Trẻ em') phanTramGiam = 0.25;
-                else if (p.DoiTuong === 'Người cao tuổi') phanTramGiam = 0.15;
+                // if (p.DoiTuong === 'Sinh viên') phanTramGiam = 0.1; 
+                // else if (p.DoiTuong === 'Trẻ em') phanTramGiam = 0.25;
+                // else if (p.DoiTuong === 'Người cao tuổi') phanTramGiam = 0.15;
                 
                 const giaGoc = p.GiaCoBan;
                 const soTienGiam = giaGoc * phanTramGiam;
@@ -232,23 +232,23 @@ processPayment: async (paymentData) => {
                 reqVe.input('MaChuyenTau', sql.VarChar(20), paymentData.tripId);
                 reqVe.input('MaViTri', sql.VarChar(20), p.MaViTri);
                 reqVe.input('GiaThuc', sql.Decimal(18, 0), giaThuc);
-                reqVe.input('SoTienGiam', sql.Decimal(18, 0), soTienGiam);
                 // [QUAN TRỌNG]: Gán vé cho đúng Mã Khách Hàng của Người Đi
                 reqVe.input('MaKhachHang', sql.VarChar(20), maKhachHangCuaNguoiDi); 
                 reqVe.input('GaXuatPhat', sql.VarChar(20), paymentData.gaDi);
                 reqVe.input('GaDen', sql.VarChar(20), paymentData.gaDen);
+                reqVe.input('MaUuDai', sql.VarChar(20), p.MaUuDai);
 
                 await reqVe.query(`
                     INSERT INTO VE_TAU (
                         MaVe, MaKhachHang, MaDatVe, MaChuyenTau, 
                         GaXuatPhat, GaDen, MaViTri, 
-                        GiaThuc, SoTienGiam, 
+                        GiaThuc, MaUuDai,
                         ThoiGianXuatVe, TrangThai
                     )
                     VALUES (
                         @MaVe, @MaKhachHang, @MaDatVe, @MaChuyenTau,
                         @GaXuatPhat, @GaDen, @MaViTri, 
-                        @GiaThuc, @SoTienGiam,
+                        @GiaThuc, @MaUuDai,
                         GETDATE(), N'Đã đặt'
                     )
                 `);
