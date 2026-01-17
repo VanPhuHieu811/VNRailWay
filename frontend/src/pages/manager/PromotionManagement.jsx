@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, Plus, Tag, Calendar, 
-  Power, Trash2, Edit, Percent, X, Filter, Info 
+  Power, Trash2, Edit, Percent, X, Filter, Info,
+  Loader2 // <-- Đã thêm icon Loader2
 } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -12,7 +13,6 @@ import {
   createPromotion, 
   updatePromotion 
 } from '../../services/promotionApi.js';
-
 
 const PromotionManagement = () => {
   // --- STATE ---
@@ -25,6 +25,7 @@ const PromotionManagement = () => {
   const [hasExistingEndDate, setHasExistingEndDate] = useState(false); 
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // <-- State mới để quản lý loading khi submit
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('default');
 
@@ -183,8 +184,7 @@ const PromotionManagement = () => {
     const start = new Date(formData.startDate);
     start.setHours(0,0,0,0);
 
-    // 3. Start Date Logic: Must be Today or Future (Only for Create Mode)
-    // In Edit mode, start date is locked, so we skip this check to avoid errors on old promotions.
+    // 3. Start Date Logic
     if (!isEditMode) {
         if (start < today) {
             toast.error("Ngày bắt đầu không được ở trong quá khứ");
@@ -192,7 +192,7 @@ const PromotionManagement = () => {
         }
     }
 
-    // 4. End Date Logic: Must be > Start Date
+    // 4. End Date Logic
     if (formData.endDate) {
         const end = new Date(formData.endDate);
         end.setHours(0,0,0,0);
@@ -207,6 +207,9 @@ const PromotionManagement = () => {
             return;
         }
     }
+
+    // --- BẮT ĐẦU LOGIC SUBMIT CÓ LOADING ---
+    setIsSubmitting(true);
 
     try {
       if (isEditMode) {
@@ -240,6 +243,8 @@ const PromotionManagement = () => {
     } catch (error) {
       console.error(error);
       toast.error(isEditMode ? "Lỗi khi cập nhật" : "Lỗi khi tạo mới");
+    } finally {
+      setIsSubmitting(false); // Tắt loading dù thành công hay thất bại
     }
   };
 
@@ -432,7 +437,9 @@ const PromotionManagement = () => {
                     <h2 className="text-xl font-bold text-gray-800">
                         {isEditMode ? 'Cập nhật ưu đãi' : 'Tạo ưu đãi mới'}
                     </h2>
-                    <button onClick={() => setIsModalOpen(false)}><X className="text-gray-400 hover:text-gray-600"/></button>
+                    <button onClick={() => !isSubmitting && setIsModalOpen(false)} disabled={isSubmitting}>
+                        <X className={`text-gray-400 hover:text-gray-600 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}/>
+                    </button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {/* Name */}
@@ -444,6 +451,7 @@ const PromotionManagement = () => {
                         placeholder="VD: Khách hàng VIP" 
                         value={formData.name} 
                         onChange={e => setFormData({...formData, name: e.target.value})} 
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -456,6 +464,7 @@ const PromotionManagement = () => {
                         placeholder="VD: Giảm giá trọn đời cho thẻ VIP" 
                         value={formData.description} 
                         onChange={e => setFormData({...formData, description: e.target.value})} 
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -472,21 +481,22 @@ const PromotionManagement = () => {
                             placeholder="VD: 1" 
                             value={formData.value} 
                             onChange={e => setFormData({...formData, value: e.target.value})} 
+                            disabled={isSubmitting}
                         />
                       </div>
                       
                       {/* Start Date */}
                       <div>
-                         <label className="block text-sm font-medium mb-1 text-gray-700">
+                          <label className="block text-sm font-medium mb-1 text-gray-700">
                              Ngày bắt đầu {isEditMode && "(Không thể thay đổi)"}
-                         </label>
-                         <input 
+                          </label>
+                          <input 
                             required 
                             type="date"
-                            min={!isEditMode ? getTodayString() : undefined} // UI Constraint: Cannot pick past dates
-                            disabled={isEditMode} 
+                            min={!isEditMode ? getTodayString() : undefined}
+                            disabled={isEditMode || isSubmitting} 
                             className={`border border-gray-300 p-2 rounded-lg w-full focus:ring-2 ring-blue-500 outline-none ${
-                                isEditMode ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                                (isEditMode || isSubmitting) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                             }`}
                             value={formData.startDate} 
                             onChange={e => setFormData({...formData, startDate: e.target.value})} 
@@ -496,28 +506,47 @@ const PromotionManagement = () => {
 
                     {/* End Date */}
                     <div>
-                         <label className="block text-sm font-medium mb-1 text-gray-700">
+                          <label className="block text-sm font-medium mb-1 text-gray-700">
                              Ngày kết thúc {isEditMode && hasExistingEndDate && "(Không thể thay đổi)"}
-                         </label>
-                         <input 
+                          </label>
+                          <input 
                             type="date" 
-                            // UI Constraint: Cannot pick date before start date
                             min={formData.startDate || getTodayString()}
-                            disabled={isEditMode && hasExistingEndDate}
+                            disabled={(isEditMode && hasExistingEndDate) || isSubmitting}
                             className={`border border-gray-300 p-2 rounded-lg w-full focus:ring-2 ring-blue-500 outline-none ${
-                                isEditMode && hasExistingEndDate ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+                                ((isEditMode && hasExistingEndDate) || isSubmitting) ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
                             }`}
                             value={formData.endDate} 
                             onChange={e => setFormData({...formData, endDate: e.target.value})} 
-                         />
-                         {!isEditMode && <p className="text-xs text-gray-500 mt-1">Để trống nếu không có thời hạn.</p>}
-                         {isEditMode && !hasExistingEndDate && <p className="text-xs text-blue-500 mt-1">Bạn có thể thiết lập ngày kết thúc ngay bây giờ.</p>}
+                          />
+                          {!isEditMode && <p className="text-xs text-gray-500 mt-1">Để trống nếu không có thời hạn.</p>}
+                          {isEditMode && !hasExistingEndDate && <p className="text-xs text-blue-500 mt-1">Bạn có thể thiết lập ngày kết thúc ngay bây giờ.</p>}
                     </div>
 
+                    {/* BUTTONS WITH LOADING STATE */}
                     <div className="flex gap-3 mt-6">
-                        <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Hủy bỏ</button>
-                        <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors">
-                            {isEditMode ? 'Lưu thay đổi' : 'Tạo mới'}
+                        <button 
+                            type="button" 
+                            onClick={() => setIsModalOpen(false)} 
+                            disabled={isSubmitting}
+                            className="flex-1 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Hủy bỏ
+                        </button>
+                        
+                        <button 
+                            type="submit" 
+                            disabled={isSubmitting}
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg font-medium transition-colors flex justify-center items-center disabled:bg-blue-400 disabled:cursor-not-allowed"
+                        >
+                            {isSubmitting ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                                    Đang lưu...
+                                </>
+                            ) : (
+                                isEditMode ? 'Lưu thay đổi' : 'Tạo mới'
+                            )}
                         </button>
                     </div>
                 </form>

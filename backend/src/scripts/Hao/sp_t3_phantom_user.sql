@@ -3,18 +3,16 @@ USE VNRAILWAY
 GO
 
 CREATE OR ALTER PROCEDURE sp_XemDSChuyenTau
-    @NgayDi DATE,          -- Ngày khách muốn đi (tại Ga Đi)
-    @GaDi VARCHAR(20),     -- Mã Ga Đi (VD: GA01, GA08...)
-    @GaDen VARCHAR(20),    -- Mã Ga Đến (VD: GA12...)
-    @GioKhoiHanh TIME NULL -- (Tùy chọn) Giờ cụ thể
+    @NgayDi DATE,         
+    @GaDi VARCHAR(20),     
+    @GaDen VARCHAR(20),    
+    @GioKhoiHanh TIME NULL
 AS
 BEGIN
-    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ; -- Hoặc READ COMMITTED tùy bạn
+    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ; 
     BEGIN TRANSACTION;
 
-    -- =======================================================
     -- LẦN ĐỌC 1: TÌM KIẾM CHUYẾN TÀU PHÙ HỢP
-    -- =======================================================
     SELECT 
         ct.MaChuyenTau, 
         ct.MaDoanTau, 
@@ -36,11 +34,11 @@ BEGIN
     
     -- 1. JOIN ĐỂ TÌM GA ĐI (Quan trọng: Lọc ngày tại đúng ga này)
     JOIN THOI_GIAN_CHUYEN_TAU T_DI ON T_DI.MaChuyenTau = ct.MaChuyenTau
-    JOIN GA_TAU gd ON gd.MaGaTau = T_DI.MaGaTau -- Lấy tên ga đi
+    JOIN GA_TAU gd ON gd.MaGaTau = T_DI.MaGaTau 
 
     -- 2. JOIN ĐỂ TÌM GA ĐẾN (Quan trọng: Phải cùng chuyến với ga đi)
     JOIN THOI_GIAN_CHUYEN_TAU T_DEN ON T_DEN.MaChuyenTau = ct.MaChuyenTau
-    JOIN GA_TAU gc ON gc.MaGaTau = T_DEN.MaGaTau -- Lấy tên ga đến
+    JOIN GA_TAU gc ON gc.MaGaTau = T_DEN.MaGaTau
 
     -- 3. JOIN ĐỂ TÍNH GHẾ TRỐNG (Logic cũ)
     JOIN TOA_TAU ttau ON ttau.MaDoanTau = dt.MaDoanTau
@@ -49,9 +47,7 @@ BEGIN
                         AND vt.MaViTri = vt2.MaViTri
                         AND (vt.TrangThai = N'Đã đặt' OR vt.TrangThai = N'Giữ chỗ')
 
-    -- =======================================================
-    -- ĐIỀU KIỆN LỌC (WHERE)
-    -- =======================================================
+    -- ĐIỀU KIỆN LỌC 
     WHERE 
         ct.TrangThai = N'Chuẩn bị'
         
@@ -77,14 +73,8 @@ BEGIN
         
     HAVING (COUNT(vt2.MaViTri) - COUNT(vt.MaVe)) > 0;
 
-    -- =======================================================
-    -- GIẢ LẬP ĐỘ TRỄ ĐỂ TEST PHANTOM READ
-    -- =======================================================
     WAITFOR DELAY '00:00:10';
 
-    -- =======================================================
-    -- LẦN ĐỌC 2 (COPY Y HỆT LẦN 1)
-    -- =======================================================
     SELECT 
         ct.MaChuyenTau, ct.MaDoanTau, dt.TenTau,
         gd.TenGa AS GaXuatPhat,

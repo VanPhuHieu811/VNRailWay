@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, User, Loader2, Train, Tag } from 'lucide-react';
+import { ArrowLeft, CheckCircle, User, Loader2, Train, Tag, AlertTriangle, X } from 'lucide-react'; // Thêm icon AlertTriangle, X
 import CustomerNavbar from '../../components/layout/CustomerNavbar';
 import BookingSteps from '../../components/common/BookingSteps';
-import { bookingApi } from '../../services/bookingApi'; // 
+import { bookingApi } from '../../services/bookingApi'; 
 import '../../styles/pages/BookingFlow.css';
 
 const PaymentPage = ({ isEmployee = false }) => {
@@ -17,44 +17,43 @@ const PaymentPage = ({ isEmployee = false }) => {
   const [passengerList, setPassengerList] = useState(initialPassengers || []);
   const [isRecalculating, setIsRecalculating] = useState(false);
   
-  // [MỚI] State lưu danh sách ưu đãi từ API
+  // State lưu danh sách ưu đãi từ API
   const [promotions, setPromotions] = useState([]);
   const [isLoadingPromos, setIsLoadingPromos] = useState(true);
 
-  const tripInfo = location.state?.tripInfo || LICH_TRINH_DB.find(t => t.id === tripId) || {
+  // [MỚI] State quản lý thông báo cảnh báo (thay cho alert)
+  const [notification, setNotification] = useState(null); 
+
+  // Thông tin chuyến tàu
+  const tripInfo = location.state?.tripInfo || {
     tenTau: '---', gaDi: '---', gaDen: '---', gioDi: '--:--', gioDen: '--:--'
   };
 
   const [paymentMethod, setPaymentMethod] = useState(isEmployee ? 'cash' : 'qr');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // --- [MỚI] USE EFFECT: GỌI API LẤY ƯU ĐÃI ---
+  // --- USE EFFECT: GỌI API LẤY DANH SÁCH ƯU ĐÃI ---
   useEffect(() => {
     const fetchPromotions = async () => {
       try {
         const res = await bookingApi.getPromotions();
-        if (res.success) {
-          // Lưu ý: Tùy vào service trả về recordsets (mảng lồng nhau) hay recordset
-          // Ta kiểm tra an toàn để lấy mảng dữ liệu
-          let rawData = res.data;
-          if (Array.isArray(res.data) && Array.isArray(res.data[0])) {
-             rawData = res.data[0]; // Trường hợp trả về recordsets
-          }
-
-          // 1. Lọc các ưu đãi đang hoạt động
-          const activePromos = rawData.filter(p => p.TrangThai === 'Đang áp dụng');
-
-          // 2. Thêm tùy chọn mặc định "Vé thường"
-          const formattedPromos = [
-            { MaUuDai: '', LoaiUuDai: 'Vé thường (Không giảm)', PhanTram: 0 },
-            ...activePromos
-          ];
-          
-          setPromotions(formattedPromos);
+        const rawData = res.success ? res.data : (res.data?.data || res.data || []);
+        
+        let processedData = rawData;
+        if (Array.isArray(rawData) && Array.isArray(rawData[0])) {
+            processedData = rawData[0]; 
         }
+
+        const activePromos = Array.isArray(processedData) ? processedData.filter(p => p.TrangThai === 'Đang áp dụng') : [];
+
+        const formattedPromos = [
+          { MaUuDai: '', LoaiUuDai: 'Vé thường (Không giảm)', PhanTram: 0 },
+          ...activePromos
+        ];
+        
+        setPromotions(formattedPromos);
       } catch (error) {
         console.error("Lỗi lấy danh sách ưu đãi:", error);
-        // Fallback nếu lỗi API
         setPromotions([{ MaUuDai: '', LoaiUuDai: 'Vé thường (Không giảm)', PhanTram: 0 }]);
       } finally {
         setIsLoadingPromos(false);
@@ -64,38 +63,86 @@ const PaymentPage = ({ isEmployee = false }) => {
     fetchPromotions();
   }, []);
 
-  // --- TÍNH TỔNG TIỀN ĐỘNG ---
+  // --- TỰ ĐỘNG TẮT THÔNG BÁO SAU 5 GIÂY ---
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 5000); // 5 giây sau tự mất
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
   const dynamicTotalPrice = passengerList.reduce((sum, p) => sum + (p.price || 0), 0);
 
-  // --- HÀM XỬ LÝ CHỌN ƯU ĐÃI ---
+  // --- [LOGIC CHÍNH] HÀM XỬ LÝ CHỌN ƯU ĐÃI ---
   const handlePromotionChange = async (index, promoCode) => {
     setIsRecalculating(true);
+    setNotification(null); // Reset thông báo cũ khi thao tác mới
     const currentPassenger = passengerList[index];
 
+    // TRƯỜNG HỢP 1: Bỏ chọn mã
+    if (!promoCode) {
+        const updatedList = [...passengerList];
+        updatedList[index] = {
+            ...currentPassenger,
+            price: currentPassenger.originalPrice || currentPassenger.price,
+            discount: 0,
+            promotionCode: ''
+        };
+        setPassengerList(updatedList);
+        setIsRecalculating(false);
+        return;
+    }
+
+    // TRƯỜNG HỢP 2: Áp dụng mã -> Gọi API Demo
     try {
-        const res = await bookingApi.calculatePrice({
-            tripId: tripId,
-            fromStationId: tripInfo.maGaDi, 
-            toStationId: tripInfo.maGaDen,
-            seatId: currentPassenger.maViTri,
-            promotionCode: promoCode || null
-        });
+        const rawRes = await bookingApi.applyPromotion({ maUuDai: promoCode });
+        const res = rawRes.success ? rawRes : (rawRes.data || {});
 
         if (res.success) {
-            const priceData = res.data;
+            // [THAY ĐỔI QUAN TRỌNG]: Thay alert bằng setNotification
+            // Code sẽ KHÔNG DỪNG LẠI, nó sẽ chạy tiếp xuống dưới để cập nhật giá ngay lập tức
+            if (res.isUnrepeatableRead) {
+                setNotification({
+                    type: 'warning',
+                    message: res.message
+                });
+            }
+
+            // Cập nhật giá ngay lập tức (Không cần đợi user bấm OK)
+            const data = res.data || {};
+            const giaGoc = currentPassenger.originalPrice || currentPassenger.price;
+            
+            let phanTramMoi = data.phanTramMoi;
+            if (Array.isArray(phanTramMoi) && phanTramMoi.length > 0) {
+                 phanTramMoi = phanTramMoi[0].PhanTram;
+            }
+            phanTramMoi = Number(phanTramMoi) || 0;
+
+            const tienGiam = Math.round((giaGoc * phanTramMoi) / 100);
+            const giaMoi = giaGoc - tienGiam;
+
             const updatedList = [...passengerList];
             updatedList[index] = {
                 ...currentPassenger,
-                price: priceData.GiaThucTe,
-                originalPrice: priceData.GiaGoc,
-                discount: priceData.SoTienGiam,
+                price: giaMoi,      
+                originalPrice: giaGoc,
+                discount: tienGiam,
                 promotionCode: promoCode
             };
             setPassengerList(updatedList);
+
+        } else {
+            setNotification({
+                type: 'error',
+                message: "Lỗi áp dụng ưu đãi: " + (res.message || "Không xác định")
+            });
         }
     } catch (error) {
-        console.error("Lỗi tính lại giá:", error);
-        alert("Không thể áp dụng ưu đãi này. Vui lòng thử lại.");
+        console.error("Lỗi API Demo:", error);
+        const errorMsg = error.response?.data?.message || "Có lỗi xảy ra khi kết nối server.";
+        setNotification({ type: 'error', message: errorMsg });
     } finally {
         setIsRecalculating(false);
     }
@@ -116,9 +163,11 @@ const PaymentPage = ({ isEmployee = false }) => {
 
   const handleConfirmPayment = async () => {
     if (!passengerList || passengerList.length === 0) {
-        alert("Dữ liệu không hợp lệ."); return;
+        setNotification({ type: 'error', message: "Dữ liệu không hợp lệ." }); return;
     }
     setIsProcessing(true);
+    setNotification(null);
+
     try {
         const payload = {
             tripId,
@@ -144,12 +193,14 @@ const PaymentPage = ({ isEmployee = false }) => {
             gaDi: tripInfo.maGaDi,
             gaDen: tripInfo.maGaDen
         };
-        console.log("Payload gửi lên API:", payload);
-        const res = await bookingApi.submitPayment(payload);
+        
+        const rawRes = await bookingApi.submitPayment(payload);
+        const res = rawRes.success ? rawRes : (rawRes.data || {});
+
         if (res.success) {
             const basePath = isEmployee ? '/employee/sales' : '/booking';
-            const updatedPasengers=passengerList.map(p => ({
-                MaViTri: p.maViTri, // ID ghế trong DB
+            const updatedPasengers = passengerList.map(p => ({
+                MaViTri: p.maViTri, 
                 GiaCoBan: p.price,
                 DoiTuong: p.type || 'Người lớn',
                 HoTen: p.fullName,
@@ -158,7 +209,7 @@ const PaymentPage = ({ isEmployee = false }) => {
                 tenTau: tripInfo.tenTau,
                 loaiToa: p.loaiToa
             }));
-            // Chuyển sang trang Thành công kèm kết quả trả về
+            
             navigate(`${basePath}/success`, {
                 state: { 
                     resultData: res.data, 
@@ -169,11 +220,11 @@ const PaymentPage = ({ isEmployee = false }) => {
                 }
             });
         } else {
-            alert("Thanh toán thất bại: " + res.message);
+            setNotification({ type: 'error', message: "Thanh toán thất bại: " + (res.message || "Lỗi server") });
         }
     } catch (error) {
         console.error("Lỗi:", error);
-        alert("Lỗi kết nối server.");
+        setNotification({ type: 'error', message: "Lỗi kết nối server." });
     } finally {
         setIsProcessing(false); 
     }
@@ -185,8 +236,27 @@ const PaymentPage = ({ isEmployee = false }) => {
     <div className="booking-container" style={isEmployee ? {paddingTop: '20px'} : {}}>
       {!isEmployee && (<><CustomerNavbar /><BookingSteps currentStep={5} /></>)}
 
-      <div className="booking-content">
+      <div className="booking-content relative">
         <div onClick={() => navigate(-1)} className="btn-back"><ArrowLeft size={18} /> Quay lại</div>
+
+        {/* --- [MỚI] PHẦN HIỂN THỊ THÔNG BÁO (NOTIFICATION BANNER) --- */}
+        {notification && (
+            <div className={`
+                fixed top-20 right-5 z-50 max-w-md w-full shadow-lg rounded-lg p-4 flex items-start gap-3 border-l-4 animation-slide-in
+                ${notification.type === 'error' ? 'bg-red-50 border-red-500 text-red-700' : 'bg-yellow-50 border-yellow-500 text-yellow-800'}
+            `}>
+                {notification.type === 'error' ? <X className="shrink-0" size={20}/> : <AlertTriangle className="shrink-0" size={20}/>}
+                <div className="flex-1">
+                    <h4 className="font-bold text-sm uppercase mb-1">
+                        {notification.type === 'error' ? 'Lỗi' : 'Cảnh báo hệ thống'}
+                    </h4>
+                    <p className="text-sm">{notification.message}</p>
+                </div>
+                <button onClick={() => setNotification(null)} className="opacity-50 hover:opacity-100">
+                    <X size={16}/>
+                </button>
+            </div>
+        )}
 
         <div className="seat-layout-container">
           
@@ -257,7 +327,7 @@ const PaymentPage = ({ isEmployee = false }) => {
                             </div>
                         </div>
 
-                        {/* [MỚI] Dropdown chọn ưu đãi từ API */}
+                        {/* Dropdown chọn ưu đãi */}
                         <div className="bg-slate-50 p-3 rounded border border-slate-100 flex items-center gap-3">
                             <Tag size={16} className="text-blue-600 shrink-0"/>
                             <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Đối tượng ưu đãi:</label>

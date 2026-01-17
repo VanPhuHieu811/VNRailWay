@@ -74,3 +74,19 @@ export const updatePromotionService = async (maUuDai, updateData) => {
         throw error;
     }
 };
+
+export const getPromotionById = async (maUuDai) => {
+    try {
+        const pool = await getPool();
+        const result = await pool.request()
+            .input('MaUuDai', sql.VarChar(10), maUuDai)
+            .execute('sp_ApDungUuDai');
+        
+        return {
+            lan1: result.recordsets[0]?.[0], 
+            lan2: result.recordsets[1]?.[0]
+        };
+    } catch (error) {
+        throw error;
+    } 
+};
