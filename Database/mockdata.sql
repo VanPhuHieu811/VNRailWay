@@ -1,9 +1,6 @@
 USE VNRAILWAY;
 GO
-
--- =============================================
--- XÓA DỮ LIỆU CŨ (THEO THỨ TỰ FK)
--- =============================================
+-- Clear existing data
 DELETE FROM HOA_DON;
 DELETE FROM DOI_VE;
 DELETE FROM VE_TAU;
@@ -330,8 +327,9 @@ INSERT INTO THOI_GIAN_CHUYEN_TAU (MaChuyenTau, MaGaTau, DuKienXuatPhat, DuKienDe
 ('CT005', 'GA01', '2025-12-31 06:00', '2025-12-31 06:00', NULL, NULL),
 ('CT005', 'GA05', '2025-12-31 12:30', '2025-12-31 12:20', NULL, NULL),
 ('CT005', 'GA08', '2025-12-31 20:00', '2025-12-31 20:00', NULL, NULL),
-('CT006', 'GA01', '2026-01-02 07:00', '2026-01-02 07:00', NULL, NULL),
-('CT006', 'GA12', '2026-01-03 06:00', '2026-01-03 06:00', NULL, NULL);
+('CT006', 'GA01', '2026-01-17 07:00', '2026-01-17 05:00', NULL, NULL),
+('CT006', 'GA10', '2026-01-17 17:00', '2026-01-17 13:00', NULL, NULL),
+('CT006', 'GA12', '2026-01-17 21:00', '2026-01-17 19:00', NULL, NULL);
 GO
 
 -- =============================================
@@ -349,7 +347,8 @@ INSERT INTO PHAN_CONG_CHUYEN_TAU (MaPhanCong, MaNV, VaiTro, MaChuyenTau, MaToa, 
 ('PC009', 'NV008', N'Nhân viên trưởng', 'CT004', NULL, N'Nhận việc'),
 ('PC010', 'NV012', N'Nhân viên phụ trách toa', 'CT004', 'T02_01', N'Nhận việc'),
 ('PC011', 'NV004', N'Nhân viên phụ trách lái', 'CT005', NULL, N'Nhận việc'),
-('PC012', 'NV009', N'Nhân viên trưởng', 'CT005', NULL, N'Nhận việc');
+('PC012', 'NV009', N'Nhân viên trưởng', 'CT005', NULL, N'Nhận việc'),
+('PC013', 'NV007', N'Nhân viên phụ trách toa', 'CT006', 'T02_03', N'Nhận việc')
 GO
 
 -- =============================================
@@ -360,7 +359,7 @@ INSERT INTO DON_NGHI_PHEP (MaDon, MaPhanCong, NgayGui, LyDo, NVGuiDon, NVDuyetDo
 ('DNP002', 'PC007', '2025-12-27 09:00', N'Việc gia đình', 'NV011', 'NV001', 'NV008', N'Chấp nhận'),
 ('DNP003', 'PC008', '2025-12-28 10:00', N'Khám sức khỏe định kỳ', 'NV006', NULL, NULL, N'Đang chờ'),
 ('DNP004', 'PC010', '2025-12-28 14:00', N'Con ốm', 'NV012', 'NV001', NULL, N'Từ chối'),
-('DNP005', 'PC006', '2025-12-27 08:00', N'Đau ruột thừa', 'NV007', NULL, NULL, N'Đang chờ');
+('DNP005', 'PC013', '2026-01-13 08:00', N'Đau ruột thừa', 'NV007', NULL, NULL, N'Đang chờ');
 GO
 
 -- =============================================
@@ -453,6 +452,5 @@ INSERT INTO HOA_DON (MaHoaDon, MaDatVe, MaDoiVe, MaNVLap, ThoiGianThanhToan, Hin
 ('HD007', NULL, 'DV_01', 'NV002', '2025-12-28 09:10', N'Tại quầy', 129375);
 GO
 
-PRINT N'=== NẠP DỮ LIỆU MẪU HOÀN TẤT ===';
-PRINT N'Tổng: 25 bảng đã được nạp dữ liệu';
+PRINT N'Tạo dữ liệu mẫu thành công';
 GO
