@@ -93,3 +93,4 @@ export const getStaffScheduleService = async (staffId, tuNgay, denNgay) => {
 export const updateMyProfileService = async (data) => {
   return await client.put('/api/v1/staff/me', data);
 };
+

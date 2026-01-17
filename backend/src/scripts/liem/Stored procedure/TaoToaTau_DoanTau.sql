@@ -32,7 +32,7 @@ BEGIN
 
         -- Ngăn chặn race condition
         SELECT @MaDoanTauGenerate = 
-            'SE' + RIGHT('00' + CAST(ISNULL(MAX(CAST(SUBSTRING(MaDoanTau, 3, LEN(MaDoanTau)) AS INT)), 0) + 1 AS VARCHAR), 2)
+            'DT' + RIGHT('00' + CAST(ISNULL(MAX(CAST(SUBSTRING(MaDoanTau, 3, LEN(MaDoanTau)) AS INT)), 0) + 1 AS VARCHAR), 2)
         FROM DOAN_TAU WITH (UPDLOCK, HOLDLOCK);
 
         INSERT INTO DOAN_TAU (MaDoanTau, TenTau, HangSanXuat, NgayVanHanh, LoaiTau, TrangThai)
@@ -74,6 +74,12 @@ BEGIN
     IF @LoaiToa NOT IN (N'Ghế', N'Giường')
     BEGIN
         RAISERROR(N'Loại toa không hợp lệ.', 16, 1);
+        RETURN;
+    END
+
+    IF @SLViTri > 1200
+    BEGIN
+        RAISERROR(N'Số lượng toa vượt quá mức cho phép', 16, 1);
         RETURN;
     END
 

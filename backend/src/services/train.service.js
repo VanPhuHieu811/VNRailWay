@@ -207,3 +207,77 @@ export const updateCarriageService = async (maToaTau, updateData) => {
         throw error;
     }
 };
+
+///////////////////////////////////////////////////////////////////////////////////
+// 1. Lấy lịch trình tàu (Có filter)
+export const getTrainScheduleService = async (status) => {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('Status', sql.NVarChar(20), status === 'all' ? null : status)
+        .execute('sp_QuanLyLayDSChuyen');
+    return result.recordset;
+};
+
+// 2. Lấy Timeline chi tiết
+export const getTripTimelineService = async (tripId) => {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('MaChuyenTau', sql.VarChar(10), tripId)
+        .execute('sp_LoTrinhChuyen');
+    return result.recordset;
+};
+
+// 3. Cập nhật thời gian thực tế
+export const updateTripTimeService = async (tripId, stationId, actArr, actDep) => {
+    const pool = await getPool();
+
+    await pool.request()
+        .input('MaChuyenTau', sql.VarChar(10), tripId)
+        .input('MaGaTau', sql.VarChar(10), stationId)
+        .input('ThucTeDen', sql.DateTime, actArr ? new Date(actArr) : null)
+        .input('ThucTeXuatPhat', sql.DateTime, actDep ? new Date(actDep) : null)
+        .execute('sp_CapNhatTGThucTe');
+    
+    return { success: true };
+};
+
+// 4. Lấy chuyến chưa phân công
+export const getUnassignedTripsService = async () => {
+    const pool = await getPool();
+    const result = await pool.request().execute('sp_DSChuyenChuaPC');
+    return result.recordset;
+};
+
+// 5. Lấy chi tiết phân công
+export const getTripAssignmentsService = async (tripId) => {
+    const pool = await getPool();
+    const result = await pool.request()
+        .input('MaChuyenTau', sql.VarChar(10), tripId)
+        .execute('sp_LayChiTietPC');
+    
+    // Format lại dữ liệu cho dễ dùng ở FE
+    const assignments = {
+        driver: null,
+        manager: null,
+        carriages: {}
+    };
+
+    result.recordset.forEach(row => {
+        if (row.VaiTro === 'Nhân viên phụ trách lái') {
+            assignments.driver = row.TenNV;
+            assignments.driverId = row.MaNV;
+        } else if (row.VaiTro === 'Nhân viên trưởng') {
+            assignments.manager = row.TenNV;
+            assignments.managerId = row.MaNV;
+        } else if (row.VaiTro === 'Nhân viên phụ trách toa') {
+            // Mapping theo số thứ tự toa (row.SoToa)
+            assignments.carriages[row.SoToa] = {
+                staffName: row.TenNV,   
+                staffId: row.MaNV,       
+                coachId: row.MaToa       
+            };
+        }
+    });
+
+    return assignments;
+};
