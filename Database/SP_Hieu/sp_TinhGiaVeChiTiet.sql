@@ -36,7 +36,7 @@ BEGIN
     SET @KhoangCach = ABS(@KmDen - @KmDi);
     
     SELECT @DonGiaKm = CAST(GiaTriSo AS DECIMAL(18,0)) FROM THAM_SO WHERE MaThamSo = 'TS004';
-    SET @TienKhoangCach = (@KhoangCach / 100.0) * @DonGiaKm;
+    SET @TienKhoangCach = @KhoangCach * @DonGiaKm;
 
     -- 2. PHỤ PHÍ TÀU
     SELECT @GiaLoaiTau = g.GiaTien

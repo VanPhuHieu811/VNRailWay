@@ -19,5 +19,7 @@ export const bookingApi = {
 
   calculatePrice: (data) => {
     return client.post('/api/v1/prices/calculate', data);
-  } 
+  },
+  
+  getPromotions: () => client.get('/api/v1/promotions'),
 };

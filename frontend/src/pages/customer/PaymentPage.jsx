@@ -7,14 +7,6 @@ import { bookingApi } from '../../services/bookingApi';
 import { LICH_TRINH_DB } from '../../services/db_mock';
 import '../../styles/pages/BookingFlow.css';
 
-// [MỚI] Danh sách ưu đãi (Giả lập lấy từ DB - Bảng UU_DAI_GIA)
-const AVAILABLE_PROMOTIONS = [
-    { code: '', name: 'Vé thường (Không giảm)' },
-    { code: 'UD01', name: 'Sinh viên (-10%)' },
-    { code: 'UD02', name: 'Người cao tuổi (-15%)' },
-    // UD03 Tạm ngưng, UD04 Hết hạn (Không hiển thị)
-];
-
 const PaymentPage = ({ isEmployee = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -22,9 +14,13 @@ const PaymentPage = ({ isEmployee = false }) => {
   // 1. Lấy dữ liệu từ trang trước
   const { tripId, contactInfo, passengers: initialPassengers } = location.state || {};
   
-  // [MỚI] State quản lý danh sách hành khách (để update giá khi chọn ưu đãi)
+  // State quản lý danh sách hành khách
   const [passengerList, setPassengerList] = useState(initialPassengers || []);
-  const [isRecalculating, setIsRecalculating] = useState(false); // Loading khi tính lại tiền
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  
+  // [MỚI] State lưu danh sách ưu đãi từ API
+  const [promotions, setPromotions] = useState([]);
+  const [isLoadingPromos, setIsLoadingPromos] = useState(true);
 
   const tripInfo = location.state?.tripInfo || LICH_TRINH_DB.find(t => t.id === tripId) || {
     tenTau: '---', gaDi: '---', gaDen: '---', gioDi: '--:--', gioDen: '--:--'
@@ -33,37 +29,68 @@ const PaymentPage = ({ isEmployee = false }) => {
   const [paymentMethod, setPaymentMethod] = useState(isEmployee ? 'cash' : 'qr');
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // --- [MỚI] USE EFFECT: GỌI API LẤY ƯU ĐÃI ---
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      try {
+        const res = await bookingApi.getPromotions();
+        if (res.success) {
+          // Lưu ý: Tùy vào service trả về recordsets (mảng lồng nhau) hay recordset
+          // Ta kiểm tra an toàn để lấy mảng dữ liệu
+          let rawData = res.data;
+          if (Array.isArray(res.data) && Array.isArray(res.data[0])) {
+             rawData = res.data[0]; // Trường hợp trả về recordsets
+          }
+
+          // 1. Lọc các ưu đãi đang hoạt động
+          const activePromos = rawData.filter(p => p.TrangThai === 'Đang áp dụng');
+
+          // 2. Thêm tùy chọn mặc định "Vé thường"
+          const formattedPromos = [
+            { MaUuDai: '', LoaiUuDai: 'Vé thường (Không giảm)', PhanTram: 0 },
+            ...activePromos
+          ];
+          
+          setPromotions(formattedPromos);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy danh sách ưu đãi:", error);
+        // Fallback nếu lỗi API
+        setPromotions([{ MaUuDai: '', LoaiUuDai: 'Vé thường (Không giảm)', PhanTram: 0 }]);
+      } finally {
+        setIsLoadingPromos(false);
+      }
+    };
+
+    fetchPromotions();
+  }, []);
+
   // --- TÍNH TỔNG TIỀN ĐỘNG ---
   const dynamicTotalPrice = passengerList.reduce((sum, p) => sum + (p.price || 0), 0);
 
   // --- HÀM XỬ LÝ CHỌN ƯU ĐÃI ---
   const handlePromotionChange = async (index, promoCode) => {
     setIsRecalculating(true);
-    
-    // Lấy thông tin hành khách đang chỉnh sửa
     const currentPassenger = passengerList[index];
 
     try {
-        // Gọi API tính lại giá cho vé này
         const res = await bookingApi.calculatePrice({
             tripId: tripId,
             fromStationId: tripInfo.maGaDi, 
             toStationId: tripInfo.maGaDen,
-            seatId: currentPassenger.maViTri, // Cần ID ghế để tính
+            seatId: currentPassenger.maViTri,
             promotionCode: promoCode || null
         });
 
         if (res.success) {
             const priceData = res.data;
-            
-            // Cập nhật lại state cho hành khách này
             const updatedList = [...passengerList];
             updatedList[index] = {
                 ...currentPassenger,
-                price: priceData.GiaThucTe,      // Giá mới sau giảm
-                originalPrice: priceData.GiaGoc, // Giá gốc
-                discount: priceData.SoTienGiam,  // Tiền giảm
-                promotionCode: promoCode         // Lưu mã đã chọn
+                price: priceData.GiaThucTe,
+                originalPrice: priceData.GiaGoc,
+                discount: priceData.SoTienGiam,
+                promotionCode: promoCode
             };
             setPassengerList(updatedList);
         }
@@ -105,15 +132,14 @@ const PaymentPage = ({ isEmployee = false }) => {
                 DiaChi: finalBuyerInfo.address,
                 NgaySinh: finalBuyerInfo.dob 
             },
-            // [QUAN TRỌNG] Gửi kèm MaUuDai
             passengers: passengerList.map(p => ({
                 MaViTri: p.maViTri,
-                GiaCoBan: p.price,      // Giá thực trả
+                GiaCoBan: p.price,
                 DoiTuong: p.type || 'Người lớn',
                 HoTen: p.fullName,
                 CCCD: p.cmnd,
                 NgaySinh: p.dob,
-                MaUuDai: p.promotionCode || null // Gửi mã ưu đãi về BE
+                MaUuDai: p.promotionCode || null 
             })),
             gaDi: tripInfo.maGaDi,
             gaDen: tripInfo.maGaDen
@@ -167,8 +193,8 @@ const PaymentPage = ({ isEmployee = false }) => {
                 <div className="flex-1 border-t-2 border-dashed border-slate-300 mx-6 mt-6"></div>
                 <div className="station-time-group right">
                   <div className="station-label text-right">Ga đến</div>
-                  <div className="station-name text-right">{tripInfo.gaDen}</div>
-                  <div className="time-big text-right">{tripInfo.gioDen}</div>
+                  <div className="station-name">{tripInfo.gaDen}</div>
+                  <div className="time-big">{tripInfo.gioDen}</div>
                 </div>
               </div>
             </div>
@@ -182,11 +208,11 @@ const PaymentPage = ({ isEmployee = false }) => {
                 </div>
             </div>
 
-            {/* [QUAN TRỌNG] Danh sách vé & Chọn ưu đãi */}
+            {/* DANH SÁCH VÉ & CHỌN ƯU ĐÃI */}
             <div className="review-card">
               <div className="review-header flex items-center gap-2 mb-4">
                 <CheckCircle size={20}/> Chi tiết vé & Ưu đãi
-                {isRecalculating && <Loader2 className="animate-spin ml-auto text-blue-600" size={18}/>}
+                {(isRecalculating || isLoadingPromos) && <Loader2 className="animate-spin ml-auto text-blue-600" size={18}/>}
               </div>
               
               <div className="space-y-4">
@@ -219,7 +245,7 @@ const PaymentPage = ({ isEmployee = false }) => {
                             </div>
                         </div>
 
-                        {/* Dropdown chọn ưu đãi */}
+                        {/* [MỚI] Dropdown chọn ưu đãi từ API */}
                         <div className="bg-slate-50 p-3 rounded border border-slate-100 flex items-center gap-3">
                             <Tag size={16} className="text-blue-600 shrink-0"/>
                             <label className="text-sm font-medium text-slate-700 whitespace-nowrap">Đối tượng ưu đãi:</label>
@@ -227,11 +253,11 @@ const PaymentPage = ({ isEmployee = false }) => {
                                 className="flex-1 p-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-blue-500 bg-white"
                                 value={p.promotionCode || ''}
                                 onChange={(e) => handlePromotionChange(idx, e.target.value)}
-                                disabled={isRecalculating}
+                                disabled={isRecalculating || isLoadingPromos}
                             >
-                                {AVAILABLE_PROMOTIONS.map((promo) => (
-                                    <option key={promo.code} value={promo.code}>
-                                        {promo.name}
+                                {promotions.map((promo) => (
+                                    <option key={promo.MaUuDai || 'default'} value={promo.MaUuDai}>
+                                        {promo.LoaiUuDai} {promo.PhanTram > 0 ? `(-${promo.PhanTram}%)` : ''}
                                     </option>
                                 ))}
                             </select>
