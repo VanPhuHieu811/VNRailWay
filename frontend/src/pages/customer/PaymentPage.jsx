@@ -3,20 +3,21 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Wallet, QrCode, Train, CheckCircle, User, Loader2 } from 'lucide-react';
 import CustomerNavbar from '../../components/layout/CustomerNavbar';
 import BookingSteps from '../../components/common/BookingSteps';
-import { bookingApi } from '../../services/bookingApi'; // [MỚI] Import API
-import { LICH_TRINH_DB } from '../../services/db_mock';
+import { bookingApi } from '../../services/bookingApi'; // 
 import '../../styles/pages/BookingFlow.css';
 
 const PaymentPage = ({ isEmployee = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  console.log("Dữ liệu nhận được từ trang trước:", location.state?.passengers);
+
   // 1. Lấy dữ liệu từ state chuyển trang
   // contactInfo được truyền từ PassengerInfoPage (lấy từ Login hoặc Form)
   const { selectedSeats, tripId, totalPrice, passengers, contactInfo } = location.state || {};
 
   // 2. Fallback thông tin tàu (Tránh crash nếu user reload trang)
-  const tripInfo = location.state?.tripInfo || LICH_TRINH_DB.find(t => t.id === tripId) || {
+  const tripInfo = location.state?.tripInfo  || {
     tenTau: '---', gaDi: '---', gaDen: '---', gioDi: '--:--', gioDen: '--:--'
   };
 
@@ -78,7 +79,8 @@ const PaymentPage = ({ isEmployee = false }) => {
                 DoiTuong: p.type || 'Người lớn',
                 HoTen: p.fullName,
                 CCCD: p.cmnd,
-                NgaySinh: p.dob
+                NgaySinh: p.dob,
+                tenTau: tripInfo.tenTau
             })),
             
             // Thông tin hành trình (để lưu vào vé)
@@ -93,6 +95,16 @@ const PaymentPage = ({ isEmployee = false }) => {
         console.log("🚀 Kết quả thanh toán:", res);
         if (res.success) {
             const basePath = isEmployee ? '/employee/sales' : '/booking';
+            const updatedPasengers=passengers.map(p => ({
+                MaViTri: p.maViTri, // ID ghế trong DB
+                GiaCoBan: p.price,
+                DoiTuong: p.type || 'Người lớn',
+                HoTen: p.fullName,
+                CCCD: p.cmnd,
+                NgaySinh: p.dob,
+                tenTau: tripInfo.tenTau,
+                loaiToa: p.loaiToa
+            }));
             // Chuyển sang trang Thành công kèm kết quả trả về
             navigate(`${basePath}/success`, {
                 state: { 
@@ -100,7 +112,7 @@ const PaymentPage = ({ isEmployee = false }) => {
                     tripInfo, 
                     totalPrice, 
                     paymentMethod,
-                    passengers 
+                    passengers: updatedPasengers
                 }
             });
         } else {

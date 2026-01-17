@@ -76,6 +76,7 @@ const customerService = {
                 vt.STT AS SoGhe,
                 g.Phong,
                 g.Tang,
+                dt.TenTau,
                 CASE 
                     WHEN ve.MaVe IS NOT NULL THEN 'Booked' 
                     ELSE 'Available'                       
@@ -319,12 +320,15 @@ processPayment: async (paymentData) => {
                             tenTau: row.MaChuyenTau, 
                             gaDi: row.GaXuatPhat,
                             gaDen: row.GaDen,
+                            LoaiToa: row.LoaiToa,
                             
                             // Map Giờ đi từ DuKienXuatPhat
                             gioDi: row.DuKienXuatPhat 
                                 ? new Date(row.DuKienXuatPhat).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) 
                                 : '--:--',
-                            
+                            gioDen: row.DuKienDen 
+                                ? new Date(row.DuKienDen).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) 
+                                : '--:--',
                             // Lấy ngày đi từ DuKienXuatPhat
                             ngayDi: row.DuKienXuatPhat 
                                 ? new Date(row.DuKienXuatPhat).toISOString().split('T')[0] 

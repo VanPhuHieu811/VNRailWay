@@ -1,87 +1,168 @@
 import React from 'react';
-import { X } from 'lucide-react';
-import '../../styles/pages/MyTickets.css'; // Sử dụng chung file CSS vừa sửa
+import { X, QrCode, User, MapPin, Calendar, Clock, Ticket as TicketIcon } from 'lucide-react';
+import '../../styles/pages/MyTickets.css'; // Dùng chung style với trang MyTickets hoặc tạo file mới
 
 const TicketDetailModal = ({ ticket, onClose }) => {
   if (!ticket) return null;
 
-  const { tripInfo, seats, totalPrice, maVe, ngayDat } = ticket;
+  const { tripInfo, seats, totalPrice, maVe, ngayDat, contactInfo } = ticket;
+
+  // Helper format tiền tệ
+  const formatCurrency = (amount) => amount ? amount.toLocaleString('vi-VN') + ' ₫' : '0 ₫';
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      {/* onClick e.stopPropagation để bấm vào card không bị đóng modal */}
-      <div className="modal-ticket-card" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose}>
+      
+      {/* Ticket Card Container */}
+      <div 
+        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all animate-in fade-in zoom-in-95 duration-200"
+        onClick={(e) => e.stopPropagation()}
+      >
         
-        {/* Nút đóng */}
-        <button className="btn-close-modal" onClick={onClose}>
-          <X size={20} />
-        </button>
+        {/* === HEADER === */}
+        <div className="bg-gradient-to-r from-blue-700 to-blue-600 p-6 relative text-white">
+          <button 
+            className="absolute top-4 right-4 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 p-1.5 rounded-full transition-colors" 
+            onClick={onClose}
+          >
+            <X size={20} />
+          </button>
 
-        {/* Header: Xanh dương */}
-        <div className="modal-header">
-          <div className="modal-brand">
-            <h3>Vé Tàu Hỏa</h3>
-            <p>Tổng công ty Đường sắt Việt Nam</p>
-          </div>
-          <div className="modal-ticket-id">{maVe}</div>
-        </div>
-
-        {/* Body: Nội dung vé */}
-        <div className="modal-body">
-          
-          {/* Hàng 1: Tàu & Ngày đi */}
-          <div className="ticket-info-row">
-            <div className="info-col">
-              <label>Tàu số</label>
-              <strong>{tripInfo.tenTau}</strong>
-              <span>Thống nhất</span>
-            </div>
-            <div className="info-col text-right">
-              <label>Ngày đi</label>
-              <strong>{new Date(tripInfo.ngayDi).toLocaleDateString('vi-VN')}</strong>
-            </div>
-          </div>
-
-          {/* Hàng 2: Ga đi & Ga đến */}
-          <div className="ticket-info-row">
-            <div className="info-col">
-              <label>Ga đi</label>
-              <span style={{fontSize: 14, color: '#334155', fontWeight: 600}}>{tripInfo.gaDi}</span>
-              <strong className="text-blue-big">{tripInfo.gioDi}</strong>
-            </div>
-            <div className="info-col text-right">
-              <label>Ga đến</label>
-              <span style={{fontSize: 14, color: '#334155', fontWeight: 600}}>{tripInfo.gaDen}</span>
-              <strong className="text-blue-big">{tripInfo.gioDen}</strong>
-            </div>
-          </div>
-
-          {/* Hàng 3: Danh sách ghế */}
-          <label style={{fontSize: 13, color: '#94a3b8', marginBottom: 10, display: 'block'}}>Thông tin chỗ ngồi</label>
-          {seats.map((seat, index) => (
-            <div key={index} className="seat-detail-box">
-              <div>
-                <span className="seat-name">Toa {seat.maToa} - Chỗ {seat.seatNum}</span>
-                <span className="seat-class">{seat.loaiToa || 'Standard'}</span>
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="bg-white/20 p-1.5 rounded text-white">
+                   <TicketIcon size={20} /> 
+                </div>
+                <h3 className="text-xl font-bold tracking-wide uppercase">Vé Tàu Hỏa</h3>
               </div>
-              <div className="seat-price">{seat.price.toLocaleString()} ₫</div>
+              <p className="text-blue-100 text-xs font-medium opacity-90">Tổng công ty Đường sắt Việt Nam</p>
             </div>
-          ))}
-
-          {/* Hàng 4: Tổng tiền */}
-          <div className="modal-total-section">
-            <span className="total-label">Tổng tiền thanh toán:</span>
-            <span className="total-value-big">{totalPrice.toLocaleString()} ₫</span>
+            
+            {/* Giả lập QR Code */}
+            <div className="bg-white p-1 rounded">
+                <QrCode size={48} className="text-slate-800"/>
+            </div>
           </div>
 
-          {/* Footer: Ghi chú */}
-          <div className="modal-footer-notes">
-            <div className="note-item">Vui lòng có mặt tại ga trước giờ tàu chạy ít nhất 15 phút.</div>
-            <div className="note-item">Mang theo vé và giấy tờ tùy thân khi lên tàu.</div>
-            <div className="note-item">Vé đã mua không hoàn trả. Đổi trả theo quy định hiện hành.</div>
+          <div className="mt-6 flex justify-between items-end">
+             <div>
+                <span className="text-blue-200 text-xs uppercase block mb-0.5">Mã đặt chỗ</span>
+                <span className="text-2xl font-bold font-mono tracking-wider text-yellow-300">#{maVe}</span>
+             </div>
+             <div className="text-right">
+                <span className="text-blue-200 text-xs uppercase block mb-0.5">Ngày đặt</span>
+                <span className="font-medium">{new Date(ngayDat).toLocaleDateString('vi-VN')}</span>
+             </div>
+          </div>
+        </div>
+
+        {/* === BODY === */}
+        <div className="p-6 bg-slate-50 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          
+          {/* 1. Hành trình */}
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-4">
+            <div className="flex justify-between items-center mb-4 border-b border-dashed border-slate-200 pb-3">
+               <div>
+                  <span className="text-slate-400 text-xs uppercase font-bold">Mác tàu</span>
+                  <div className="text-xl font-black text-blue-700">{tripInfo.tenTau}</div>
+               </div>
+               <div className="text-right">
+                  <span className="text-slate-400 text-xs uppercase font-bold">Ngày khởi hành</span>
+                  <div className="text-lg font-bold text-slate-700 flex items-center justify-end gap-2">
+                     <Calendar size={16} className="text-blue-500"/>
+                     {new Date(tripInfo.ngayDi).toLocaleDateString('vi-VN')}
+                  </div>
+               </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+                <div className="text-left">
+                    <div className="text-2xl font-bold text-slate-800">{tripInfo.gioDi}</div>
+                    <div className="flex items-center gap-1 text-slate-500 font-medium text-sm mt-1">
+                        <MapPin size={14}/> {tripInfo.gaDi}
+                    </div>
+                </div>
+
+                {/* Line nối */}
+                <div className="flex-1 px-4 flex flex-col items-center">
+                    <div className="w-full h-[2px] bg-slate-200 relative mt-2">
+                        <div className="absolute -top-1 left-0 w-2 h-2 rounded-full bg-blue-500"></div>
+                        <div className="absolute -top-1 right-0 w-2 h-2 rounded-full bg-slate-300"></div>
+                    </div>
+                    <span className="text-xs text-slate-400 mt-2 font-medium">Thời gian di chuyển</span>
+                </div>
+
+                <div className="text-right">
+                    <div className="text-2xl font-bold text-slate-400">{tripInfo.gioDen || '--:--'}</div>
+                    <div className="flex items-center justify-end gap-1 text-slate-500 font-medium text-sm mt-1">
+                        {tripInfo.gaDen} <MapPin size={14}/> 
+                    </div>
+                </div>
+            </div>
+          </div>
+
+          {/* 2. Chi tiết ghế & Hành khách */}
+          <h4 className="text-xs font-bold text-slate-400 uppercase mb-2 ml-1 flex items-center gap-1">
+             <User size={14}/> Danh sách hành khách ({seats.length})
+          </h4>
+          
+          <div className="space-y-3 mb-6">
+            {seats.map((seat, index) => (
+              <div key={index} className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+                {/* Dải màu bên trái */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>
+                
+                <div className="flex justify-between items-start mb-2 pl-2">
+                    <div>
+                        <div className="font-bold text-slate-800 uppercase text-sm">
+                            {seat.hanhKhach || contactInfo?.hoTen || 'Hành khách'}
+                        </div>
+                    </div>
+                    <div className="text-right">
+                        <div className="text-sm font-bold text-blue-600">{formatCurrency(seat.price)}</div>
+                        <div className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded inline-block mt-1 font-medium border border-blue-100">
+                            {tripInfo.LoaiToa || 'Thường'}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between bg-slate-50 rounded p-2 mt-2 ml-2 text-sm border border-slate-100">
+                    <span className="font-medium text-slate-600">Toa {seat.maToa || seat.tenToa}</span>
+                    <span className="h-4 w-[1px] bg-slate-300 mx-2"></span>
+                    <span className="font-bold text-slate-800">Ghế số {seat.seatNum}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 3. Người đặt (Thông tin liên hệ) */}
+          {contactInfo && (
+             <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 mb-4 text-xs text-slate-600">
+                <strong className="block mb-1 text-slate-700">Người đặt vé / Liên hệ:</strong>
+                <div className="flex justify-between">
+                    <span>{contactInfo.hoTen}</span>
+                    <span>{contactInfo.sdt}</span>
+                </div>
+                <div className="mt-1 text-slate-500 truncate">{contactInfo.email}</div>
+             </div>
+          )}
+
+          {/* Footer Notes */}
+          <div className="text-[10px] text-slate-400 space-y-1 italic text-center border-t border-slate-200 pt-4">
+             <p>• Vui lòng có mặt tại ga trước giờ tàu chạy ít nhất 30 phút.</p>
+             <p>• Khi lên tàu, quý khách xuất trình vé điện tử kèm giấy tờ tùy thân.</p>
+             <p>• Vé đã mua không hoàn trả. Mọi thắc mắc vui lòng liên hệ 1900 6469.</p>
           </div>
 
         </div>
+
+        {/* === FOOTER: TỔNG TIỀN === */}
+        <div className="p-4 bg-white border-t border-slate-200 flex justify-between items-center">
+            <span className="text-slate-500 text-sm font-medium">Tổng thanh toán</span>
+            <span className="text-2xl font-bold text-red-600">{formatCurrency(totalPrice)}</span>
+        </div>
+
       </div>
     </div>
   );

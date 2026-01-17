@@ -76,8 +76,8 @@ const fetchUserData = async () => {
       const initialPassengers = selectedSeats.map(seat => ({
         seatId: seat.id,
         maViTri: seat.maViTri,
-        seatNum: seat.seatNum,
-        tenToa: seat.tenToa,
+        tenToa: seat.maToaTau,
+        loaiToa: seat.loaiToa,
         fullName: '',
         type: 'Người lớn', // Mặc định
         cmnd: '',

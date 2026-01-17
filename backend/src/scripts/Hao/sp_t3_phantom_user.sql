@@ -19,6 +19,7 @@ BEGIN
         ct.MaChuyenTau, 
         ct.MaDoanTau, 
         dt.TenTau,
+        ttau.LoaiToa,
         
         -- Thông tin Ga Đi (Của khách chọn)
         gd.TenGa AS GaXuatPhat,
