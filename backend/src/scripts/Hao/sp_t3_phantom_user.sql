@@ -19,7 +19,6 @@ BEGIN
         ct.MaChuyenTau, 
         ct.MaDoanTau, 
         dt.TenTau,
-        ttau.LoaiToa,
         
         -- Thông tin Ga Đi (Của khách chọn)
         gd.TenGa AS GaXuatPhat,
@@ -119,28 +118,4 @@ BEGIN
 
     COMMIT TRANSACTION;
 END;
-GO
-exec sp_XemDSChuyenTau 
-    @NgayDi = '2026-01-16', 
-    @GaDi = 'GA01', 
-    @GaDen = 'GA12', 
-    @GioKhoiHanh = NULL;
 
-
-select *
-from THOI_GIAN_CHUYEN_TAU
-
-select *
-from  DAT_VE
-
-select *
-from TAI_KHOAN
-
-select *
-FROM VI_TRI_TREN_TOA
-
-SELECT*
-FROM THAM_SO
-
-SELECT *
-FROM GIA_THEO_LOAI_TAU
