@@ -381,7 +381,7 @@ const TrainScheduling = () => {
                 <div className="animate-in fade-in duration-300">
                     <div className="flex justify-end mb-4">
                         <div className="flex bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-                            {[{ id: 'all', label: 'Tất cả' }, { id: 'Đang chạy', label: 'Đang chạy' }, { id: 'Chuẩn bị', label: 'Chuẩn bị' }, { id: 'Hoàn thành', label: 'Hoàn thành' }].map(tab => (
+                            {[{ id: 'all', label: 'Tất cả' }, { id: 'Đang chạy', label: 'Đang chạy' }, { id: 'Chuẩn bị', label: 'Chuẩn bị' }, { id: 'Hoàn thành', label: 'Hoàn thành' }, { id: 'Hủy', label: 'Đã hủy' }].map(tab => (
                                 <button
                                     key={tab.id} onClick={() => setFilterStatus(tab.id)}
                                     className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${filterStatus === tab.id ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-50'}`}
@@ -404,8 +404,11 @@ const TrainScheduling = () => {
                                     className="bg-white rounded-xl border border-gray-200 p-6 flex flex-col md:flex-row justify-between items-center shadow-sm hover:shadow-md transition-shadow cursor-pointer group"
                                 >
                                     <div className="flex items-start gap-4 mb-4 md:mb-0 w-full md:w-auto">
-                                        <div className={`p-3 rounded-lg shrink-0 ${trip.status === 'Đang chạy' ? 'bg-green-100 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
-                                            <Train className="w-8 h-8" />
+                                        <div className={`p-3 rounded-lg shrink-0 ${trip.status === 'Đang chạy' ? 'bg-green-100 text-green-600' :
+                                                trip.status === 'Hủy' ? 'bg-red-50 text-red-500' : // Add red style for Cancelled
+                                                    'bg-blue-50 text-blue-600'
+                                            }`}>
+                                            {trip.status === 'Hủy' ? <X className="w-8 h-8" /> : <Train className="w-8 h-8" />}
                                         </div>
                                         <div>
                                             <h3 className="text-lg font-bold text-gray-800">{trip.route}</h3>
@@ -494,7 +497,7 @@ const TrainScheduling = () => {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div className="col-span-2">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tuyến đường</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tuyến tàu</label>
                                     <select
                                         className="w-full border p-2.5 rounded-lg"
                                         onChange={handleRouteChange}
@@ -502,7 +505,10 @@ const TrainScheduling = () => {
                                     >
                                         <option value="">-- Chọn tuyến --</option>
                                         {routesList.map(r => (
-                                            <option key={r.MaTuyenTau} value={r.MaTuyenTau}>{r.TenTuyen} ({r.MaTuyenTau})</option>
+                                            // NEW CODE (Correct keys: id, name)
+                                            <option key={r.id} value={r.id}>
+                                                {r.name} ({r.code})
+                                            </option>
                                         ))}
                                     </select>
                                 </div>
