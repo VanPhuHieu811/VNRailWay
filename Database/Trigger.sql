@@ -214,31 +214,31 @@ BEGIN
         RETURN;
     END
 
-    IF EXISTS (
-        SELECT MaChuyenTau FROM PHAN_CONG_CHUYEN_TAU
-        WHERE VaiTro = N'Nhân viên phụ trách lái'
-          AND MaChuyenTau IN (SELECT MaChuyenTau FROM Inserted)
-          AND TrangThai IN (N'Nhận việc', N'Đang làm')
-        GROUP BY MaChuyenTau HAVING COUNT(*) > 1
-    )
-    BEGIN
-        RAISERROR(N'Lỗi RB-145: Mỗi chuyến tàu chỉ được có 01 Nhân viên lái tàu.', 16, 1);
-        ROLLBACK TRANSACTION;
-        RETURN;
-    END
+    -- IF EXISTS (
+    --     SELECT MaChuyenTau FROM PHAN_CONG_CHUYEN_TAU
+    --     WHERE VaiTro = N'Nhân viên phụ trách lái'
+    --       AND MaChuyenTau IN (SELECT MaChuyenTau FROM Inserted)
+    --       AND TrangThai IN (N'Nhận việc', N'Đang làm')
+    --     GROUP BY MaChuyenTau HAVING COUNT(*) > 1
+    -- )
+    -- BEGIN
+    --     RAISERROR(N'Lỗi RB-145: Mỗi chuyến tàu chỉ được có 01 Nhân viên lái tàu.', 16, 1);
+    --     ROLLBACK TRANSACTION;
+    --     RETURN;
+    -- END
 
-    IF EXISTS (
-        SELECT MaChuyenTau FROM PHAN_CONG_CHUYEN_TAU
-        WHERE VaiTro = N'Nhân viên trưởng'
-          AND MaChuyenTau IN (SELECT MaChuyenTau FROM Inserted)
-          AND TrangThai IN (N'Nhận việc', N'Đang làm')
-        GROUP BY MaChuyenTau HAVING COUNT(*) > 1
-    )
-    BEGIN
-        RAISERROR(N'Lỗi RB-145: Mỗi chuyến tàu chỉ được có 01 Nhân viên trưởng tàu.', 16, 1);
-        ROLLBACK TRANSACTION;
-        RETURN;
-    END
+    -- IF EXISTS (
+    --     SELECT MaChuyenTau FROM PHAN_CONG_CHUYEN_TAU
+    --     WHERE VaiTro = N'Nhân viên trưởng'
+    --       AND MaChuyenTau IN (SELECT MaChuyenTau FROM Inserted)
+    --       AND TrangThai IN (N'Nhận việc', N'Đang làm')
+    --     GROUP BY MaChuyenTau HAVING COUNT(*) > 1
+    -- )
+    -- BEGIN
+    --     RAISERROR(N'Lỗi RB-145: Mỗi chuyến tàu chỉ được có 01 Nhân viên trưởng tàu.', 16, 1);
+    --     ROLLBACK TRANSACTION;
+    --     RETURN;
+    -- END
 
     IF EXISTS (
         SELECT 1 
