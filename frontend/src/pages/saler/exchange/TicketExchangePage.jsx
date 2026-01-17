@@ -2,62 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Search, Ticket, User, Train, ArrowRight, AlertCircle, RefreshCw, 
-  CreditCard, Armchair, Clock, MapPin, CheckCircle
+  CreditCard, Armchair, Clock, MapPin, CheckCircle, Loader2
 } from 'lucide-react';
 import { toast } from 'react-toastify';
-
-// --- MOCK DATA (MÔ PHỎNG DỮ LIỆU TỪ API/DB) ---
-// Giả sử API trả về dữ liệu đã được JOIN từ các bảng VE_TAU, KHACH_HANG, CHUYEN_TAU...
-const VE_DA_DAT_DB = [
-    {
-        // Thông tin bảng VE_TAU
-        MaVe: "VE882910",
-        MaKhachHang: "KH001",
-        MaChuyenTau: "SE7-27",
-        MaViTri: "GHE-01-15",
-        ThoiGianXuatVe: "2026-01-10T08:30:00",
-        GaXuatPhat: "Hà Nội",
-        GaDen: "Đà Nẵng",
-        GiaThuc: 850000,
-        TrangThai: "DA_THANH_TOAN", // active
-
-        // Thông tin JOIN thêm để hiển thị
-        TenKhachHang: "Nguyễn Văn A",
-        CCCD: "0123456789", // Key để tra cứu
-        SDT: "0987654321",
-        
-        TenTau: "SE7",
-        ThoiGianDi: "2026-02-15T19:00:00",
-        ThoiGianDen: "2026-02-16T11:30:00",
-        
-        TenToa: "Toa 1",
-        LoaiToa: "Ngồi mềm điều hòa",
-        SoGhe: "15"
-    },
-    {
-        MaVe: "VE999999",
-        MaKhachHang: "KH002",
-        MaChuyenTau: "TN1-05",
-        MaViTri: "GHE-03-22",
-        ThoiGianXuatVe: "2025-12-20T10:00:00",
-        GaXuatPhat: "Sài Gòn",
-        GaDen: "Nha Trang",
-        GiaThuc: 450000,
-        TrangThai: "DA_SU_DUNG", // Đã đi rồi -> Không đổi được
-
-        TenKhachHang: "Trần Thị B",
-        CCCD: "9876543210",
-        SDT: "0909090909",
-        
-        TenTau: "TN1",
-        ThoiGianDi: "2025-12-25T06:00:00",
-        ThoiGianDen: "2025-12-25T14:00:00",
-        
-        TenToa: "Toa 3",
-        LoaiToa: "Giường nằm khoang 6",
-        SoGhe: "22"
-    }
-];
 
 const TicketExchangePage = () => {
   const navigate = useNavigate();
@@ -66,12 +13,13 @@ const TicketExchangePage = () => {
   const [ticketCode, setTicketCode] = useState('');
   const [passengerCCCD, setPassengerCCCD] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [loading, setLoading] = useState(false); // Thêm loading state
 
   // State kết quả tìm kiếm
   const [foundTicket, setFoundTicket] = useState(null);
 
-  // --- LOGIC 1: TRA CỨU VÉ ---
-  const handleSearch = () => {
+  // --- LOGIC 1: TRA CỨU VÉ (GỌI API) ---
+  const handleSearch = async () => {
     setErrorMsg('');
     setFoundTicket(null);
 
@@ -81,55 +29,83 @@ const TicketExchangePage = () => {
       return;
     }
 
-    // 2. Tìm trong DB giả lập
-    const ticket = VE_DA_DAT_DB.find(t => 
-        t.MaVe === ticketCode.trim() && 
-        t.CCCD === passengerCCCD.trim()
-    );
+    setLoading(true);
 
-    // 3. Xử lý kết quả
-    if (!ticket) {
-      setErrorMsg('Không tìm thấy vé hoặc thông tin CCCD không khớp.');
-      return;
+    try {
+      // 2. Gọi API Backend (Đổi URL nếu port khác)
+      const response = await fetch('http://localhost:3000/api/v1/tickets/search-exchange', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          ticketCode: ticketCode.trim(),
+          cccd: passengerCCCD.trim()
+        }),
+      });
+
+      const result = await response.json();
+
+      // 3. Xử lý kết quả trả về
+      if (result.success) {
+        const ticket = result.data;
+
+        // Kiểm tra trạng thái vé (Business Logic ở Frontend hoặc Backend đều được)
+        if (!['Đã đặt', 'Đã thanh toán'].includes(ticket.TrangThai)) {
+           setErrorMsg(`Vé này đang ở trạng thái "${ticket.TrangThai}", không thể đổi.`);
+           setLoading(false);
+           return;
+        }
+
+        setFoundTicket(ticket);
+        toast.success("Đã tìm thấy thông tin vé!");
+      } else {
+        // API trả về lỗi (404, 400...)
+        setErrorMsg(result.message || 'Không tìm thấy vé hoặc thông tin không khớp.');
+      }
+
+    } catch (error) {
+      console.error("Lỗi kết nối:", error);
+      setErrorMsg('Lỗi kết nối đến máy chủ. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
     }
-
-    if (ticket.TrangThai !== 'DA_THANH_TOAN') {
-       setErrorMsg(`Vé này đang ở trạng thái "${ticket.TrangThai}", không thể đổi.`);
-       return;
-    }
-
-    // 4. Thành công -> Hiện chi tiết
-    setFoundTicket(ticket);
-    toast.success("Đã tìm thấy thông tin vé!");
   };
 
   // --- LOGIC 2: TIẾP TỤC ĐỔI VÉ ---
   const handleProceedExchange = () => {
     if (!foundTicket) return;
 
-    // Chuẩn bị dữ liệu để đẩy sang trang Search (SalesExchangeSearchPage)
-    // Cấu trúc object phải khớp với những gì trang Search đang mong đợi
+    // Chuẩn bị dữ liệu
     const oldTicketData = {
-        id: foundTicket.MaVe,             // ID unique
-        ticketCode: foundTicket.MaVe,     // Mã hiển thị
-        price: foundTicket.GiaThuc,       // Giá để tính chênh lệch
-        seatInfo: `${foundTicket.TenToa} - Ghế ${foundTicket.SoGhe}`, // Hiển thị ghế cũ
+        id: foundTicket.MaVe,             
+        ticketCode: foundTicket.MaVe,     
+        price: foundTicket.GiaThuc,       
+        seatInfo: `${foundTicket.TenToa} - Ghế ${foundTicket.SoGhe}`, 
         passengerName: foundTicket.TenKhachHang,
-        identity: foundTicket.CCCD
+        identity: foundTicket.CCCD,
+        routeCode: foundTicket.MaTuyenTau
     };
+
+    // Hàm map tên ga sang mã ga (Nếu Backend trả về tên tiếng Việt)
     const mapStationToCode = (name) => {
-        if (name === "Hà Nội") return "HN";
-        if (name === "Sài Gòn" || name === "TP.Hồ Chí Minh") return "SG";
-        if (name === "Đà Nẵng") return "DN";
-        if (name === "Nha Trang") return "NT";
-        if (name === "Huế") return "HUE";
-        return "HN"; // Mặc định
+        if (!name) return "HN";
+        if (name.includes("Hà Nội")) return "HN";
+        if (name.includes("Sài Gòn") || name.includes("Hồ Chí Minh")) return "SG";
+        if (name.includes("Đà Nẵng")) return "DN";
+        if (name.includes("Nha Trang")) return "NT";
+        if (name.includes("Huế")) return "HUE";
+        if (name.includes("Vinh")) return "VINH";
+        return "HN"; // Default fallback
     };
+
+    // Format ngày đi từ ISO string (2026-02-15T19:00:00) -> YYYY-MM-DD
+    const datePart = foundTicket.ThoiGianDi ? foundTicket.ThoiGianDi.split('T')[0] : new Date().toISOString().split('T')[0];
 
     const searchDefaults = {
         from: mapStationToCode(foundTicket.GaXuatPhat), 
         to: mapStationToCode(foundTicket.GaDen),     
-        date: '2026-01-16'
+        date: datePart
     };
 
     navigate('/employee/sales/exchange/search', { 
@@ -140,13 +116,17 @@ const TicketExchangePage = () => {
     });
   };
 
-  // Hàm reset form
   const handleReset = () => {
     setFoundTicket(null);
     setTicketCode('');
     setPassengerCCCD('');
     setErrorMsg('');
   };
+
+    const parseLocalDate = (iso) => {
+        if (!iso) return null;
+        return new Date(iso.replace('Z', ''));
+    };
 
   return (
     <div className="min-h-screen bg-slate-50 p-6 font-sans">
@@ -161,9 +141,7 @@ const TicketExchangePage = () => {
 
       <div className="max-w-5xl mx-auto">
         
-        {/* ========================================================= */}
-        {/* VIEW 1: FORM TRA CỨU (Luôn hiển thị nếu chưa tìm thấy)   */}
-        {/* ========================================================= */}
+        {/* VIEW 1: FORM TRA CỨU */}
         {!foundTicket && (
           <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200">
              <div className="flex border-b border-gray-100 mb-6 pb-2">
@@ -215,25 +193,23 @@ const TicketExchangePage = () => {
                  <button className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-slate-600 rounded-lg font-bold transition-colors" onClick={() => navigate('/employee')}>
                     Hủy bỏ
                  </button>
-                 <button className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2" onClick={handleSearch}>
-                    <Search size={18}/> Tra cứu ngay
+                 <button 
+                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed" 
+                    onClick={handleSearch}
+                    disabled={loading}
+                 >
+                    {loading ? <Loader2 className="animate-spin" size={18}/> : <Search size={18}/>}
+                    {loading ? 'Đang tìm...' : 'Tra cứu ngay'}
                  </button>
              </div>
 
-             {/* Hint */}
              <div className="mt-8 pt-6 border-t border-dashed border-slate-200 text-sm text-slate-500">
-                <strong>Gợi ý tra cứu (Mock Data):</strong>
-                <ul className="list-disc pl-5 mt-2 space-y-1">
-                   <li>Mã vé: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800">VE882910</code> - CCCD: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800">0123456789</code> (Hợp lệ)</li>
-                   <li>Mã vé: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800">VE999999</code> - CCCD: <code className="bg-slate-100 px-1 py-0.5 rounded text-slate-800">9876543210</code> (Đã sử dụng)</li>
-                </ul>
+                <strong>Lưu ý:</strong> Chỉ có thể đổi vé ở trạng thái "Đã thanh toán" và trước giờ tàu chạy theo quy định.
              </div>
           </div>
         )}
 
-        {/* ========================================================= */}
-        {/* VIEW 2: KẾT QUẢ TÌM THẤY (Card Chi tiết)                 */}
-        {/* ========================================================= */}
+        {/* VIEW 2: KẾT QUẢ TÌM THẤY */}
         {foundTicket && (
           <div className="bg-white rounded-xl shadow-lg border border-blue-100 overflow-hidden animate-in zoom-in duration-300">
             
@@ -249,7 +225,6 @@ const TicketExchangePage = () => {
             </div>
 
             <div className="p-8">
-                {/* Thông tin chính */}
                 <div className="flex flex-col md:flex-row gap-8 mb-8">
                     
                     {/* Cột Trái: Thông tin chuyến */}
@@ -272,9 +247,16 @@ const TicketExchangePage = () => {
                                 <span className="block text-xs text-slate-500 mb-1">Thời gian đi</span>
                                 <span className="font-bold text-slate-700 flex items-center gap-1">
                                     <Clock size={16}/> 
-                                    {new Date(foundTicket.ThoiGianDi).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'})}
+                                              {parseLocalDate(foundTicket.ThoiGianDi).toLocaleTimeString('vi-VN', {
+                                                  hour: '2-digit',
+                                                  minute: '2-digit'
+                                              })}
+
                                     <span className="text-xs font-normal text-slate-500 ml-1">
-                                        {new Date(foundTicket.ThoiGianDi).toLocaleDateString('vi-VN')}
+                                                  {new Date(foundTicket.ThoiGianDi).toLocaleDateString('vi-VN', {
+                                                      timeZone: 'Asia/Ho_Chi_Minh'
+                                                  })}
+
                                     </span>
                                 </span>
                             </div>
@@ -311,7 +293,7 @@ const TicketExchangePage = () => {
                                 </li>
                                 <li className="flex justify-between border-b border-dashed border-slate-200 pb-2">
                                     <span className="text-slate-500">Số điện thoại:</span>
-                                    <span className="font-bold text-slate-800">{foundTicket.SDT}</span>
+                                    <span className="font-bold text-slate-800">{foundTicket.SDT || "---"}</span>
                                 </li>
                             </ul>
                         </div>

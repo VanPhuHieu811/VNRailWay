@@ -4,6 +4,7 @@ import sql from 'mssql';
 export const findTicketForExchangeService = async (ticketCode, cccd) => {
     try {
         const pool = await getPool();
+        // Gọi SP cũ sp_TraCuuVeDoi (đã viết ở câu trả lời trước)
         const result = await pool.request()
             .input('MaVe', sql.VarChar(10), ticketCode)
             .input('CCCD', sql.VarChar(12), cccd)
@@ -13,36 +14,36 @@ export const findTicketForExchangeService = async (ticketCode, cccd) => {
             return null;
         }
 
-        // Map dữ liệu từ SQL sang format Frontend cần
         const row = result.recordset[0];
-        
+
+        // --- MAP DATA CHO KHỚP VỚI FRONTEND MỚI ---
         return {
-            ticket: {
-                maVe: row.MaVe,
-                //ngayDat: row.NgayMua,
-                customerInfo: {
-                    sdt: row.SoDienThoai
-                },
-                tripInfo: {
-                    tenTau: row.TenTau,
-                    gaDi: row.TenGaDi,
-                    gaDen: row.TenGaDen,
-                    // Format ngày giờ đẹp đẽ
-                    ngayDi: new Date(row.NgayDi).toISOString().split('T')[0],
-                    gioDi: row.GioDi,//new Date(row.ThoiGianDi).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}),
-                    gioDen: row.GioDen//new Date(row.ThoiGianDen).toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'}),
-                    //thoiGianChay: "---" // Có thể tính diff giữa Den và Di
-                }
-            },
-            seat: {
-                id: row.MaViTri,
-                tenToa: `Toa ${row.MaToaTau}`, // Giả sử mã toa
-                seatNum: row.MaViTri, // Hoặc tách số ghế từ mã
-                loaiToa: row.LoaiToa || "Ghế ngồi",
-                price: row.GiaVe,
-                passengerName: row.TenKhach,
-                passengerID: row.CCCD
-            }
+            // Thông tin vé
+            MaVe: row.MaVe,
+            MaKhachHang: row.MaKhachHang, // Giả sử SP trả về cột này
+            MaChuyenTau: row.MaChuyenTau,
+            MaViTri: row.MaViTri,
+            ThoiGianXuatVe: row.ThoiGianXuatVe, // Map từ NgayMua sang ThoiGianXuatVe
+            GaXuatPhat: row.TenGaDi,     // Map TenGaDi -> GaXuatPhat
+            GaDen: row.TenGaDen,         // Map TenGaDen -> GaDen
+            GiaThuc: row.GiaVe,          // Map GiaVe -> GiaThuc
+            TrangThai: row.TrangThai,
+
+            // Thông tin khách hàng
+            TenKhachHang: row.TenKhach,
+            CCCD: row.CCCD,
+            SDT: row.SoDienThoai,
+
+            // Thông tin chuyến tàu
+            TenTau: row.TenTau,
+            ThoiGianDi: row.ThoiGianDi,
+            ThoiGianDen: row.ThoiGianDen,
+            MaTuyenTau: row.MaTuyenTau,
+
+            // Thông tin ghế
+            TenToa: `Toa ${row.MaToaTau}`,
+            LoaiToa: row.LoaiToa,
+            SoGhe: row.MaViTri.split('-').pop() // Hoặc logic tách số ghế nếu cần
         };
     } catch (error) {
         throw error;

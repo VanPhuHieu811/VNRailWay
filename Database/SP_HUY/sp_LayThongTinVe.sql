@@ -11,12 +11,14 @@ BEGIN
     SELECT 
         -- Thông tin vé & Ghế
         vt.MaVe,
-        --vt.NgayDat AS NgayMua,
+		vt.MaKhachHang,
+        vt.ThoiGianXuatVe,
         vt.TrangThai,
         vt.GiaThuc AS GiaVe,
         vt.MaViTri,
         tt.MaToaTau, -- Cần join thêm bảng nếu muốn lấy Tên Toa
         tt.LoaiToa,
+		ct.MaTuyenTau,
         
         -- Thông tin khách hàng
         kh.HoTen AS TenKhach,
@@ -33,8 +35,10 @@ BEGIN
         
         -- Thời gian (Lấy từ bảng Lịch trình - Ở đây lấy ví dụ từ bảng Chuyến hoặc giả định logic lấy giờ)
 		CONVERT(date, tg1.DuKienXuatPhat) AS NgayDi,
-		CONVERT(varchar(5), tg1.DuKienXuatPhat, 108) AS GioDi,
-		CONVERT(varchar(5), tg2.DuKienDen, 108) AS GioDen
+		tg1.DuKienXuatPhat AS ThoiGianDi,
+		tg2.DuKienDen AS ThoiGianDen
+		--CONVERT(varchar(5), tg1.DuKienXuatPhat, 108) AS GioDi,
+		--CONVERT(varchar(5), tg2.DuKienDen, 108) AS GioDen
 
 		--CONVERT(VARCHAR(5), tg1.DuKienXuatPhat, 108) AS ThoiGianDi,
         --CONVERT(VARCHAR(5), tg2.DuKienDen, 108) AS ThoiGianDen
