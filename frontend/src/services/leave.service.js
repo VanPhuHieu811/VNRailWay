@@ -59,3 +59,29 @@ export const rejectLeaveRequest = async (maDon, reason) => {
     );
     return response.data;
 };
+
+// ... Các hàm cũ giữ nguyên ...
+
+// API Mới: Duyệt Dirty Read (Lỗi)
+export const approveLeaveRequestDirtyRead = async (requestId, replacementId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_URL}/approve-leave/dirty-read`, {
+        maDon: requestId,
+        maNVThayThe: replacementId
+    }, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
+
+// API Mới: Duyệt Fixed Dirty Read (An toàn)
+export const approveLeaveRequestFixedDirtyRead = async (requestId, replacementId) => {
+    const token = localStorage.getItem('token');
+    const response = await axios.post(`${API_URL}/approve-leave/fixed`, {
+        maDon: requestId,
+        maNVThayThe: replacementId
+    }, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    return response.data;
+};
