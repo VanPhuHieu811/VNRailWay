@@ -7,7 +7,7 @@ Content-Type: application/json
 
 {
   "username": "admin",
-  "password": "123"
+  "password": "admin123"
 }
 
 ### Luu token vao bien
