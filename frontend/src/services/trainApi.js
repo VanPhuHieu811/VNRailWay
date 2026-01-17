@@ -95,3 +95,11 @@ export const createCarriageService = async (data) => {
 export const updateCarriageService = async (carriageId, data) => {
   return await client.patch(`${BASE_URL}/carriages/${carriageId}`, data);
 };
+
+export const getRoutesManagementApi = async () => {
+    return await client.get('/api/v1/routes');
+};
+
+export const getRouteDetailsApi = async (routeId) => {
+    return await client.get(`/api/v1/routes/${routeId}`);
+};

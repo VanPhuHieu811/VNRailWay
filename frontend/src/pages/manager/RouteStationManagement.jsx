@@ -1,13 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { MapPin, ArrowRight, Loader2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
-// Cấu hình đường dẫn API
-const API_BASE_URL = 'http://localhost:3000/api/v1/routes';
+// 1. IMPORT SERVICE API (Thay vì dùng URL cứng)
+import { 
+    getRoutesManagementApi, 
+    getRouteDetailsApi 
+} from '../../services/trainApi';
 
 const RouteStationManagement = () => {
   // --- 1. STATE & DATA ---
-  const [routes, setRoutes] = useState([]); // Khởi tạo mảng rỗng
+  const [routes, setRoutes] = useState([]); 
   const [selectedRouteId, setSelectedRouteId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -19,29 +22,30 @@ const RouteStationManagement = () => {
     const fetchRoutes = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}`);
-        const result = await response.json();
+        
+        // 2. GỌI API QUA SERVICE (Tự động kèm Token Admin)
+        const result = await getRoutesManagementApi();
 
-        if (result.success && Array.isArray(result.data)) {
-          // Map dữ liệu từ SQL (Tiếng Việt/PascalCase) sang cấu trúc State (CamelCase)
+        if (result && result.success && Array.isArray(result.data)) {
+          // Map dữ liệu từ Backend sang cấu trúc State
           const mappedRoutes = result.data.map(r => ({
-            id: r.id,          // MaTuyenTau
+            id: r.id,          // MaTuyenTau (hoặc r.maTuyenTau tùy backend trả về)
             name: r.name,      // TenTuyen
-            code: r.code,      // MaTuyenTau (Code)
+            code: r.code,      // MaTuyenTau
             totalStations: r.totalStations,
             totalLength: r.totalLength,
-            stations: []       // Khởi tạo mảng ga rỗng, sẽ load sau
+            stations: []       // Init mảng rỗng
           }));
 
           setRoutes(mappedRoutes);
           
-          // Mặc định chọn tuyến đầu tiên nếu có
           if (mappedRoutes.length > 0) {
             setSelectedRouteId(mappedRoutes[0].id);
           }
         }
       } catch (error) {
         console.error("Lỗi lấy danh sách tuyến:", error);
+        toast.error("Không thể tải danh sách tuyến. Vui lòng kiểm tra quyền truy cập.");
       } finally {
         setLoading(false);
       }
@@ -56,28 +60,27 @@ const RouteStationManagement = () => {
 
     const fetchRouteDetails = async () => {
       try {
-        // Kiểm tra xem tuyến này đã có dữ liệu ga chưa, nếu có rồi thì không gọi API nữa
+        // Kiểm tra cache local, nếu có stations rồi thì không gọi lại
         const currentRoute = routes.find(r => r.id === selectedRouteId);
         if (currentRoute && currentRoute.stations && currentRoute.stations.length > 0) {
           return; 
         }
 
         setLoadingDetails(true);
-        const response = await fetch(`${API_BASE_URL}/${selectedRouteId}`);
-        const result = await response.json();
+        
+        // 3. GỌI API CHI TIẾT (Tự động kèm Token Admin)
+        const result = await getRouteDetailsApi(selectedRouteId);
 
-        console.log(result);
-
-        if (result.success && result.data) {
-          // Map dữ liệu Chi tiết từ Backend trả về
+        if (result && result.success && result.data) {
+          // Map dữ liệu Ga
           const stationsData = result.data.stations.map((s, index) => ({
-            id: index + 1,        // Frontend cần ID duy nhất để làm key
-            code: s.maGaTau,      // Backend trả về maGaTau
-            name: s.tenGa,        // Backend trả về tenGa
-            km: s.khoangCachTuGaDau // Backend trả về khoangCachTuGaDau
+            id: index + 1,        
+            code: s.maGaTau,      
+            name: s.tenGa,        
+            km: s.khoangCachTuGaDau 
           }));
 
-          // Cập nhật lại state routes với dữ liệu ga vừa lấy được
+          // Update State
           setRoutes(prevRoutes => prevRoutes.map(r => {
             if (r.id === selectedRouteId) {
               return { ...r, stations: stationsData };
@@ -87,19 +90,21 @@ const RouteStationManagement = () => {
         }
       } catch (error) {
         console.error("Lỗi lấy chi tiết tuyến:", error);
+        toast.error("Lỗi tải chi tiết ga.");
       } finally {
         setLoadingDetails(false);
       }
     };
 
     fetchRouteDetails();
-  }, [selectedRouteId]); // Chạy lại mỗi khi selectedRouteId thay đổi
+  }, [selectedRouteId]); // Chạy lại khi ID thay đổi
 
   // --- 3. LOGIC & HELPERS ---
   const selectedRoute = routes.find(r => r.id === selectedRouteId);
-  const totalLength = selectedRoute?.totalLength || selectedRoute?.stations[selectedRoute?.stations?.length - 1]?.km || 0;
+  // Tính tổng chiều dài fallback nếu API list chưa có
+  const totalLength = selectedRoute?.totalLength || (selectedRoute?.stations?.length > 0 ? selectedRoute.stations[selectedRoute.stations.length - 1].km : 0);
 
-  // --- 4. RENDER ---
+  // --- 4. RENDER (Giữ nguyên như cũ) ---
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -183,26 +188,21 @@ const RouteStationManagement = () => {
                     const prevStation = index > 0 ? selectedRoute.stations[index - 1] : null;
                     const distFromPrev = prevStation ? (station.km - prevStation.km).toFixed(1) : 0;
 
-                    // Màu sắc icon
                     let iconColorClass = "bg-sky-500 text-white"; 
                     if (isFirst) iconColorClass = "bg-green-500 text-white"; 
                     if (isLast) iconColorClass = "bg-red-500 text-white";
 
                     return (
                       <div key={station.id || index} className="relative group">
-                        {/* Vertical Line Connector */}
                         {!isLast && (
                           <div className="absolute left-[19px] top-10 bottom-[-16px] w-0.5 bg-gray-200 group-hover:bg-gray-300 transition-colors"></div>
                         )}
 
                         <div className="flex items-center gap-4 p-3 rounded-lg border border-gray-100 hover:border-gray-300 transition-all bg-white z-10 relative">
-                          
-                          {/* Icon */}
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm ${iconColorClass}`}>
                             <MapPin className="w-5 h-5" />
                           </div>
 
-                          {/* Info */}
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
                               <h4 className="font-bold text-gray-800 text-lg">{station.name}</h4>
@@ -225,7 +225,7 @@ const RouteStationManagement = () => {
                 )}
               </div>
 
-              {/* Footer: Summary Distance (Chỉ hiện khi đã tải xong và có > 1 ga) */}
+              {/* Footer: Summary Distance */}
               {!loadingDetails && selectedRoute.stations.length > 1 && (
                 <div className="p-4 bg-gray-50 border-t border-gray-200 rounded-b-xl">
                   <h4 className="text-xs font-bold text-gray-500 uppercase mb-3">Tóm tắt lộ trình</h4>
