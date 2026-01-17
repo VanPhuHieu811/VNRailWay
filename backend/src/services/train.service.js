@@ -63,63 +63,16 @@ export const createTrainService = async (trainData) => {
 export const updateTrainService = async (maDoanTau, updateData) => {
     try {
         const pool = await getPool();
-
-        // Check if train exists
-        const trainResult = await pool.request()
-            .input('maDoanTau', sql.VarChar(10), maDoanTau)
-            .query(`
-                SELECT MaDoanTau
-                FROM DOAN_TAU
-                WHERE MaDoanTau = @maDoanTau
-            `);
-
-        if (trainResult.recordset.length === 0) {
-            throw new AppError('Train not found', 404);
-        }
-
-        const updateFields = [];
-        const request = pool.request()
-            .input('maDoanTau', sql.VarChar(10), maDoanTau);
-
-        if (updateData.tenTau !== undefined) {
-            updateFields.push('TenTau = @tenTau');
-            request.input('tenTau', sql.NVarChar(100), updateData.tenTau);
-        }
-
-        if (updateData.hangSanXuat !== undefined) {
-            updateFields.push('HangSanXuat = @hangSanXuat');
-            request.input('hangSanXuat', sql.NVarChar(100), updateData.hangSanXuat);
-        }
-
-        if (updateData.ngayVanHanh !== undefined) {
-            updateFields.push('NgayVanHanh = @ngayVanHanh');
-            request.input('ngayVanHanh', sql.Date, updateData.ngayVanHanh);
-        }
-
-        if (updateData.loaiTau !== undefined) {
-            updateFields.push('LoaiTau = @loaiTau');
-            request.input('loaiTau', sql.NVarChar(20), updateData.loaiTau);
-        }
-
-        if (updateData.trangThai !== undefined) {
-            updateFields.push('TrangThai = @trangThai');
-            request.input('trangThai', sql.NVarChar(20), updateData.trangThai);
-        }
-
-        if (updateFields.length === 0) {
-            throw new AppError('No fields to update', 400);
-        }
-
-        const updateQuery = `
-            UPDATE DOAN_TAU
-            SET ${updateFields.join(', ')}
-            WHERE MaDoanTau = @maDoanTau
-        `;
-
-        await request.query(updateQuery);
+        await pool.request()
+            .input('MaDoanTau', sql.VarChar(10), maDoanTau)
+            .input('TenTau', sql.NVarChar(100), updateData.tenTau ?? null)
+            .input('HangSanXuat', sql.NVarChar(100), updateData.hangSanXuat ?? null)
+            .input('NgayVanHanh', sql.Date, updateData.ngayVanHanh ?? null)
+            .input('LoaiTau', sql.NVarChar(20), updateData.loaiTau ?? null)
+            .input('TrangThai', sql.NVarChar(20), updateData.trangThai ?? null)
+            .execute('sp_CapNhatDoanTau_DeadlockDemo');
 
         return {
-            updated: true,
             maDoanTau,
             message: 'Train updated successfully'
         };
