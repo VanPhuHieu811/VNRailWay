@@ -70,6 +70,26 @@ export const updateTrainService = async (maDoanTau, updateData) => {
             .input('NgayVanHanh', sql.Date, updateData.ngayVanHanh ?? null)
             .input('LoaiTau', sql.NVarChar(20), updateData.loaiTau ?? null)
             .input('TrangThai', sql.NVarChar(20), updateData.trangThai ?? null)
+            .execute('sp_CapNhatDoanTau_DeadlockFix');
+        return {
+            maDoanTau,
+            message: 'Train updated successfully'
+        };
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const updateTrainServiceDeadlock = async (maDoanTau, updateData) => {
+    try {
+        const pool = await getPool();
+        await pool.request()
+            .input('MaDoanTau', sql.VarChar(10), maDoanTau)
+            .input('TenTau', sql.NVarChar(100), updateData.tenTau ?? null)
+            .input('HangSanXuat', sql.NVarChar(100), updateData.hangSanXuat ?? null)
+            .input('NgayVanHanh', sql.Date, updateData.ngayVanHanh ?? null)
+            .input('LoaiTau', sql.NVarChar(20), updateData.loaiTau ?? null)
+            .input('TrangThai', sql.NVarChar(20), updateData.trangThai ?? null)
             .execute('sp_CapNhatDoanTau_DeadlockDemo');
 
         return {

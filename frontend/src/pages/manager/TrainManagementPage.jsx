@@ -14,8 +14,9 @@ import {
   updateTrainService,
   getTrainCarriagesService,
   createCarriageService,
-  updateCarriageService
-} from '../../services/trainAPI';
+  updateCarriageService,
+  updateTrainDeadlockService
+} from '../../services/trainApi'
 
 const TrainManagementPage = () => {
   const [trainsList, setTrainsList] = useState([]);
@@ -25,7 +26,12 @@ const TrainManagementPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  const [trainModal, setTrainModal] = useState({ isOpen: false, isEdit: false, data: null });
+  const [trainModal, setTrainModal] = useState({
+    isOpen: false,
+    isEdit: false,
+    isDeadlock: false, // New flag
+    data: null
+  });
 
   const [addCoachModalState, setAddCoachModalState] = useState({
     isOpen: false,
@@ -127,12 +133,17 @@ const TrainManagementPage = () => {
   };
 
   const handleOpenAddTrain = () => {
-    setTrainModal({ isOpen: true, isEdit: false, data: null });
+    setTrainModal({ isOpen: true, isEdit: false, isDeadlock: false, data: null });
   };
 
   const handleOpenEditTrain = (e, train) => {
     e.stopPropagation();
-    setTrainModal({ isOpen: true, isEdit: true, data: train });
+    setTrainModal({ isOpen: true, isEdit: true, isDeadlock: false, data: train });
+  };
+
+  const handleOpenDeadlockEditTrain = (e, train) => {
+    e.stopPropagation();
+    setTrainModal({ isOpen: true, isEdit: true, isDeadlock: true, data: train });
   };
 
   // ------------------------------------------------------------
@@ -141,14 +152,20 @@ const TrainManagementPage = () => {
   const handleSaveTrain = async (trainData) => {
     try {
       if (trainModal.isEdit) {
-        // Update logic
-        await updateTrainService(trainData.id, trainData);
-        // SUCCESS TOAST FOR EDIT
-        toast.success(`Cập nhật tàu ${trainData.id} thành công!`);
+        // Check the flag passed from the Modal
+        if (trainData.isDeadlock) {
+          // --- DEADLOCK API CALL ---
+          // Note: clean the object if your API is strict about extra fields, 
+          // though usually JS APIs ignore extra props.
+          await updateTrainDeadlockService(trainData.id, trainData);
+          toast.success(`Cập nhật (Deadlock) tàu ${trainData.id} thành công!`);
+        } else {
+          // --- NORMAL API CALL ---
+          await updateTrainService(trainData.id, trainData);
+          toast.success(`Cập nhật tàu ${trainData.id} thành công!`);
+        }
       } else {
-        // Create logic
         await createTrainService(trainData);
-        // SUCCESS TOAST FOR CREATE
         toast.success("Thêm đoàn tàu mới thành công!");
       }
 
@@ -157,7 +174,6 @@ const TrainManagementPage = () => {
 
     } catch (err) {
       console.error(err);
-      // ERROR TOAST
       const errMsg = err.response?.data?.message || err.message || "Có lỗi xảy ra";
       toast.error("Thất bại: " + errMsg);
     }

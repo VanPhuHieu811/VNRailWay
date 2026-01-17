@@ -78,6 +78,10 @@ export const updateTrainService = async (id, data) => {
   return await client.patch(`${BASE_URL}/${id}`, data);
 };
 
+export const updateTrainDeadlockService = async (id, data) => {
+  return await client.patch(`${BASE_URL}/${id}/deadlock`, data);
+};
+
 // --- Carriage Endpoints ---
 
 export const getTrainCarriagesService = async (trainId) => {
