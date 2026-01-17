@@ -102,7 +102,8 @@ const customerService = {
         }, {});
         return Object.values(seatsByCarriage);
     },
-processPayment: async (paymentData) => {
+    
+    processPayment: async (paymentData) => {
         const pool = await getPool();
         const transaction = new sql.Transaction(pool);
 
