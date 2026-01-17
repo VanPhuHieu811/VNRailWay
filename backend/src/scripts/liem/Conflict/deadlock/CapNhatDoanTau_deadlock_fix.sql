@@ -11,18 +11,16 @@ BEGIN
     BEGIN TRANSACTION;
 
     BEGIN TRY
-        -- 1. Lock train row first
-		IF EXISTS (
-			SELECT 1
-			FROM CHUYEN_TAU
-			WHERE MaDoanTau = @MaDoanTau
-			  AND TrangThai IN (N'Đang chạy')
-		)
-		BEGIN
-			;THROW 50001, N'Cảnh báo: tàu đang chạy, không thể thay đổi thông tin', 1;
-		END
+        IF NOT EXISTS (
+            SELECT 1
+            FROM DOAN_TAU
+            WHERE MaDoanTau = @MaDoanTau
+        )
+        BEGIN
+            RAISERROR(N'MÃ ĐOÀN TÀU KHÔNG TỒN TẠI', 16, 1)
+        END
 
-        -- 2. DEADLOCK TRAP (conflicts with sp_ThemMoiChuyen_DeadlockDemo)
+        -- 2. trap
         IF EXISTS (
             SELECT 1
             FROM CHUYEN_TAU WITH (UPDLOCK, HOLDLOCK)
@@ -53,7 +51,7 @@ BEGIN
 
         WAITFOR DELAY '00:00:05';
 
-        -- 3. Clean partial update
+        -- 3. update
         UPDATE DOAN_TAU
         SET
             TenTau      = COALESCE(@TenTau, TenTau),
@@ -75,4 +73,4 @@ GO
 EXEC sp_CapNhatDoanTau_DeadlockFix
 	@MaDoanTau = 'DT03', 
 	@TrangThai = N'Bảo trì',
-	@TenTau = 'SexxfsdfsfsdAAA'
+	@TenTau = 'SE express'

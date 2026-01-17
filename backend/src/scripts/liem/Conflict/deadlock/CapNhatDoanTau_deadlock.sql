@@ -11,7 +11,6 @@ BEGIN
     BEGIN TRANSACTION;
 
     BEGIN TRY
-        -- 1. Lock train row first
         IF NOT EXISTS (
             SELECT 1
             FROM DOAN_TAU WITH (UPDLOCK, HOLDLOCK)
@@ -21,7 +20,7 @@ BEGIN
             RAISERROR(N'MÃ ĐOÀN TÀU KHÔNG TỒN TẠI', 16, 1)
         END
 
-        -- 2. DEADLOCK TRAP (conflicts with sp_ThemMoiChuyen_DeadlockDemo)
+        -- 2. trap
         IF EXISTS (
             SELECT 1
             FROM CHUYEN_TAU WITH (UPDLOCK, HOLDLOCK)
