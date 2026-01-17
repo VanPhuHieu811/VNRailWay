@@ -358,6 +358,7 @@ export const fixLostUpdateApprove = async (req, res) => {
       message: `Xử lý đơn ${maDon} thành công.` 
     });
   } catch (error) {
+    console.error('❌ Lỗi duyệt đơn (Fix Lost Update):', error);
     res.status(400).json({ success: false, message: error.message });
   }
 }

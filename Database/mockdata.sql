@@ -350,7 +350,7 @@ INSERT INTO PHAN_CONG_CHUYEN_TAU (MaPhanCong, MaNV, VaiTro, MaChuyenTau, MaToa, 
 ('PC010', 'NV012', N'Nhân viên phụ trách toa', 'CT004', 'T02_01', N'Nhận việc'),
 ('PC011', 'NV004', N'Nhân viên phụ trách lái', 'CT005', NULL, N'Nhận việc'),
 ('PC012', 'NV009', N'Nhân viên trưởng', 'CT005', NULL, N'Nhận việc'),
-('PC013', 'NV007', N'Nhân viên phụ trách toa', 'CT006', 'T02_03', N'Nhận việc')
+('PC013', 'NV007', N'Nhân viên phụ trách toa', 'CT006', 'T04_01', N'Nhận việc')
 GO
 
 -- =============================================
