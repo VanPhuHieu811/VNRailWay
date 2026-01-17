@@ -35,9 +35,9 @@ export const assignStaffApi = async (data) => {
 
 // 7. Lấy danh sách nhân viên khả dụng (Gọi sang Staff Controller)
 export const getAvailableStaffApi = async (maChuyenTau, loaiNV) => {
-    return await client.get('/api/v1/staff/available-crew', { 
-        params: { maChuyenTau, loaiNV } 
-    });
+    return await client.post('/api/v1/staff/available-crew',  
+        { maChuyenTau, loaiNV }
+    );
 };
 // 8. Tạo lịch trình chuyến mới 
 export const createScheduleApi = async (data) => {

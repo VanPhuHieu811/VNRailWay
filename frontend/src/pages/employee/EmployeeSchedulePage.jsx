@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Train, Calendar, Clock, MapPin, User, X, ChevronRight } from 'lucide-react';
+import { Train, Calendar, Clock, MapPin, User, X, ChevronRight, Loader } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getMyScheduleService } from '../../services/staffApi'; // Import Service vừa tạo
 import '../../styles/pages/employee/EmployeeSchedulePage.css';
@@ -161,8 +161,26 @@ const EmployeeSchedulePage = () => {
             />
           </div>
 
-          <button className="btn-search-schedule" onClick={filterSchedules}>
-            Xem
+          <button 
+            className="btn-search-schedule" 
+            onClick={filterSchedules}
+            disabled={loading}
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              opacity: loading ? 0.7 : 1, 
+              cursor: loading ? 'not-allowed' : 'pointer' 
+            }}
+          >
+            {loading ? (
+              <>
+                <Loader className="animate-spin" size={18} />
+                <span>Đang tải...</span>
+              </>
+            ) : (
+              "Xem"
+            )}
           </button>
         </div>
       </div>

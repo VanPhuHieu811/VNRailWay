@@ -427,3 +427,28 @@ BEGIN
     END
 END;
 GO
+
+CREATE OR ALTER TRIGGER trg_KiemTraToaThuocDoanTau
+ON PHAN_CONG_CHUYEN_TAU
+AFTER INSERT, UPDATE
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM Inserted WHERE MaToa IS NOT NULL)
+    BEGIN
+        IF EXISTS (
+            SELECT 1 
+            FROM Inserted i
+            JOIN CHUYEN_TAU ct ON i.MaChuyenTau = ct.MaChuyenTau   
+            JOIN TOA_TAU tt ON i.MaToa = tt.MaToaTau               
+            WHERE ct.MaDoanTau <> tt.MaDoanTau                     
+        )
+        BEGIN
+            RAISERROR(N'Lỗi Nghiệp vụ: Toa tàu bạn chọn không thuộc Đoàn tàu đang chạy trong chuyến này.', 16, 1);
+            ROLLBACK TRANSACTION;
+            RETURN;
+        END
+    END
+END;
+GO
