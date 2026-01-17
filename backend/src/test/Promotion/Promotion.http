@@ -1,0 +1,105 @@
+@baseUrl = http://localhost:3000/api/v1
+@resource = promotions
+
+### ==============================================================================
+### 1. AUTHENTICATION
+### ==============================================================================
+
+### Login Request (Get Token)
+# @name loginRequest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "admin123"
+}
+
+### Save token to variable
+@authToken = {{loginRequest.response.body.$.data.token}}
+
+### ==============================================================================
+### 2. GET REQUESTS
+### ==============================================================================
+
+### Get All Promotions
+GET {{baseUrl}}/{{resource}}
+Authorization: Bearer {{authToken}}
+
+### Search Promotions (e.g., search for 'Tết' or 'Sinh viên')
+GET {{baseUrl}}/{{resource}}?search=UD05
+Authorization: Bearer {{authToken}}
+
+### ==============================================================================
+### 3. POST REQUESTS (CREATE)
+### ==============================================================================
+
+### Create a New Promotion (Happy Path)
+# @name createPromoRequest
+POST {{baseUrl}}/{{resource}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "loaiUuDai": "Mừng Quốc Khánh 2026",
+  "moTa": "Giảm giá đặc biệt ngày 2/9",
+  "doiTuong": "Tất cả",
+  "phanTram": 15,
+  "ngayBatDau": "2026-09-01",
+  "ngayKetThuc": "2026-09-05",
+  "trangThai": "Đang áp dụng"
+}
+
+### Capture the new ID from the response above
+# Assuming your controller returns { "success": true, "maUuDai": "UDxx", ... }
+@newPromoId = {{createPromoRequest.response.body.maUuDai}}
+
+
+### Create Another Promotion (Indefinite time - No End Date)
+POST {{baseUrl}}/{{resource}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+  "loaiUuDai": "Khách hàng VIP",
+  "moTa": "Giảm giá trọn đời cho thẻ VIP",
+  "doiTuong": "Khách hàng thân thiết",
+  "phanTram": 5,
+  "ngayBatDau": "2026-01-01",
+  "trangThai": "Đang áp dụng"
+}
+
+### ==============================================================================
+### 4. PATCH REQUESTS (UPDATE)
+### ==============================================================================
+
+### Update the Promotion we just created (using the captured ID)
+# Scenario: Change status to 'Tạm ngưng'
+PATCH {{baseUrl}}/{{resource}}/{{newPromoId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "trangThai": "Tạm ngưng"
+}
+
+### Update Promotion Details
+# Scenario: Change Description and Extend End Date
+PATCH {{baseUrl}}/{{resource}}/{{newPromoId}}
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "moTa": "Gia hạn chương trình khuyến mãi đến 10/9",
+    "ngayKetThuc": "2026-09-10"
+}
+
+### Update a specific Hardcoded ID (e.g., UD01 from mock data)
+PATCH {{baseUrl}}/{{resource}}/UD01
+Authorization: Bearer {{authToken}}
+Content-Type: application/json
+
+{
+    "phanTram": 12,
+    "moTa": "Cập nhật giảm giá sinh viên mùa hè"
+}

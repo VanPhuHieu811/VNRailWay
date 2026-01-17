@@ -1,23 +1,24 @@
-﻿-- T1_fix: Khách hàng xem ưu đãi
--- Fix sửa isolation level
-CREATE OR ALTER PROCEDURE sp_th9_KhachHang_XemUuDai_fix
+﻿-- T1 FIX: Sử dụng SERIALIZABLE
+CREATE OR ALTER PROCEDURE sp_LayDanhSachUuDai_th9_fix
+    @TuKhoa NVARCHAR(100) = NULL
 AS
 BEGIN
-    -- FIX: Sử dụng SERIALIZABLE để khóa toàn bộ phạm vi (Range Lock)
-    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; 
+    SET NOCOUNT ON;
+    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
     BEGIN TRANSACTION;
-
-    PRINT N'--- B1: Khách hàng xem danh sách (SERIALIZABLE) ---';
-    SELECT * FROM UU_DAI_GIA WHERE LoaiUuDai = N'VIP';
     
+    -- Read 1
+    SELECT MaUuDai, LoaiUuDai FROM UU_DAI_GIA 
+    WHERE (@TuKhoa IS NULL OR LoaiUuDai LIKE N'%' + @TuKhoa + N'%');
+
     WAITFOR DELAY '00:00:15';
 
-    PRINT N'--- B5: Khách hàng xem lại danh sách ---';
-    SELECT * FROM UU_DAI_GIA WHERE LoaiUuDai = N'VIP';
+    -- Read 2
+    SELECT MaUuDai, LoaiUuDai FROM UU_DAI_GIA 
+    WHERE (@TuKhoa IS NULL OR LoaiUuDai LIKE N'%' + @TuKhoa + N'%');
 
     COMMIT TRANSACTION;
 END;
-
 GO
-EXEC sp_th9_KhachHang_XemUuDai_fix;
+EXEC sp_LayDanhSachUuDai_th9_fix
