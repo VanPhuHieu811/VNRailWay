@@ -1,5 +1,5 @@
 import { getPool } from "../config/sqlserver.config.js"
-
+import sql from "mssql"
 export const getAllTrainCarriagePrices = async () => {
   const pool = await getPool();
   const query = `
@@ -148,3 +148,27 @@ export const updatePriceByKilometerById = async (id, price) => {
     .query(query);
   return result.rowsAffected[0] > 0 ? { MaThamSo: id, GiaTien: price } : null;
 }
+
+export const calculateTicketPrice = async ({ tripId, fromStationId, toStationId, seatId, promotionCode }) => {
+    try {
+        const pool = await getPool();
+        const request = pool.request();
+        
+        request.input('MaChuyenTau', sql.VarChar, tripId);
+        request.input('GaDi', sql.VarChar, fromStationId);
+        request.input('GaDen', sql.VarChar, toStationId);
+        request.input('MaViTri', sql.VarChar, seatId);
+        request.input('MaUuDai', sql.VarChar, promotionCode || null); 
+
+        const result = await request.execute('sp_TinhGiaVeChiTiet');
+
+        if (result.recordset.length > 0) {
+            return result.recordset[0];
+        }
+        return null;
+
+    } catch (error) {
+        console.error('Lỗi tại price.service:', error);
+        throw error; 
+    }
+};

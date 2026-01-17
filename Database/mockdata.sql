@@ -38,7 +38,7 @@ INSERT INTO THAM_SO (MaThamSo, TenThamSo, GiaTriSo, GiaTriChuoi, NgayHieuLuc, Ng
 ('TS001', N'Thời gian giữ vé', 30, NULL, '2026-01-01', NULL, N'Số phút giữ chỗ trước khi hủy'),
 ('TS002', N'Phí hủy vé', 10, NULL, '2026-01-01', NULL, N'Phần trăm phí hủy vé'),
 ('TS003', N'Phí đổi vé', 5, NULL, '2026-01-01', NULL, N'Phần trăm phí đổi vé'),
-('TS004', N'Giá vé theo km', 5000, NULL, '2026-01-01', NULL, N'Số tiền cho 100 km');
+('TS004', N'Giá vé theo km', 5000, NULL, '2026-01-01', NULL, N'Số tiền cho 1 km');
 GO
 
 -- =============================================

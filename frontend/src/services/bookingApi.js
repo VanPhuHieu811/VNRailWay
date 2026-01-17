@@ -15,6 +15,9 @@ export const bookingApi = {
     return client.get('/api/v1/customers/my-tickets', {
       params: { email }
     });
-  }
+  },
 
+  calculatePrice: (data) => {
+    return client.post('/api/v1/prices/calculate', data);
+  } 
 };
