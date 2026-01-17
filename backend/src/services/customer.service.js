@@ -1,6 +1,29 @@
 import sql from 'mssql';
 import { getPool } from '../config/sqlserver.config.js';
 import { generateId } from '../utils/idGenerator.js';
+const mapStatusToFrontend = (statusDb) => {
+    if (!statusDb) return 'processing';
+    
+    const s = statusDb.toLowerCase();
+    
+    // Nếu DB lưu "Đã hủy" hoặc "Cancelled"
+    if (s.includes('hủy') || s.includes('cancelled')) {
+        return 'cancelled';
+    }
+    
+    // Nếu DB lưu "Đã đi", "Hoàn thành"
+    if (s.includes('đã đi') || s.includes('hoàn thành')) {
+        return 'used';
+    }
+    
+    // Nếu DB lưu "Đã thanh toán", "Đã đặt" -> Trả về active để frontend hiện "Sắp khởi hành"
+    if (s.includes('thanh toán') || s.includes('đã đặt')) {
+        return 'active';
+    }
+
+    // Mặc định
+    return 'processing';
+};
 
 const customerService = {
     /**
@@ -79,95 +102,127 @@ const customerService = {
         }, {});
         return Object.values(seatsByCarriage);
     },
-    processPayment: async (paymentData) => {
+processPayment: async (paymentData) => {
         const pool = await getPool();
         const transaction = new sql.Transaction(pool);
 
         try {
             await transaction.begin(); // --- BẮT ĐẦU TRANSACTION ---
             
-            // --- BƯỚC 1: XỬ LÝ KHÁCH HÀNG (NGƯỜI ĐẶT VÉ) ---
-            let maKhachHang = '';
-            
-            // Kiểm tra khách hàng đã tồn tại chưa (Dựa vào CCCD hoặc SĐT)
-            const checkKhRequest = new sql.Request(transaction);
-            checkKhRequest.input('CCCD', sql.VarChar(20), paymentData.buyerInfo.CCCD);
-            checkKhRequest.input('SoDienThoai', sql.VarChar(15), paymentData.buyerInfo.SoDienThoai);
-            
-            const checkKhResult = await checkKhRequest.query(`
-                SELECT MaKhachHang FROM KHACH_HANG 
-                WHERE CCCD = @CCCD OR SoDienThoai = @SoDienThoai
-            `);
-
-            if (checkKhResult.recordset.length > 0) {
-                // Nếu đã có -> Lấy mã cũ
-                maKhachHang = checkKhResult.recordset[0].MaKhachHang;
-                const updateKh = new sql.Request(transaction);
-                updateKh.input('MaKhachHang', maKhachHang);
-                updateKh.input('HoTen', sql.NVarChar(50), paymentData.buyerInfo.HoTen);
-                updateKh.input('SoDienThoai', sql.VarChar(15), paymentData.buyerInfo.SoDienThoai);
-                updateKh.input('NgaySinh', sql.Date, paymentData.buyerInfo.NgaySinh || null);
-                // ... các trường khác
-                await updateKh.query(`
-                    UPDATE KHACH_HANG 
-                    SET HoTen = @HoTen, SoDienThoai = @SoDienThoai, NgaySinh = @NgaySinh
-                    WHERE MaKhachHang = @MaKhachHang
-                `);
-            } else {
-                // Nếu chưa có -> Sinh mã mới (KH001, KH002...)
-                // Lưu ý: Trong transaction, ta phải tự tính logic sinh mã cẩn thận hoặc lock bảng. 
-                // Để đơn giản ở đây, ta gọi hàm generateId (lưu ý: có thể bị race condition nếu traffic cao, production cần lock)
-                maKhachHang = await generateId('KHACH_HANG', 'MaKhachHang', 'KH', 3);
-
-                const insertKhRequest = new sql.Request(transaction);
-                insertKhRequest.input('MaKhachHang', sql.VarChar(20), maKhachHang);
-                insertKhRequest.input('HoTen', sql.NVarChar(50), paymentData.buyerInfo.HoTen);
-                insertKhRequest.input('CCCD', sql.VarChar(20), paymentData.buyerInfo.CCCD);
-                insertKhRequest.input('NgaySinh', sql.Date, paymentData.buyerInfo.NgaySinh); // YYYY-MM-DD
-                insertKhRequest.input('DiaChi', sql.NVarChar(100), paymentData.buyerInfo.DiaChi);
-                insertKhRequest.input('SoDienThoai', sql.VarChar(15), paymentData.buyerInfo.SoDienThoai);
-
-                await insertKhRequest.query(`
-                    INSERT INTO KHACH_HANG (MaKhachHang, HoTen, CCCD, NgaySinh, DiaChi, SoDienThoai,GioiTinh)
-                    VALUES (@MaKhachHang, @HoTen, @CCCD, @NgaySinh, @DiaChi, @SoDienThoai, 'Nam')
-                `);
-            }
-
-            // --- BƯỚC 2: TẠO ĐƠN ĐẶT VÉ (DAT_VE) ---
-            const maDatVe = await generateId('DAT_VE', 'MaDatVe', 'DV', 3); // VD: DV001
+            // =========================================================================
+            // BƯỚC 1: TẠO ĐƠN ĐẶT VÉ (DAT_VE) - Gắn với EMAIL NGƯỜI ĐẶT
+            // =========================================================================
+            const maDatVe = await generateId('DAT_VE', 'MaDatVe', 'DV', 3);
             const thoiGianDat = new Date();
-            const hanThanhToan = new Date(thoiGianDat.getTime() + 30 * 60000); // Cộng thêm 30 phút
+            const hanThanhToan = new Date(thoiGianDat.getTime() + 30 * 60000); // +30 phút
 
             const reqDatVe = new sql.Request(transaction);
             reqDatVe.input('MaDatVe', sql.VarChar(20), maDatVe);
             reqDatVe.input('ThoiGianDat', sql.DateTime, thoiGianDat);
-            reqDatVe.input('Email', sql.VarChar(50), paymentData.buyerInfo.Email || null);
+            // EMAIL người đặt lưu ở đây để gửi vé
+            reqDatVe.input('Email', sql.VarChar(50), paymentData.buyerInfo.Email || null); 
             reqDatVe.input('MaChuyenTau', sql.VarChar(20), paymentData.tripId);
             reqDatVe.input('HanThanhToan', sql.DateTime, hanThanhToan);
             
-            // Insert tạm thời, Tổng tiền sẽ update sau hoặc tính luôn nếu có
             await reqDatVe.query(`
-                INSERT INTO DAT_VE (MaDatVe,MaChuyenTau,Email, ThoiGianDat, HanThanhToan, TrangThai, KenhDat)
+                INSERT INTO DAT_VE (MaDatVe, MaChuyenTau, Email, ThoiGianDat, HanThanhToan, TrangThai, KenhDat)
                 VALUES (@MaDatVe, @MaChuyenTau, @Email, @ThoiGianDat, @HanThanhToan, N'Đã thanh toán', 'Online')
             `);
 
-            // --- BƯỚC 3: TẠO CHI TIẾT VÉ (VE_TAU) VÀ TÍNH TIỀN ---
+            // =========================================================================
+            // CHUẨN BỊ ID ĐỂ TỰ TĂNG (Tránh lỗi trùng lặp trong vòng lặp)
+            // =========================================================================
+            
+            // 1. Chuẩn bị ID cho VÉ (VE...)
+            let baseMaVe = await generateId('VE_TAU', 'MaVe', 'VE', 3); 
+            let currentVeNum = parseInt(baseMaVe.replace('VE', ''), 10);
+
+            // 2. Chuẩn bị ID cho KHÁCH HÀNG (KH...) - Phòng trường hợp cần tạo mới nhiều KH
+            // Lưu ý: generateId trả về ID kế tiếp khả dụng
+            let baseMaKh = await generateId('KHACH_HANG', 'MaKhachHang', 'KH', 3);
+            let currentKhNum = parseInt(baseMaKh.replace('KH', ''), 10);
+            
+            // Biến đếm số lượng khách hàng MỚI được tạo trong transaction này
+            let newCustomerCount = 0; 
+
+            // =========================================================================
+            // BƯỚC 2: DUYỆT TỪNG HÀNH KHÁCH -> XỬ LÝ KHÁCH HÀNG -> TẠO VÉ
+            // =========================================================================
             let tongTienThuc = 0;
 
-            for (const p of paymentData.passengers) {
-                const maVe = await generateId('VE_TAU', 'MaVe', 'VE', 3); // VD: VE001
+            for (let i = 0; i < paymentData.passengers.length; i++) {
+                const p = paymentData.passengers[i];
+                let maKhachHangCuaNguoiDi = '';
+
+                // --- 2.1: KIỂM TRA KHÁCH HÀNG (NGƯỜI ĐI) ĐÃ CÓ TRONG DB CHƯA? ---
+                // Ưu tiên check theo CCCD, nếu không có CCCD thì check theo gì đó tùy nghiệp vụ (ở đây bắt buộc CCCD với người lớn)
+                // Nếu là trẻ em không có CCCD thì có thể phải dùng logic khác, nhưng ở đây giả sử check CCCD hoặc tạo mới luôn.
                 
-                // Logic tính giảm giá dựa trên Đối Tượng
+                const checkKhRequest = new sql.Request(transaction);
+                // Với hành khách, CCCD là quan trọng nhất để định danh
+                checkKhRequest.input('CCCD', sql.VarChar(20), p.CCCD || ''); 
+                
+                // Chỉ check nếu có CCCD, nếu trẻ em ko CCCD thì coi như tạo mới (hoặc handle riêng)
+                let existingKh = null;
+                if (p.CCCD) {
+                    const checkResult = await checkKhRequest.query(`
+                        SELECT MaKhachHang FROM KHACH_HANG WHERE CCCD = @CCCD
+                    `);
+                    if (checkResult.recordset.length > 0) {
+                        existingKh = checkResult.recordset[0];
+                    }
+                }
+
+                if (existingKh) {
+                    // CASE A: Đã có khách hàng này -> Lấy ID cũ & Update thông tin
+                    maKhachHangCuaNguoiDi = existingKh.MaKhachHang;
+                    
+                    const updateKh = new sql.Request(transaction);
+                    updateKh.input('MaKhachHang', maKhachHangCuaNguoiDi);
+                    updateKh.input('HoTen', sql.NVarChar(50), p.HoTen);
+                    // Update Họ tên mới nhất
+                    await updateKh.query(`UPDATE KHACH_HANG SET HoTen = @HoTen WHERE MaKhachHang = @MaKhachHang`);
+
+                } else {
+                    // CASE B: Khách hàng chưa tồn tại -> TẠO MỚI
+                    // Tính toán ID mới thủ công để không trùng trong vòng lặp
+                    let num = currentKhNum + newCustomerCount;
+                    maKhachHangCuaNguoiDi = `KH${String(num).padStart(3, '0')}`;
+                    newCustomerCount++; // Tăng biến đếm để người sau lấy số tiếp theo
+
+                    const insertKhRequest = new sql.Request(transaction);
+                    insertKhRequest.input('MaKhachHang', sql.VarChar(20), maKhachHangCuaNguoiDi);
+                    insertKhRequest.input('HoTen', sql.NVarChar(50), p.HoTen);
+                    insertKhRequest.input('CCCD', sql.VarChar(20), p.CCCD || null);
+                    insertKhRequest.input('NgaySinh', sql.Date, p.NgaySinh || null);
+                    // Các trường này hành khách có thể không có, để null hoặc rỗng
+                    insertKhRequest.input('DiaChi', sql.NVarChar(100), ''); 
+                    insertKhRequest.input('SoDienThoai', sql.VarChar(15), ''); 
+
+                    await insertKhRequest.query(`
+                        INSERT INTO KHACH_HANG (MaKhachHang, HoTen, CCCD, NgaySinh, DiaChi, SoDienThoai, GioiTinh)
+                        VALUES (@MaKhachHang, @HoTen, @CCCD, @NgaySinh, @DiaChi, @SoDienThoai, 'Nam')
+                    `);
+                }
+
+                // --- 2.2: TẠO VÉ (VE_TAU) CHO KHÁCH HÀNG NÀY ---
+                
+                // Tự tăng ID Vé
+                let maVe = baseMaVe;
+                if (i > 0) {
+                    currentVeNum += 1;
+                    maVe = `VE${String(currentVeNum).padStart(3, '0')}`;
+                }
+
+                // Tính giá
                 let phanTramGiam = 0;
-                // // String so sánh phải khớp với value trong Select Option ở Frontend
-                // if (p.DoiTuong.includes('Sinh viên')) phanTramGiam = 0.1; 
-                // else if (p.DoiTuong.includes('Trẻ em')) phanTramGiam = 0.25;
-                // else if (p.DoiTuong.includes('Người cao tuổi')) phanTramGiam = 0.15;
+                if (p.DoiTuong === 'Sinh viên') phanTramGiam = 0.1; 
+                else if (p.DoiTuong === 'Trẻ em') phanTramGiam = 0.25;
+                else if (p.DoiTuong === 'Người cao tuổi') phanTramGiam = 0.15;
                 
                 const giaGoc = p.GiaCoBan;
                 const soTienGiam = giaGoc * phanTramGiam;
                 const giaThuc = giaGoc - soTienGiam;
-                
                 tongTienThuc += giaThuc;
 
                 const reqVe = new sql.Request(transaction);
@@ -177,23 +232,31 @@ const customerService = {
                 reqVe.input('MaViTri', sql.VarChar(20), p.MaViTri);
                 reqVe.input('GiaThuc', sql.Decimal(18, 0), giaThuc);
                 reqVe.input('SoTienGiam', sql.Decimal(18, 0), soTienGiam);
-                reqVe.input('MaKhachHang', sql.VarChar(20), maKhachHang);
+                // [QUAN TRỌNG]: Gán vé cho đúng Mã Khách Hàng của Người Đi
+                reqVe.input('MaKhachHang', sql.VarChar(20), maKhachHangCuaNguoiDi); 
                 reqVe.input('GaXuatPhat', sql.VarChar(20), paymentData.gaDi);
                 reqVe.input('GaDen', sql.VarChar(20), paymentData.gaDen);
-                // Lưu tên hành khách vào vé (nếu cần thiết kế bảng VE_TAU có cột TenHanhKhach)
-                // reqVe.input('TenHanhKhach', sql.NVarChar(50), p.HoTen); 
 
                 await reqVe.query(`
-                    INSERT INTO VE_TAU (MaVe,MaKhachHang,MaDatVe, MaChuyenTau,GaXuatPhat,GaDen, MaViTri, GiaThuc, SoTienGiam,ThoiGianXuatVe, TrangThai)
-                    VALUES (@MaVe, @MaKhachHang, @MaDatVe, @MaChuyenTau,@GaXuatPhat,@GaDen, @MaViTri, @GiaThuc, @SoTienGiam, GETDATE(), N'Đã đặt')
+                    INSERT INTO VE_TAU (
+                        MaVe, MaKhachHang, MaDatVe, MaChuyenTau, 
+                        GaXuatPhat, GaDen, MaViTri, 
+                        GiaThuc, SoTienGiam, 
+                        ThoiGianXuatVe, TrangThai
+                    )
+                    VALUES (
+                        @MaVe, @MaKhachHang, @MaDatVe, @MaChuyenTau,
+                        @GaXuatPhat, @GaDen, @MaViTri, 
+                        @GiaThuc, @SoTienGiam,
+                        GETDATE(), N'Đã đặt'
+                    )
                 `);
-                
-                // Cập nhật trạng thái ghế trong VI_TRI (nếu thiết kế cần, nhưng thường dùng Left Join bảng Vé)
             }
 
-            // --- BƯỚC 4: TẠO HÓA ĐƠN & CẬP NHẬT TỔNG TIỀN ---
+            // =========================================================================
+            // BƯỚC 3: TẠO HÓA ĐƠN & UPDATE TỔNG TIỀN
+            // =========================================================================
             const maHoaDon = await generateId('HOA_DON', 'MaHoaDon', 'HD', 3);
-            
             const reqHD = new sql.Request(transaction);
             reqHD.input('MaHoaDon', sql.VarChar(20), maHoaDon);
             reqHD.input('MaDatVe', sql.VarChar(20), maDatVe);
@@ -206,27 +269,91 @@ const customerService = {
                 VALUES (@MaHoaDon, @MaDatVe, @ThoiGianThanhToan, 'Online', @TongTien)
             `);
 
-            // Update lại tổng tiền dự kiến vào bảng Đặt Vé
+            // Update tổng tiền
             const reqUpdate = new sql.Request(transaction);
             reqUpdate.input('MaDatVe', maDatVe);
             reqUpdate.input('TongTien', tongTienThuc);
             await reqUpdate.query("UPDATE DAT_VE SET TongTienDuKien = @TongTien WHERE MaDatVe = @MaDatVe");
 
+            // --- COMMIT ---
             await transaction.commit(); 
             
             return { success: true, maDatVe, maHoaDon, tongTien: tongTienThuc };
 
         } catch (error) {
-            await transaction.rollback(); // --- ROLLBACK NẾU LỖI ---
-            console.error("Lỗi Payment Transaction:");
-            console.error(error);
-
+            await transaction.rollback(); 
+            console.error("Lỗi Payment Transaction:", error);
             if (error.originalError) {
                 console.error("SQL Error:", error.originalError.message);
             }
             throw error;
         }
-    }
+    },
+    getMyTickets: async (email) => {
+        try {
+            const pool = await getPool();
+            const request = pool.request();
+            request.input('Email', sql.VarChar(100), email); 
+
+            const result = await request.execute('sp_LayLichSuDatVe_DirtyRead');
+            const flatRows = result.recordset;
+
+            const bookingMap = new Map();
+
+            flatRows.forEach(row => {
+                if (!bookingMap.has(row.MaDatVe)) {
+                    bookingMap.set(row.MaDatVe, {
+                        maVe: row.MaDatVe,
+                        ngayDat: row.ThoiGianDat,
+                        status: mapStatusToFrontend(row.TrangThaiDatVe),
+                        totalPrice: row.TongTienDuKien,
+                        email: row.Email,
+                        
+                        contactInfo: {
+                            hoTen: row.HoTen,
+                            sdt: row.SoDienThoai
+                        },
+
+                        tripInfo: {
+                            // Dùng Mã chuyến tàu làm tên hiển thị
+                            tenTau: row.MaChuyenTau, 
+                            gaDi: row.GaXuatPhat,
+                            gaDen: row.GaDen,
+                            
+                            // Map Giờ đi từ DuKienXuatPhat
+                            gioDi: row.DuKienXuatPhat 
+                                ? new Date(row.DuKienXuatPhat).toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) 
+                                : '--:--',
+                            
+                            // Lấy ngày đi từ DuKienXuatPhat
+                            ngayDi: row.DuKienXuatPhat 
+                                ? new Date(row.DuKienXuatPhat).toISOString().split('T')[0] 
+                                : ''
+                        },
+                        seats: [] 
+                    });
+                }
+
+                // Push chi tiết vé
+                const booking = bookingMap.get(row.MaDatVe);
+                booking.seats.push({
+                    maVeCon: row.MaVe,
+                    seatNum: row.STTViTri,      
+                    maToa: row.MaToaTau,
+                    tenToa: `Toa ${row.STTToaTau}`, 
+                    price: row.GiaThuc,
+                    trangThaiVe: row.TrangThaiVe,
+                    hanhKhach: row.HoTen
+                });
+            });
+
+            return Array.from(bookingMap.values());
+
+        } catch (error) {
+            console.error("❌ Lỗi getMyTickets:", error);
+            throw error;
+        }
+    },
 };
 
 

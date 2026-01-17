@@ -8,5 +8,5 @@ const router = express.Router();
 router.get('/search', customerController.searchSchedules);
 router.get('/seats/:tripId', customerController.getSeats);
 router.post('/payment', customerController.submitPayment);
-
+router.get('/my-tickets', customerController.getMyTickets);
 export default router;  
