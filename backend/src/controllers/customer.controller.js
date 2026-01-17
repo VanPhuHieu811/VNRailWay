@@ -101,7 +101,36 @@ const customerController = {
                 message: error.originalError?.message || error.message
             });
         }
-    }
+    },
+    // [GET] /api/v1/customers/my-tickets
+    // Lấy lịch sử đặt vé của khách hàng qua Email
+    getMyTickets: async (req, res) => {
+        try {
+            const { email } = req.query; // Lấy email từ URL: ?email=...
+
+            if (!email) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: "Vui lòng cung cấp email (Query param: ?email=...)" 
+                });
+            }
+
+            console.log(`[MY-TICKETS] Đang lấy vé cho email: ${email}`);
+            const tickets = await customerService.getMyTickets(email);
+
+            return res.status(200).json({
+                success: true,
+                count: tickets.length,
+                data: tickets
+            });
+        } catch (error) {
+            console.error('[MY-TICKETS ERROR]:', error);
+            return res.status(500).json({ 
+                success: false, 
+                message: "Lỗi khi lấy lịch sử vé: " + error.message 
+            });
+        }
+    },
 };
 
 export default customerController;
