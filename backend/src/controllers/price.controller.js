@@ -18,6 +18,7 @@ export const getAllTrainCarriagePrices = async (req, res) => {
     });
   }
   catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -43,6 +44,7 @@ export const getTrainCarriagePriceById = async (req, res) => {
     });
   }
   catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -70,6 +72,7 @@ export const updateTrainCarriagePriceById = async (req, res) => {
     });
   }
   catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -94,6 +97,7 @@ export const getAllTrainFloorPrices = async (req, res) => {
       data: prices,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -118,6 +122,7 @@ export const getTrainFloorPriceById = async (req, res) => {
       data: price,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -144,6 +149,7 @@ export const updateTrainFloorPriceById = async (req, res) => {
       data: updatedPrice,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -169,6 +175,7 @@ export const getAllTrainTypePrices = async (req, res) => {
     });
   }
   catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -194,6 +201,7 @@ export const getTrainTypePriceById = async (req, res) => {
     });
   }
   catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -221,6 +229,7 @@ export const updateTrainTypePriceById = async (req, res) => {
     });
   }
   catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -244,6 +253,7 @@ export const getAllPriceByKilometer = async (req, res) => {
       data: prices,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -268,6 +278,7 @@ export const getPriceByKilometerById = async (req, res) => {
       data: price,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
@@ -294,9 +305,50 @@ export const updatePriceByKilometerById = async (req, res) => {
       data: updatedPrice,
     });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({
       success: false,
       message: 'Internal server error',
     });
   }
 }
+
+export const calculatePrice = async (req, res) => {
+    try {
+        const { tripId, fromStationId, toStationId, seatId, promotionCode } = req.body;
+
+        if (!tripId || !fromStationId || !toStationId || !seatId) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Vui lòng cung cấp đủ thông tin: Chuyến tàu, Ga đi, Ga đến, Vị trí.' 
+            });
+        }
+
+        const priceData = await priceService.calculateTicketPrice({
+            tripId, 
+            fromStationId, 
+            toStationId, 
+            seatId, 
+            promotionCode
+        });
+
+        if (priceData) {
+            return res.status(200).json({
+                success: true,
+                data: priceData
+            });
+        } else {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Không thể tính toán giá vé (Có thể dữ liệu không hợp lệ).' 
+            });
+        }
+
+    } catch (error) {
+        return res.status(500).json({ 
+            success: false, 
+            message: 'Lỗi server khi tính giá vé.',
+            error: error.message 
+        });
+    }
+};

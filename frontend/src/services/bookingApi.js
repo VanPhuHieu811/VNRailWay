@@ -9,6 +9,17 @@ export const bookingApi = {
   // Gửi thông tin thanh toán
   submitPayment: (paymentData) => {
     return client.post('/api/v1/customers/payment', paymentData);
-  }
+  },
 
+  getMyTickets: (email) => {
+    return client.get('/api/v1/customers/my-tickets', {
+      params: { email }
+    });
+  },
+
+  calculatePrice: (data) => {
+    return client.post('/api/v1/prices/calculate', data);
+  },
+  
+  getPromotions: () => client.get('/api/v1/promotions'),
 };
