@@ -15,7 +15,7 @@ BEGIN
     BEGIN TRY
         DECLARE @NewMaChuyenTau VARCHAR(10);
 
-        /* ===== 1. LOCK + ID GENERATION ===== */
+        -- 1. LOCK + ID GENERATION
         SELECT @NewMaChuyenTau =
             'CT' + RIGHT('000' + CAST(ISNULL(MAX(CAST(SUBSTRING(MaChuyenTau, 3, 5) AS INT)), 0) + 1 AS VARCHAR), 3)
         FROM CHUYEN_TAU WITH (UPDLOCK, HOLDLOCK);
@@ -26,7 +26,7 @@ BEGIN
         (@NewMaChuyenTau, @MaDoanTau, @MaTuyenTau,
          @GaXuatPhat, @GaKetThuc, N'Chuẩn bị');
 
-        /* ===== 2. VALIDATE ROUTE ===== */
+        -- 2. VALIDATE ROUTE
         DECLARE @ThuTuDi INT, @ThuTuDen INT;
 
         SELECT @ThuTuDi = ThuTu
@@ -40,7 +40,7 @@ BEGIN
         IF @ThuTuDi IS NULL OR @ThuTuDen IS NULL OR @ThuTuDi = @ThuTuDen
             THROW 50001, N'Ga xuất phát/kết thúc không hợp lệ.', 1;
 
-        /* ===== 3. GENERATE SCHEDULE ===== */
+        -- 3. GENERATE SCHEDULE
         DECLARE
             @CurMaGa NVARCHAR(10),
             @CurThuTu INT,
@@ -99,8 +99,8 @@ BEGIN
         CLOSE cur;
         DEALLOCATE cur;
 
-        /* ===== 4. DEADLOCK TRIGGER ===== */
-        WAITFOR DELAY '00:00:10';
+        -- 4. DEADLOCK TRIGGER
+        WAITFOR DELAY '00:00:05';
 
         UPDATE DOAN_TAU
         SET NgayVanHanh = @NgayKhoiHanh
