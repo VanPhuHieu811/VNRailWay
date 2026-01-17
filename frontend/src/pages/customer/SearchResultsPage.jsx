@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   ArrowLeft, User, MapPin, Clock, ChevronLeft, ChevronRight, 
-  Calendar, AlertTriangle, Loader2, AlertCircle 
+  Calendar, AlertTriangle, Loader2, AlertCircle, RefreshCw 
 } from 'lucide-react';
 
 // Import các component
@@ -20,6 +20,9 @@ const SearchResultsPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
+  // Ref để lưu trữ timeout ID giúp clear khi unmount hoặc gọi lại
+  const timeoutRef = useRef(null);
+
   // Lấy dữ liệu state từ trang Dashboard gửi sang
   const stateData = location.state || {};
   const { isExchange, exchangeData } = stateData;
@@ -37,7 +40,8 @@ const SearchResultsPage = () => {
   // Dữ liệu từ API
   const [trainList, setTrainList] = useState([]);       // Danh sách tàu hiển thị
   const [stationsList, setStationsList] = useState([]); // Danh sách ga (để map tên)
-  const [isLoading, setIsLoading] = useState(false);    // Trạng thái loading
+  const [isLoading, setIsLoading] = useState(false);    // Trạng thái loading API
+  const [isUpdating, setIsUpdating] = useState(false);  // Trạng thái đang cập nhật từ Lần 1 -> Lần 2
   
   // State demo Phantom Read
   const [phantomInfo, setPhantomInfo] = useState({
@@ -71,16 +75,22 @@ const SearchResultsPage = () => {
   // B. Tìm kiếm chuyến tàu (Chạy khi tiêu chí thay đổi)
   useEffect(() => {
     const fetchTrains = async () => {
+      // 1. Kiểm tra đầu vào
       if (!searchCriteria.from || !searchCriteria.to) return;
 
+      // 2. Reset trạng thái
       setIsLoading(true);
-      setTrainList([]); // Reset danh sách cũ
-      setPhantomInfo({ detected: false, countBefore: 0, countAfter: 0, newIds: [] }); // Reset cảnh báo
+      setIsUpdating(false);
+      setTrainList([]); // Xóa màn hình để user biết đang load mới
+      setPhantomInfo({ detected: false, countBefore: 0, countAfter: 0, newIds: [] });
       
+      // Clear timeout cũ nếu user bấm tìm liên tục
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
       try {
         console.log("🚀 Đang tìm vé với tiêu chí:", searchCriteria);
         
-        // Gọi API Search
+        // Gọi API Search (Sẽ mất khoảng 10s do backend delay)
         const response = await scheduleApi.searchSchedules(
             searchCriteria.from, 
             searchCriteria.to, 
@@ -93,44 +103,71 @@ const SearchResultsPage = () => {
             const listLan1 = response.data.lan1_TruocKhiCho || [];
             const listLan2 = response.data.lan2_SauKhiCho || [];
 
-            console.log(`Kết quả: Lần 1 = ${listLan1.length}, Lần 2 = ${listLan2.length}`);
+            console.log(`✅ Kết quả: Lần 1 = ${listLan1.length}, Lần 2 = ${listLan2.length}`);
 
-            // --- LOGIC PHÁT HIỆN PHANTOM READ ---
-            // Tìm các chuyến có trong Lan2 mà không có trong Lan1
+            // === [LOGIC HIỂN THỊ PHANTOM READ] ===
+            
+            // BƯỚC 1: Hiển thị ngay kết quả Lần 1
+            setTrainList(listLan1);
+            setIsLoading(false); // Tắt loading ngay lập tức để user thấy dữ liệu
+
+            // BƯỚC 2: Kiểm tra sự thay đổi (Phantom Read)
             const oldIds = new Set(listLan1.map(item => item.MaChuyenTau));
             const diffIds = listLan2
                 .filter(item => !oldIds.has(item.MaChuyenTau))
                 .map(item => item.MaChuyenTau);
+            
+            // Phantom xảy ra khi có ID mới hoặc số lượng thay đổi
+            const isPhantom = diffIds.length > 0 || listLan1.length !== listLan2.length;
 
-            // Nếu tìm thấy ID mới -> Kích hoạt cảnh báo
-            if (diffIds.length > 0) {
-                setPhantomInfo({
-                    detected: true,
-                    countBefore: listLan1.length,
-                    countAfter: listLan2.length,
-                    newIds: diffIds
-                });
-            } else if (listLan1.length !== listLan2.length) {
-                // Trường hợp lệch số lượng nhưng ko tìm ra ID (ít gặp, hoặc do xóa)
-                setPhantomInfo({
-                    detected: true,
-                    countBefore: listLan1.length,
-                    countAfter: listLan2.length,
-                    newIds: []
-                });
+            if (isPhantom) {
+                // Nếu phát hiện thay đổi, hiển thị trạng thái "Đang cập nhật..."
+                setIsUpdating(true); 
+                
+                // Đợi 2.5s để user kịp nhìn thấy Lần 1 trước khi nó bị thay đổi
+                timeoutRef.current = setTimeout(() => {
+                    // [BẢO VỆ]: Chỉ cập nhật nếu Lan 2 có dữ liệu (hoặc nếu Lan 1 vốn dĩ cũng trống)
+                    // Tránh trường hợp Lan 1 có 5 tàu -> Lan 2 lỗi trả về 0 -> Mất sạch
+                    if (listLan2.length > 0 || listLan1.length === 0) {
+                        setTrainList(listLan2); // Ghi đè bằng danh sách mới
+                        setPhantomInfo({
+                            detected: true,
+                            countBefore: listLan1.length,
+                            countAfter: listLan2.length,
+                            newIds: diffIds
+                        });
+                    } else {
+                        console.warn("⚠️ Lần 2 trả về rỗng bất thường, giữ nguyên hiển thị Lần 1");
+                    }
+                    setIsUpdating(false); // Tắt trạng thái updating
+                }, 2500); 
+
+            } else {
+                // Nếu không có thay đổi (dữ liệu ổn định), cập nhật luôn cho chắc chắn
+                // (Chỉ cập nhật nếu listLan2 có dữ liệu để tránh lỗi mất hết lịch)
+                if (listLan2.length > 0 || listLan1.length === 0) {
+                     setTrainList(listLan2);
+                }
             }
-
-            // Luôn hiển thị dữ liệu mới nhất (Lần 2)
-            setTrainList(listLan2);
+        } else {
+            // Trường hợp API trả về success: false hoặc không có data
+            setTrainList([]);
+            setIsLoading(false);
         }
+
       } catch (error) {
         console.error("❌ Lỗi tìm chuyến:", error);
-      } finally {
+        setTrainList([]);
         setIsLoading(false);
-      }
+      } 
     };
 
     fetchTrains();
+
+    // Cleanup: Hủy timeout nếu user thoát trang khi đang chờ
+    return () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
   }, [searchCriteria]); 
 
   // --- 3. CÁC HÀM HELPER XỬ LÝ GIAO DIỆN ---
@@ -168,29 +205,27 @@ const SearchResultsPage = () => {
   };
 
   const calculateDuration = (start, end) => {
-     if(!start || !end) return "--";
-     const startTime = new Date(start).getTime();
-     const endTime = new Date(end).getTime();
-     const diffMs = endTime - startTime;
-     if (diffMs < 0) return "Qua đêm";
-     const hours = Math.floor(diffMs / (1000 * 60 * 60));
-     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-     return `${hours}h ${minutes}p`;
+      if(!start || !end) return "--";
+      const startTime = new Date(start).getTime();
+      const endTime = new Date(end).getTime();
+      const diffMs = endTime - startTime;
+      if (diffMs < 0) return "Qua đêm";
+      const hours = Math.floor(diffMs / (1000 * 60 * 60));
+      const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+      return `${hours}h ${minutes}p`;
   };
 
   const handleSelectTrip = (tripId) => {
     const selectedTrain = trainList.find(t => t.MaChuyenTau === tripId);
     
-    // 2. Tạo object tripInfo chuẩn để truyền sang các trang sau
+    // Tạo object tripInfo chuẩn
     const tripInfoToSend = {
         id: selectedTrain.MaChuyenTau,
         tenTau: selectedTrain.TenTau,
-        // Lấy tên ga từ hàm helper có sẵn
         gaDi: getStationName(searchCriteria.from), 
         gaDen: getStationName(searchCriteria.to),
         maGaDi: searchCriteria.from,
         maGaDen: searchCriteria.to,
-        // Format giờ
         gioDi: formatTimeOnly(selectedTrain.GioKhoiHanh),
         gioDen: formatTimeOnly(selectedTrain.GioDen),
         thoiGianChay: calculateDuration(selectedTrain.GioKhoiHanh, selectedTrain.GioDen),
@@ -205,7 +240,7 @@ const SearchResultsPage = () => {
             searchParams: searchCriteria, 
             isExchange, 
             exchangeData,
-            tripInfo: tripInfoToSend // <--- QUAN TRỌNG: Truyền cái này đi
+            tripInfo: tripInfoToSend 
         } 
     });
   };
@@ -244,17 +279,32 @@ const SearchResultsPage = () => {
           )}
         </div>
 
-        {/* CẢNH BÁO PHANTOM READ */}
-        {phantomInfo.detected && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 animate-pulse shadow-sm">
-                <AlertTriangle className="text-red-600 w-6 h-6 shrink-0 mt-0.5" />
+        {/* --- [HIỆU ỨNG PHANTOM READ] --- */}
+        
+        {/* 1. Trạng thái chờ cập nhật (Hiện trong 2.5s) */}
+        {isUpdating && (
+            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center justify-center gap-2 text-yellow-800 text-sm animate-pulse shadow-sm">
+                <RefreshCw size={16} className="animate-spin"/>
+                <strong>Hệ thống đang đồng bộ dữ liệu mới nhất...</strong>
+            </div>
+        )}
+
+        {/* 2. Cảnh báo Phantom Read (Hiện sau khi update xong) */}
+        {phantomInfo.detected && !isUpdating && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-700 shadow-md">
+                <div className="bg-red-100 p-2 rounded-full">
+                    <AlertTriangle className="text-red-600 w-6 h-6" />
+                </div>
                 <div>
-                    <h4 className="text-red-700 font-bold text-sm uppercase">⚠️ Demo: Phát hiện lỗi Phantom Read</h4>
-                    <p className="text-red-600 text-sm mt-1">Dữ liệu không nhất quán do có giao dịch khác thay đổi dữ liệu trong khi đang đọc.</p>
-                    <ul className="list-disc list-inside text-sm text-red-800 mt-1 font-medium bg-red-100/50 p-2 rounded">
-                        <li>Lần đọc 1: Tìm thấy <strong>{phantomInfo.countBefore}</strong> chuyến.</li>
-                        <li>Lần đọc 2: Tìm thấy <strong>{phantomInfo.countAfter}</strong> chuyến.</li>
-                    </ul>
+                    <h4 className="text-red-800 font-bold text-base uppercase mb-1">⚠️ Demo: Phantom Read Detected!</h4>
+                    <p className="text-red-700 text-sm mb-2">
+                        Dữ liệu đã thay đổi ngay trong lúc bạn đang xem trang này (Do một giao dịch khác vừa chèn thêm bản ghi).
+                    </p>
+                    <div className="flex gap-4 text-sm font-medium bg-white/60 p-2 rounded border border-red-100 text-red-800">
+                        <span>Lần đọc 1: <b>{phantomInfo.countBefore}</b> chuyến</span>
+                        <span className="text-gray-400">➝</span>
+                        <span>Lần đọc 2: <b>{phantomInfo.countAfter}</b> chuyến</span>
+                    </div>
                 </div>
             </div>
         )}
@@ -299,13 +349,13 @@ const SearchResultsPage = () => {
         {/* LIST DANH SÁCH TÀU */}
         <div className="train-list min-h-[300px]">
           {isLoading ? (
-             <div className="text-center py-12">
-                <Loader2 size={40} className="mx-auto text-blue-600 animate-spin mb-4"/>
-                <p className="text-gray-700 font-medium text-lg">Đang tìm chuyến tàu phù hợp...</p>
-                <p className="text-sm text-orange-500 mt-2 bg-orange-50 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-orange-100">
-                    <Clock size={14}/>
-                    <span>Mô phỏng Transaction Delay (Vui lòng đợi 10 giây)</span>
-                </p>
+             <div className="text-center py-16 bg-white/50 rounded-xl">
+                <Loader2 size={48} className="mx-auto text-blue-600 animate-spin mb-4"/>
+                <p className="text-gray-700 font-medium text-lg">Đang tìm chuyến tàu...</p>
+                <div className="mt-4 inline-flex items-center gap-2 bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium border border-blue-100">
+                    <Clock size={16}/>
+                    <span>Vui lòng đợi 10 giây (Mô phỏng Delay Transaction)</span>
+                </div>
              </div>
           ) : trainList.length > 0 ? (
             // Render danh sách tàu
@@ -316,7 +366,11 @@ const SearchResultsPage = () => {
               return (
                 <div 
                   key={train.MaChuyenTau} 
-                  className={`train-card transition-all ${isPhantomItem ? 'border-red-300 ring-4 ring-red-50' : ''}`}
+                  className={`train-card relative transition-all duration-500 
+                    ${isPhantomItem 
+                        ? 'border-red-400 ring-4 ring-red-50 bg-red-50/10 shadow-lg transform scale-[1.02]' 
+                        : 'hover:shadow-md'
+                    }`}
                 >
                   <div className="train-header">
                     <div className="flex items-center gap-2">
@@ -328,11 +382,11 @@ const SearchResultsPage = () => {
                         </span>
                     </div>
                     
-                    {/* Tag đánh dấu Phantom (Chỉ hiện nếu là item mới) */}
+                    {/* Tag MỚI XUẤT HIỆN */}
                     {isPhantomItem && (
-                        <span className="ml-auto text-[10px] font-bold bg-red-600 text-white px-2 py-1 rounded shadow-sm animate-pulse">
-                          MỚI XUẤT HIỆN
-                        </span>
+                        <div className="ml-auto flex items-center gap-1 bg-red-600 text-white px-3 py-1 rounded-full text-[10px] font-bold shadow-md animate-bounce">
+                          <AlertCircle size={12}/> MỚI XUẤT HIỆN
+                        </div>
                     )}
                   </div>
 
