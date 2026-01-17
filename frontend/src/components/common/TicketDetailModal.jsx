@@ -136,18 +136,6 @@ const TicketDetailModal = ({ ticket, onClose }) => {
             ))}
           </div>
 
-          {/* 3. Người đặt (Thông tin liên hệ) */}
-          {contactInfo && (
-             <div className="bg-slate-100 p-3 rounded-lg border border-slate-200 mb-4 text-xs text-slate-600">
-                <strong className="block mb-1 text-slate-700">Người đặt vé / Liên hệ:</strong>
-                <div className="flex justify-between">
-                    <span>{contactInfo.hoTen}</span>
-                    <span>{contactInfo.sdt}</span>
-                </div>
-                <div className="mt-1 text-slate-500 truncate">{contactInfo.email}</div>
-             </div>
-          )}
-
           {/* Footer Notes */}
           <div className="text-[10px] text-slate-400 space-y-1 italic text-center border-t border-slate-200 pt-4">
              <p>• Vui lòng có mặt tại ga trước giờ tàu chạy ít nhất 30 phút.</p>
