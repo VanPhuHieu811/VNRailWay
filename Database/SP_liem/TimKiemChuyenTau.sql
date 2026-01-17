@@ -10,13 +10,13 @@ CREATE OR ALTER PROCEDURE sp_TimKiemChuyenTau
     @TrangThai  VARCHAR(20) = NULL
 AS
 BEGIN
-    SET NOCOUNT ON; -- Good practice for APIs to reduce network traffic
+    SET NOCOUNT ON; 
 
     SELECT 
         -- 1. Identity Info
         CT.MaChuyenTau,
         DT.TenTau,
-        DT.LoaiTau, -- Important for UI (Luxury vs Normal)
+        DT.LoaiTau, 
 
         -- 2. Route & Station Names (Human Readable)
         TT.TenTuyen,
@@ -53,7 +53,6 @@ BEGIN
     JOIN GA_TAU G_Di ON TG_Di.MaGaTau = G_Di.MaGaTau
     JOIN GA_TAU G_Den ON TG_Den.MaGaTau = G_Den.MaGaTau
 
-    -- Subquery / CTE Calculation for Train Capacity using OUTER APPLY
     OUTER APPLY (
         SELECT 
             COUNT(TT.MaToaTau) AS TongSoToa,
@@ -67,7 +66,6 @@ BEGIN
         AND (@GaDen IS NULL OR TG_Den.MaGaTau = @GaDen)
         AND (@NgayDi IS NULL OR CAST(TG_Di.DuKienXuatPhat AS DATE) = @NgayDi)
         
-        -- Logic: Departure must be before Arrival
         AND TG_Di.DuKienXuatPhat < TG_Den.DuKienDen
         
         AND (@TrangThai IS NULL OR CT.TrangThai = @TrangThai);

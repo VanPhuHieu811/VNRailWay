@@ -70,8 +70,3 @@ BEGIN
     END CATCH
 END
 GO
-
-EXEC sp_CapNhatDoanTau_DeadlockDemo 
-	@MaDoanTau = 'DT03', 
-	@TrangThai = N'Hoạt động',
-	@TenTau = 'SexxfsdfsfsdAAA'

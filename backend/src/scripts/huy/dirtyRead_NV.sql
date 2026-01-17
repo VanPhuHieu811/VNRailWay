@@ -34,7 +34,6 @@ BEGIN
 		END
 
         -- 2. Thực hiện chèn dữ liệu
-        -- Trigger trg_KiemTraDonNghiPhep sẽ tự động kiểm tra quy định gửi trước 1 ngày (RB-140)
         INSERT INTO DON_NGHI_PHEP (MaDon, MaPhanCong, NgayGui, LyDo, NVGuiDon, TrangThai)
         VALUES (@NewID, @MaPhanCong, getdate(), @LyDo, @MaNVGui, N'Đang chờ');
 

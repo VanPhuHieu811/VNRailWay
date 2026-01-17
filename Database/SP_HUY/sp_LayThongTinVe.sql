@@ -16,7 +16,7 @@ BEGIN
         vt.TrangThai,
         vt.GiaThuc AS GiaVe,
         vt.MaViTri,
-        tt.MaToaTau, -- Cần join thêm bảng nếu muốn lấy Tên Toa
+        tt.MaToaTau, 
         tt.LoaiToa,
 		ct.MaTuyenTau,
         
@@ -33,7 +33,6 @@ BEGIN
         vt.GaDen AS MaGaDen,
         g2.TenGa AS TenGaDen,
         
-        -- Thời gian (Lấy từ bảng Lịch trình - Ở đây lấy ví dụ từ bảng Chuyến hoặc giả định logic lấy giờ)
 		CONVERT(date, tg1.DuKienXuatPhat) AS NgayDi,
 		tg1.DuKienXuatPhat AS ThoiGianDi,
 		tg2.DuKienDen AS ThoiGianDen
@@ -52,22 +51,15 @@ BEGIN
     JOIN GA_TAU g1 ON vt.GaXuatPhat = g1.MaGaTau
     JOIN GA_TAU g2 ON vt.GaDen = g2.MaGaTau
 
-    -- Join lấy loại toa (từ Vị trí -> Toa -> Loại)
     JOIN VI_TRI_TREN_TOA vtt ON vt.MaViTri = vtt.MaViTri
     JOIN TOA_TAU tt ON vtt.MaToaTau = tt.MaToaTau
     
-    -- Join lấy thời gian (Giả sử bảng THOI_GIAN_CHUYEN_TAU lưu lịch chi tiết từng ga)
-    -- Ở đây demo lấy thời gian tại ga xuất phát và ga kết thúc của chuyến
     LEFT JOIN THOI_GIAN_CHUYEN_TAU tg1 ON ct.MaChuyenTau = tg1.MaChuyenTau AND vt.GaXuatPhat = tg1.MaGaTau
     LEFT JOIN THOI_GIAN_CHUYEN_TAU tg2 ON ct.MaChuyenTau = tg2.MaChuyenTau AND vt.GaDen = tg2.MaGaTau
 
     WHERE vt.MaVe = @MaVe 
       AND kh.CCCD = @CCCD
-      AND vt.TrangThai IN (N'Đã thanh toán', N'Đã đặt'); -- Chỉ tìm vé active
+      AND vt.TrangThai IN (N'Đã thanh toán', N'Đã đặt'); 
 END;
 GO
 
-exec sp_TraCuuVeDoi 'VE005', '001978012349'
-
-select * from VE_TAU v 
-join THOI_GIAN_CHUYEN_TAU tg on v.MaChuyenTau = tg.MaChuyenTau and v.GaXuatPhat = tg.MaGaTau

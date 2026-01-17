@@ -1,9 +1,8 @@
 USE VNRAILWAY;
 GO
 
--- =============================================
+
 -- 1. TRIGGER: KIỂM TRA TÍNH HỢP LỆ KHI BÁN VÉ
--- =============================================
 CREATE OR ALTER TRIGGER trg_KiemTraVeHopLe
 ON VE_TAU
 AFTER INSERT, UPDATE
@@ -13,7 +12,6 @@ BEGIN
 
     IF EXISTS (SELECT 1 FROM Inserted WHERE TrangThai = N'Hủy vé') RETURN;
 
-    -- RB-163: Kiểm tra Nhất quán dữ liệu (Đoàn tàu của chuyến == Đoàn tàu của ghế)
     IF EXISTS (
         SELECT 1 FROM Inserted i
         JOIN CHUYEN_TAU ct ON i.MaChuyenTau = ct.MaChuyenTau
@@ -27,7 +25,6 @@ BEGIN
         RETURN;
     END
 
-    -- RB-166: Kiểm tra "Trùng ghế" & RB-168: Thứ tự Ga
     SELECT 
         i.MaVe, i.MaChuyenTau, i.MaViTri, 
         ds1.ThuTu AS ThuTuDi, ds2.ThuTu AS ThuTuDen
@@ -37,7 +34,6 @@ BEGIN
     JOIN DANH_SACH_GA ds1 ON ct.MaTuyenTau = ds1.MaTuyenTau AND i.GaXuatPhat = ds1.MaGaTau
     JOIN DANH_SACH_GA ds2 ON ct.MaTuyenTau = ds2.MaTuyenTau AND i.GaDen = ds2.MaGaTau;
 
-    -- Kiểm tra RB-168
     IF EXISTS (SELECT 1 FROM #VeMoi WHERE ThuTuDi >= ThuTuDen)
     BEGIN
         RAISERROR(N'Lỗi RB-168: Ga xuất phát phải có thứ tự trước Ga đến trong lộ trình.', 16, 1);
@@ -45,7 +41,6 @@ BEGIN
         RETURN;
     END
 
-    -- Kiểm tra xung đột vé cũ
     IF EXISTS (
         SELECT 1 FROM VE_TAU v
         JOIN #VeMoi vm ON v.MaChuyenTau = vm.MaChuyenTau AND v.MaViTri = vm.MaViTri
@@ -67,9 +62,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 2. TRIGGER: KIỂM TRA LOGIC THỜI GIAN LỊCH TRÌNH
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraLichTrinhChiTiet
 ON THOI_GIAN_CHUYEN_TAU
 AFTER INSERT, UPDATE
@@ -90,9 +85,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 3. TRIGGER: KIỂM TRA PHÂN CÔNG NHÂN VIÊN
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraPhanCongNhanVien
 ON PHAN_CONG_CHUYEN_TAU
 AFTER INSERT, UPDATE
@@ -118,9 +113,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 4. TRIGGER: KIỂM TRA ĐƠN NGHỈ PHÉP
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraDonNghiPhep
 ON DON_NGHI_PHEP
 AFTER INSERT
@@ -143,11 +138,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 5. TRIGGER: KIỂM TRA CHÍNH SÁCH GIÁ TẦNG (ĐÃ SỬA)
--- Ràng buộc: RB-152 (Giường tầng thấp đắt hơn tầng cao)
--- Target Table: GIA_THEO_TANG
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraGiaTang
 ON GIA_THEO_TANG
 AFTER INSERT, UPDATE
@@ -155,12 +148,11 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    -- Kiểm tra logic: Số tầng càng nhỏ (tầng 1) thì giá càng cao (hoặc bằng)
     IF EXISTS (
         SELECT 1 FROM Inserted i
-        JOIN GIA_THEO_TANG g ON 1=1 -- Cross check với các dòng khác
-        WHERE (i.SoTang < g.SoTang AND i.GiaTien < g.GiaTien) -- Lỗi: Tầng thấp hơn mà giá lại rẻ hơn
-           OR (i.SoTang > g.SoTang AND i.GiaTien > g.GiaTien) -- Lỗi: Tầng cao hơn mà giá lại đắt hơn
+        JOIN GIA_THEO_TANG g ON 1=1 
+        WHERE (i.SoTang < g.SoTang AND i.GiaTien < g.GiaTien) 
+           OR (i.SoTang > g.SoTang AND i.GiaTien > g.GiaTien) 
     )
     BEGIN
         RAISERROR(N'Lỗi RB-152: Giá vé giường tầng thấp (số nhỏ) phải cao hơn hoặc bằng giường tầng cao.', 16, 1);
@@ -170,9 +162,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 6. TRIGGER: KIỂM TRA TÀI NGUYÊN ĐOÀN TÀU
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraDoanTauBan
 ON CHUYEN_TAU
 AFTER INSERT, UPDATE
@@ -197,9 +189,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 7. TRIGGER: KIỂM TRA VAI TRÒ & LOGIC PHÂN CÔNG
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraVaiTroPhanCong
 ON PHAN_CONG_CHUYEN_TAU
 AFTER INSERT, UPDATE
@@ -259,9 +251,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 8. TRIGGER: KIỂM TRA THỜI GIAN ĐẶT VÉ
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraThoiGianDatVe
 ON DAT_VE
 AFTER INSERT
@@ -282,9 +274,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 9. TRIGGER: KIỂM TRA THỜI GIAN XUẤT VÉ
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraThoiGianXuatVe
 ON VE_TAU
 AFTER INSERT, UPDATE
@@ -305,9 +297,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 10. TRIGGER: KIỂM TRA ĐỔI VÉ
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraDoiVe
 ON DOI_VE
 AFTER INSERT
@@ -329,9 +321,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 11. TRIGGER: KIỂM TRA NHÂN VIÊN THAY THẾ
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraNVThayThe
 ON DON_NGHI_PHEP
 AFTER INSERT, UPDATE
@@ -359,9 +351,9 @@ END;
 GO
 
 
--- =============================================
+
 -- 12. TRIGGER: KIỂM TRA TỔNG GIỜ LÀM VIỆC LÁI TÀU
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraGioLamLaiTau
 ON PHAN_CONG_CHUYEN_TAU
 AFTER INSERT, UPDATE
@@ -394,9 +386,9 @@ BEGIN
 END;
 GO
 
--- =============================================
+
 -- 13. TRIGGER: KIỂM TRA TỔNG QUÃNG ĐƯỜNG TÀU CHẠY
--- =============================================
+
 CREATE OR ALTER TRIGGER trg_KiemTraKmDoanTau
 ON CHUYEN_TAU
 AFTER INSERT, UPDATE

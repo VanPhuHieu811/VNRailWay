@@ -71,4 +71,3 @@ BEGIN
 END;
 GO
 
-exec sp_DuyetDonNghiPhep 'DNP01', 'NV01', N'Chấp nhận', 'NV04'

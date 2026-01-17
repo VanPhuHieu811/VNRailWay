@@ -66,8 +66,8 @@ BEGIN
                     WHERE dnp.NVThayThe = nv.MaNV AND dnp.TrangThai = N'Chấp nhận'
                     AND MONTH(dnp.NgayGui) = @Thang AND YEAR(dnp.NgayGui) = @Nam), 0),
             -- Tiền phạt: Mặc định lấy đơn giá phạt (Bạn có thể nhân với số lần vi phạm nếu có bảng kỷ luật)
-            0, -- Tạm để 0, sẽ cập nhật nếu có dữ liệu vi phạm
-            0, -- Tổng lương (sẽ update ở bước sau)
+            0, 
+            0, 
             @NgayChotLuong
         FROM NHAN_VIEN nv;
 

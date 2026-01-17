@@ -15,7 +15,7 @@ BEGIN
         ROLLBACK TRANSACTION; RETURN;
     END
 
-    WAITFOR DELAY '00:00:10'; -- Even with delay, no deadlock occurs
+    WAITFOR DELAY '00:00:10'; 
 
     -- [FIX] Then Lock Resource B
     PRINT N'--- [T2 Fix] Locking PHAN_CONG_CHUYEN_TAU (Resource B)... ---';

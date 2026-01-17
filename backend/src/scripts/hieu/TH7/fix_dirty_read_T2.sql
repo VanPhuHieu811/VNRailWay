@@ -12,23 +12,21 @@ BEGIN
     WITH LICH_TRINH_TOM_TAT AS (
         SELECT 
             MaChuyenTau,
-            MIN(DuKienXuatPhat) AS GioKhoiHanhDauTien, -- Giờ tại ga xuất phát đầu tiên
-            MAX(DuKienDen) AS GioDenCuoiCung         -- Giờ tại ga kết thúc cuối cùng
+            MIN(DuKienXuatPhat) AS GioKhoiHanhDauTien, 
+            MAX(DuKienDen) AS GioDenCuoiCung         
         FROM THOI_GIAN_CHUYEN_TAU
         GROUP BY MaChuyenTau
     )
-    -- Bước 2: Kết hợp với thông tin phân công và chuyến tàu
     SELECT 
         pc.MaPhanCong,
         ct.MaChuyenTau,
         tt.TenTuyen,
-       
-        -- Định dạng hiển thị khớp với UI của bạn
+
         CAST(lt.GioKhoiHanhDauTien AS DATE) AS NgayKhoiHanh,
         CONVERT(VARCHAR(5), lt.GioKhoiHanhDauTien, 108) AS GioDi,
         CONVERT(VARCHAR(5), lt.GioDenCuoiCung, 108) AS GioDen,
         
-        ct.TrangThai AS TrangThaiChuyenTau, -- "Sắp khởi hành"
+        ct.TrangThai AS TrangThaiChuyenTau, 
         pc.VaiTro,
         pc.MaToa,
         ct.MaDoanTau

@@ -28,7 +28,6 @@ BEGIN
             RAISERROR(N'Lỗi: Loại nhân viên không phù hợp với vai trò được phân công.', 16, 1);
         END
 
-        -- 3. Tạo mã phân công tự động
         DECLARE @Num INT;
         SELECT @Num = ISNULL(MAX(CAST(SUBSTRING(MaPhanCong,3,10) AS INT)),0) + 1 
         FROM PHAN_CONG_CHUYEN_TAU;
@@ -66,7 +65,3 @@ BEGIN
     END CATCH
 END;
 GO
-
-
-select *
-from DAT_VE

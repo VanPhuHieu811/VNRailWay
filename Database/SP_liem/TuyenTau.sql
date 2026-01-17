@@ -24,7 +24,7 @@ CREATE OR ALTER PROCEDURE sp_ThemGaVaoTuyen
     @MaTuyenTau VARCHAR(10),
     @MaGaTau VARCHAR(10),
     @ThuTu INT,
-    @KhoangCach FLOAT -- Khoảng cách từ ga đầu tiên
+    @KhoangCach FLOAT
 AS
 BEGIN
     -- 1. Kiểm tra tuyến tàu

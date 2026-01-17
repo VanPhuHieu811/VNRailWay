@@ -11,11 +11,9 @@ BEGIN
         CT.MaChuyenTau,
         CT.TrangThai,
         
-        -- Route Info
         TT.TenTuyen,
         TT.KhoangCach AS TongKhoangCachKm,
         
-        -- Train Info
         DT.TenTau,
         DT.LoaiTau,
         
@@ -28,7 +26,6 @@ BEGIN
     LEFT JOIN TUYEN_TAU TT ON CT.MaTuyenTau = TT.MaTuyenTau
     LEFT JOIN DOAN_TAU DT ON CT.MaDoanTau = DT.MaDoanTau
     
-    -- Getting Start Time (Min) and End Time (Max) logic
     OUTER APPLY (
         SELECT DuKienXuatPhat 
         FROM THOI_GIAN_CHUYEN_TAU 
