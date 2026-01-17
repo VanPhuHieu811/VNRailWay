@@ -69,8 +69,11 @@ BEGIN
     END CATCH
 END
 GO
+<<<<<<< HEAD
 
 EXEC sp_CapNhatDoanTau_DeadlockDemo 
 	@MaDoanTau = 'DT03', 
 	@TrangThai = N'Hoạt động',
 	@TenTau = 'SexxfsdfsfsdAAA'
+=======
+>>>>>>> b27e1a6d35b72cce95bf99268f2d0ef2cac83db3

@@ -1,4 +1,4 @@
-USE VNRAILWAY
+﻿USE VNRAILWAY
 GO
 
 CREATE OR ALTER PROCEDURE sp_PhanCongNhanSu
@@ -10,7 +10,6 @@ AS
 BEGIN
     SET NOCOUNT ON;
     BEGIN TRY
-        SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
         BEGIN TRANSACTION;
 
         IF NOT EXISTS (SELECT * FROM NHAN_VIEN WHERE MaNV = @MaNV)
@@ -24,10 +23,11 @@ BEGIN
         IF (@VaiTro LIKE N'%lái%' AND @LoaiNV <> N'Lái tàu')
            OR (@VaiTro LIKE N'%trưởng%' AND @LoaiNV NOT IN (N'Toa tàu', N'Lái tàu'))
            OR (@VaiTro LIKE N'%toa%' AND @LoaiNV <> N'Toa tàu')
-        BEGIN   
+        BEGIN
             RAISERROR(N'Lỗi: Loại nhân viên không phù hợp với vai trò được phân công.', 16, 1);
         END
 
+        -- 3. Tạo mã phân công tự động
         DECLARE @Num INT;
         SELECT @Num = ISNULL(MAX(CAST(SUBSTRING(MaPhanCong,3,10) AS INT)),0) + 1 
         FROM PHAN_CONG_CHUYEN_TAU;
@@ -36,9 +36,6 @@ BEGIN
 
         INSERT INTO PHAN_CONG_CHUYEN_TAU (MaPhanCong, MaNV, MaChuyenTau, VaiTro, MaToa, TrangThai)
         VALUES (@MaPC, @MaNV, @MaChuyenTau, @VaiTro, NULL, N'Nhận việc');
-
-        --  DELAY 
-        WAITFOR DELAY '00:00:10'; 
 
         IF @MaToa IS NOT NULL
         BEGIN

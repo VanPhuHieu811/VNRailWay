@@ -21,17 +21,14 @@ BEGIN
     -- 2. Kiểm tra chiều chạy để sắp xếp
     IF @ThuTuDi > @ThuTuDen
     BEGIN
-        -- CHIỀU NGƯỢC (Sắp xếp GIẢM DẦN)
         SELECT 
             gt.TenGa AS station,
             gt.MaGaTau AS stationId,
             dsg.ThuTu,
             
-            -- Lấy nguyên gốc DATETIME từ DB
             tg.DuKienXuatPhat AS expDep,
             tg.DuKienDen AS expArr,
             
-            -- Lấy nguyên gốc DATETIME (có thể là NULL)
             tg.ThucTeXuatPhat AS actDep,
             tg.ThucTeDen AS actArr,
 
@@ -50,7 +47,6 @@ BEGIN
     END
     ELSE
     BEGIN
-        -- CHIỀU XUÔI (Sắp xếp TĂNG DẦN)
         SELECT 
             gt.TenGa AS station,
             gt.MaGaTau AS stationId,

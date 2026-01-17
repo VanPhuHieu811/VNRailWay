@@ -30,7 +30,6 @@ BEGIN
     JOIN DOAN_TAU dt ON ct.MaDoanTau = dt.MaDoanTau
     LEFT JOIN THOI_GIAN_CHUYEN_TAU tg ON ct.MaChuyenTau = tg.MaChuyenTau AND ct.GaXuatPhat = tg.MaGaTau
     WHERE ct.TrangThai IN (N'Chuẩn bị', N'Đang chạy')
-    -- Logic lọc: Thiếu Lái OR Thiếu Trưởng OR Thiếu Toa
     AND (
         NOT EXISTS (SELECT 1 FROM PHAN_CONG_CHUYEN_TAU pc WHERE pc.MaChuyenTau = ct.MaChuyenTau AND pc.VaiTro = N'Nhân viên phụ trách lái')
         OR

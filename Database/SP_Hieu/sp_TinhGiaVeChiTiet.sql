@@ -87,13 +87,11 @@ BEGIN
         @MaChuyenTau AS MaChuyenTau,
         @MaViTri AS MaViTri,
         @KhoangCach AS KhoangCachKm,
-        @TongTienTamTinh AS GiaGoc,       -- Giá chưa giảm
-        @MaUuDai AS MaUuDaiApDung,        -- Mã khách nhập
-        @PhanTramGiam AS PhanTramGiam,    -- % được giảm (0 nếu ko có)
-        @SoTienGiam AS SoTienGiam,        -- Tiền được giảm (0 nếu ko có)
-        @GiaCuoiCung AS GiaThucTe         -- Giá phải trả
+        @TongTienTamTinh AS GiaGoc,       
+        @MaUuDai AS MaUuDaiApDung,        
+        @PhanTramGiam AS PhanTramGiam,    
+        @SoTienGiam AS SoTienGiam,        
+        @GiaCuoiCung AS GiaThucTe        
 END;
 GO
 
-select *
-from UU_DAI_GIA

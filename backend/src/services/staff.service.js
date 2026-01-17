@@ -352,6 +352,8 @@ export const getLeaveRequestsService = async (status) => {
     try {
         const pool = await getPool();
         let query = `
+          SET TRANSACTION ISOLATION LEVEL READ COMMITTED;  
+
           SELECT 
             d.MaDon,
             d.MaPhanCong,
@@ -412,5 +414,46 @@ const mapStatus = (status) => {
         case 'Chấp nhận': return 'approved';
         case 'Từ chối': return 'rejected';
         default: return 'pending';
+    }
+};
+
+
+export const concurrencyService = {
+    // 1. Gọi SP Fixed (Read Committed)
+    approveLeaveFixed: async ({ maDon, maQuanLy, maNVThayThe }) => {
+        try {
+            const pool = await getPool();
+            const request = pool.request();
+
+            request.input('MaDonNghiPhep', sql.VarChar(10), maDon);
+            request.input('MaQuanLyDuyetDon', sql.VarChar(10), maQuanLy);
+            request.input('MaNhanVienThayThe', sql.VarChar(10), maNVThayThe);
+
+            // Gọi SP đã fix lỗi
+            await request.execute('sp_th2_huy_fixed');
+            
+            return { success: true, message: 'Duyệt đơn và phân công thay thế thành công (Fixed Mode)' };
+        } catch (error) {
+            throw error;
+        }
+    },
+
+    // 2. Gọi SP Demo Lỗi (Dirty Read - Read Uncommitted)
+    approveLeaveDirtyRead: async ({ maDon, maQuanLy, maNVThayThe }) => {
+        try {
+            const pool = await getPool();
+            const request = pool.request();
+
+            request.input('MaDonNghiPhep', sql.VarChar(10), maDon);
+            request.input('MaQuanLyDuyetDon', sql.VarChar(10), maQuanLy);
+            request.input('MaNhanVienThayThe', sql.VarChar(10), maNVThayThe);
+
+            // Gọi SP gây lỗi Dirty Read
+            await request.execute('sp_th2_huy_dirtyRead');
+
+            return { success: true, message: 'Duyệt đơn và phân công thay thế thành công (Dirty Read Mode)' };
+        } catch (error) {
+            throw error;
+        }
     }
 };

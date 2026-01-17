@@ -11,27 +11,21 @@ BEGIN
     SELECT 
         bl.MaBangLuong AS MaPhieu,
         nv.HoTen AS TenNhanVien,
-																					--nv.LoaiNhanVien,
         month(bl.NgayNhanLuong) as Thang,
         year(bl.NgayNhanLuong) as Nam,
 		bl.NgayNhanLuong AS NgayThanhToan,
         
-																					--N'ĐÃ THANH TOÁN' AS TrangThai, -- Nhãn trạng thái trên UI
         -- Cột THU NHẬP
         bl.LuongChinh AS LuongCoBan,
         bl.PhuCap AS PhuCapTrachNhiem,
-        bl.ThuLaoChuyenTau AS PhuCapDiLai, -- Map thù lao chuyến vào phần đi lại
+        bl.ThuLaoChuyenTau AS PhuCapDiLai, 
         bl.ThuLaoThayCa AS ThuLaoTangCa,
-																					--bl.TongLuong + bl.TienPhat AS TongThuNhap,
 
-        -- Cột KHẤU TRỪ (Tương đối theo yêu cầu của bạn)
         bl.TienPhat AS KhoanKhauTruKhac,
-																					--(bl.LuongChinh * 0.1) AS BaoHiem, -- Giả định 10%
         
         -- TỔNG CỘNG
         bl.TongLuong AS TongLuongThucNhan,
 
-        -- PHẦN THỐNG KÊ CÔNG VIỆC (Góc dưới bên phải UI)
         -- 1. Số chuyến làm việc
         ISNULL((SELECT COUNT(distinct pc.MaPhanCong) 
                 FROM PHAN_CONG_CHUYEN_TAU pc
@@ -58,4 +52,3 @@ BEGIN
       AND YEAR(bl.NgayNhanLuong) = @Nam;
 END;
 GO
---exec sp_LayPhieuLuongNhanVien 'NV04', 12, 2025

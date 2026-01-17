@@ -27,18 +27,3 @@ BEGIN
 END;
 GO
 
-EXEC sp_TaoUuDai_th9_demo
-    @LoaiUuDai   = N'Giảm giá vé',
-    @MoTa        = N'Giảm 20% cho khách hàng thân thiết',
-    @DoiTuong    = N'Thân thiết',
-    @PhanTram    = 20,
-    @NgayBatDau  = '2026-01-20 00:00:00',
-    @NgayKetThuc = '2026-02-20 23:59:59',
-    @TrangThai   = N'Đang áp dụng';
-
-GO
--- Delete để demo lại
-/*
-DELETE UU_DAI_GIA
-WHERE LoaiUuDai = N'Giảm giá vé' AND DoiTuong = N'Thân thiết';
-*/

@@ -22,4 +22,13 @@ export const bookingApi = {
   },
   
   getPromotions: () => client.get('/api/v1/promotions'),
+
+  applyPromotion: async (payload) => {
+    try {
+        const response = await client.post('/api/v1/promotions/apply-demo', payload);
+        return response;
+    } catch (error) {
+        throw error;
+    }
+  }
 };

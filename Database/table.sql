@@ -11,9 +11,6 @@ GO
 USE VNRAILWAY;
 GO
 
--- ================================================================
--- CẤP ĐỘ 1: CÁC BẢNG DANH MỤC & CẤU HÌNH (Không có FK)
--- ================================================================
 
 -- 1. Bảng THAM_SO
 CREATE TABLE THAM_SO (
@@ -106,10 +103,6 @@ CREATE TABLE NHAN_VIEN (
     CONSTRAINT FK_NHAN_VIEN_QuanLy FOREIGN KEY (NVQuanLy) REFERENCES NHAN_VIEN(MaNV)
 );
 
--- ================================================================
--- CẤP ĐỘ 2: CÁC BẢNG GIÁ (Không có FK)
--- ================================================================
-
 -- 8. Bảng GIA_THEO_LOAI_TAU
 CREATE TABLE GIA_THEO_LOAI_TAU (
     MaGiaTau VARCHAR(10) NOT NULL,
@@ -139,10 +132,6 @@ CREATE TABLE GIA_THEO_TANG (
     CONSTRAINT CK_GIA_THEO_TANG_SoTang CHECK (SoTang > 0),
     CONSTRAINT CK_GIA_THEO_TANG_Gia CHECK (GiaTien >= 0)
 );
-
--- ================================================================
--- CẤP ĐỘ 3: CÁC BẢNG PHỤ THUỘC CẤP 1 (Có FK)
--- ================================================================
 
 -- 11. Bảng TOA_TAU
 CREATE TABLE TOA_TAU (
@@ -226,10 +215,6 @@ CREATE TABLE BANG_LUONG (
     CONSTRAINT FK_BANG_LUONG_NHAN_VIEN FOREIGN KEY (MaNV) REFERENCES NHAN_VIEN(MaNV)
 );
 
--- ================================================================
--- CẤP ĐỘ 4: CÁC BẢNG CHI TIẾT (Phụ thuộc vào Cấp độ 3)
--- ================================================================
-
 -- 17. Bảng VI_TRI_TREN_TOA
 CREATE TABLE VI_TRI_TREN_TOA (
     MaViTri VARCHAR(10) NOT NULL,
@@ -287,10 +272,6 @@ CREATE TABLE DAT_VE (
     CONSTRAINT FK_DAT_VE_CHUYEN_TAU FOREIGN KEY (MaChuyenTau) REFERENCES CHUYEN_TAU(MaChuyenTau)
 );
 
--- ================================================================
--- CẤP ĐỘ 5: CÁC BẢNG SÂU HƠN & GIAO DỊCH
--- ================================================================
-
 -- 21. Bảng GIUONG
 CREATE TABLE GIUONG (
     MaViTri VARCHAR(10) NOT NULL,
@@ -342,10 +323,6 @@ CREATE TABLE VE_TAU (
     CONSTRAINT FK_VE_TAU_GaDen FOREIGN KEY (GaDen) REFERENCES GA_TAU(MaGaTau),
     CONSTRAINT FK_VE_TAU_VI_TRI FOREIGN KEY (MaViTri) REFERENCES VI_TRI_TREN_TOA(MaViTri)
 );
-
--- ================================================================
--- CẤP ĐỘ 6: BẢNG GIAO DỊCH CUỐI CÙNG
--- ================================================================
 
 -- 24. Bảng DOI_VE
 CREATE TABLE DOI_VE (

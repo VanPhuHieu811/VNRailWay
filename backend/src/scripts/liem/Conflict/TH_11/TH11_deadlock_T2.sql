@@ -45,8 +45,3 @@ BEGIN
     COMMIT TRANSACTION;
 END;
 GO
-EXEC sp_th11_CapNhatPhanCongChuyenTau 
-    @MaPC = 'PC_DL', 
-    @MaDon = 'DNP_DL', 
-    @MaNV_Moi = 'NV_NEW', 
-    @NguoiSua = 'MGR2';

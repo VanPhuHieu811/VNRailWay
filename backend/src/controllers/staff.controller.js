@@ -5,6 +5,8 @@ import {
     getAllStaffService,
 } from '../services/staff.service.js';
 
+import{concurrencyService} from '../services/staff.service.js';
+
 export const getCurrentStaff = async (req, res) => {
     try {
         const emailStaff = req.user.email;
@@ -359,3 +361,59 @@ export const fixLostUpdateApprove = async (req, res) => {
     res.status(400).json({ success: false, message: error.message });
   }
 }
+
+export const concurrencyController = {
+    // API 1: Duyệt đơn (Phiên bản An toàn - Fixed)
+    approveLeaveFixed: async (req, res) => {
+        try {
+            const maQuanLy = req.user?.maNV;
+            const { maDon, maNVThayThe } = req.body;
+
+            // Validate cơ bản
+            if (!maDon || !maQuanLy || !maNVThayThe) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Thiếu thông tin: maDon, maQuanLy, hoặc maNVThayThe' 
+                });
+            }
+
+            const result = await concurrencyService.approveLeaveFixed({ maDon, maQuanLy, maNVThayThe });
+            
+            return res.status(200).json(result);
+
+        } catch (error) {
+            console.error("Lỗi Fixed Mode:", error);
+            // Bắt lỗi logic từ SQL (VD: Đơn không tồn tại)
+            return res.status(500).json({ 
+                success: false, 
+                message: error.message || 'Lỗi server' 
+            });
+        }
+    },
+
+    // API 2: Duyệt đơn (Phiên bản Demo Lỗi - Dirty Read)
+    approveLeaveDirtyRead: async (req, res) => {
+        try {
+            const maQuanLy = req.user?.maNV;
+            const { maDon, maNVThayThe } = req.body;
+
+            if (!maDon || !maQuanLy || !maNVThayThe) {
+                return res.status(400).json({ 
+                    success: false, 
+                    message: 'Thiếu thông tin bắt buộc' 
+                });
+            }
+
+            const result = await concurrencyService.approveLeaveDirtyRead({ maDon, maQuanLy, maNVThayThe });
+            
+            return res.status(200).json(result);
+
+        } catch (error) {
+            console.error("Lỗi Dirty Read Mode:", error);
+            return res.status(500).json({ 
+                success: false, 
+                message: error.message || 'Lỗi server' 
+            });
+        }
+    }
+};

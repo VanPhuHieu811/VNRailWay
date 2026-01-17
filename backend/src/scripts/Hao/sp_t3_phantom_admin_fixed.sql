@@ -3,27 +3,29 @@ USE VNRAILWAY
 GO
 
 CREATE OR ALTER PROCEDURE sp_XemDSChuyenTau
-    @NgayDi DATE,         
+    @NgayDi DATE,          
     @GaDi VARCHAR(20),     
     @GaDen VARCHAR(20),    
-    @GioKhoiHanh TIME NULL
+    @GioKhoiHanh TIME NULL 
 AS
 BEGIN
-    SET TRANSACTION ISOLATION LEVEL REPEATABLE READ; 
+    SET TRANSACTION ISOLATION LEVEL SERIALIZABLE;
     BEGIN TRANSACTION;
 
-    -- LẦN ĐỌC 1: TÌM KIẾM CHUYẾN TÀU PHÙ HỢP
     SELECT 
         ct.MaChuyenTau, 
         ct.MaDoanTau, 
         dt.TenTau,
         
+        -- Thông tin Ga Đi 
         gd.TenGa AS GaXuatPhat,
         T_DI.DuKienXuatPhat AS GioKhoiHanh,
         
+        -- Thông tin Ga Đến 
         gc.TenGa AS GaKetThuc,
         T_DEN.DuKienDen AS GioDen,
         
+        -- Tính số chỗ trống 
         (COUNT(vt2.MaViTri) - COUNT(vt.MaVe)) AS SoChoTrong
 
     FROM CHUYEN_TAU ct
@@ -31,19 +33,24 @@ BEGIN
     JOIN THOI_GIAN_CHUYEN_TAU T_DI ON T_DI.MaChuyenTau = ct.MaChuyenTau
     JOIN GA_TAU gd ON gd.MaGaTau = T_DI.MaGaTau 
     JOIN THOI_GIAN_CHUYEN_TAU T_DEN ON T_DEN.MaChuyenTau = ct.MaChuyenTau
-    JOIN GA_TAU gc ON gc.MaGaTau = T_DEN.MaGaTau
+    JOIN GA_TAU gc ON gc.MaGaTau = T_DEN.MaGaTau 
+
     JOIN TOA_TAU ttau ON ttau.MaDoanTau = dt.MaDoanTau
     JOIN VI_TRI_TREN_TOA vt2 ON vt2.MaToaTau = ttau.MaToaTau
     LEFT JOIN VE_TAU vt ON vt.MaChuyenTau = ct.MaChuyenTau 
                         AND vt.MaViTri = vt2.MaViTri
                         AND (vt.TrangThai = N'Đã đặt' OR vt.TrangThai = N'Giữ chỗ')
 
+
     WHERE 
         ct.TrangThai = N'Chuẩn bị'
         AND T_DI.MaGaTau = @GaDi 
         AND CAST(T_DI.DuKienXuatPhat AS DATE) = @NgayDi
+        
         AND T_DEN.MaGaTau = @GaDen
+        
         AND T_DEN.DuKienDen > T_DI.DuKienXuatPhat
+
         AND (@GioKhoiHanh IS NULL OR CAST(T_DI.DuKienXuatPhat AS TIME) >= @GioKhoiHanh)
 
     GROUP BY 
@@ -53,7 +60,8 @@ BEGIN
         
     HAVING (COUNT(vt2.MaViTri) - COUNT(vt.MaVe)) > 0;
 
-    WAITFOR DELAY '00:00:10';
+
+    WAITFOR DELAY '00:00:05';
 
     SELECT 
         ct.MaChuyenTau, ct.MaDoanTau, dt.TenTau,
@@ -88,4 +96,5 @@ BEGIN
 
     COMMIT TRANSACTION;
 END;
-GO
+
+

@@ -13,8 +13,8 @@ BEGIN
     WITH LICH_TRINH_TOM_TAT AS (
         SELECT 
             MaChuyenTau,
-            MIN(DuKienXuatPhat) AS GioKhoiHanhDauTien, -- Giờ tại ga xuất phát đầu tiên
-            MAX(DuKienDen) AS GioDenCuoiCung         -- Giờ tại ga kết thúc cuối cùng
+            MIN(DuKienXuatPhat) AS GioKhoiHanhDauTien, 
+            MAX(DuKienDen) AS GioDenCuoiCung        
         FROM THOI_GIAN_CHUYEN_TAU
         GROUP BY MaChuyenTau
     )
@@ -24,12 +24,11 @@ BEGIN
         ct.MaChuyenTau,
         tt.TenTuyen,
        
-        -- Định dạng hiển thị khớp với UI của bạn
         CAST(lt.GioKhoiHanhDauTien AS DATE) AS NgayKhoiHanh,
         CONVERT(VARCHAR(5), lt.GioKhoiHanhDauTien, 108) AS GioDi,
         CONVERT(VARCHAR(5), lt.GioDenCuoiCung, 108) AS GioDen,
         
-        ct.TrangThai AS TrangThaiChuyenTau, -- "Sắp khởi hành"
+        ct.TrangThai AS TrangThaiChuyenTau, 
         pc.VaiTro,
         pc.MaToa,
         ct.MaDoanTau
@@ -38,7 +37,7 @@ BEGIN
     JOIN LICH_TRINH_TOM_TAT lt ON ct.MaChuyenTau = lt.MaChuyenTau
     JOIN TUYEN_TAU tt ON tt.MaTuyenTau = ct.MaTuyenTau
     WHERE pc.MaNV = @MaNV
-      AND pc.TrangThai <> N'Nghỉ' -- Loại bỏ các lịch đã xin nghỉ thành công
+      AND pc.TrangThai <> N'Nghỉ' 
       AND (@TuNgay IS NULL OR CAST(lt.GioKhoiHanhDauTien AS DATE) >= @TuNgay)
       AND (@DenNgay IS NULL OR CAST(lt.GioKhoiHanhDauTien AS DATE) <= @DenNgay)
     ORDER BY lt.GioKhoiHanhDauTien ASC;

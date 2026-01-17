@@ -1,6 +1,6 @@
 ﻿--SP4: API4 DUYET DON NGHI PHEP (TRANH CHAP)
 GO
-CREATE or alter PROCEDURE sp_DuyetDonNghiPhep
+CREATE PROCEDURE sp_DuyetDonNghiPhep
     @MaDon VARCHAR(10),
     @MaNVQuanLy VARCHAR(10),
     @TrangThaiMoi NVARCHAR(20), 
